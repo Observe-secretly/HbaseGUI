@@ -15,6 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.hadoop.hbase.ClusterStatus;
+
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
@@ -142,10 +144,20 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        if (HandleCore.testConf(textField.getText(), textField_1.getText(), textField_2.getText())) {
-                            JOptionPane.showMessageDialog(contentPanel, "连接成功", "提示", JOptionPane.INFORMATION_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误", JOptionPane.ERROR_MESSAGE);
+                        try {
+                            ClusterStatus clusterStatus = HandleCore.testConf(textField.getText(),
+                                                                              textField_1.getText(),
+                                                                              textField_2.getText());
+                            if (clusterStatus != null) {
+                                JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus.toString(),
+                                                              "提示", JOptionPane.INFORMATION_MESSAGE);
+                            } else {
+                                JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误", JOptionPane.ERROR_MESSAGE);
+                            }
+
+                        } catch (Exception e2) {
+                            JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage(), "错误",
+                                                          JOptionPane.ERROR_MESSAGE);
                         }
                         testButton.setEnabled(true);
                     }
@@ -175,12 +187,19 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
+                        try {
+                            ClusterStatus clusterStatus = HandleCore.testConf(textField.getText(),
+                                                                              textField_1.getText(),
+                                                                              textField_2.getText());
+                            if (clusterStatus != null) {
+                                com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
+                                com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
+                            } else {
+                                JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                            }
 
-                        if (HandleCore.testConf(textField.getText(), textField_1.getText(), textField_2.getText())) {
-                            com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
-                            com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
-                        } else {
-                            JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                        } catch (Exception e2) {
+                            JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage());
                         }
                         okButton.setEnabled(true);
                     }

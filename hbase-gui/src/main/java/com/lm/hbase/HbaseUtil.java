@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.ClusterStatus;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -39,12 +40,11 @@ public class HbaseUtil {
 
     public static void init(String zkPort, String zkQuorum, String hbaseMaster) throws IOException {
         Configuration configuration = HBaseConfiguration.create();
-
         configuration.set("hbase.zookeeper.property.clientPort", zkPort);
         configuration.set("hbase.zookeeper.quorum", zkQuorum);
         configuration.set("hbase.master", hbaseMaster);
-        configuration.setInt("hbase.rpc.timeout", 20000);
-        configuration.setInt("hbase.client.operation.timeout", 30000);
+        configuration.setInt("hbase.rpc.timeout", 5000);
+        configuration.setInt("hbase.client.operation.timeout", 10000);
         configuration.setInt("hbase.client.scanner.timeout.period", 200000);
         connection = ConnectionFactory.createConnection(configuration);
 
@@ -434,6 +434,22 @@ public class HbaseUtil {
             }
         }
         return null;
+    }
+
+    public static ClusterStatus getClusterStatus() throws Exception {
+        Admin admin = null;
+        try {
+            Connection connection = getConn();
+            admin = connection.getAdmin();
+            return admin.getClusterStatus();
+
+        } finally {
+            try {
+                admin.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**

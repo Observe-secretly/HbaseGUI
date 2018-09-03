@@ -21,6 +21,7 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+import org.apache.hadoop.hbase.ClusterStatus;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
@@ -112,16 +113,15 @@ public class HandleCore {
      * @param zkQuorum
      * @param hbaseMaster
      * @return
+     * @throws Exception
      */
-    public static boolean testConf(String zkPort, String zkQuorum, String hbaseMaster) {
-        try {
-            HbaseUtil.init(zkPort, zkQuorum, hbaseMaster);
-            setConf(zkPort, zkQuorum, hbaseMaster);
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+    public static ClusterStatus testConf(String zkPort, String zkQuorum, String hbaseMaster) throws Exception {
+        HbaseUtil.init(zkPort, zkQuorum, hbaseMaster);
+        setConf(zkPort, zkQuorum, hbaseMaster);
+
+        // 尝试获取集群状态
+        ClusterStatus clusterStatus = HbaseUtil.getClusterStatus();
+        return clusterStatus;
     }
 
     /**
