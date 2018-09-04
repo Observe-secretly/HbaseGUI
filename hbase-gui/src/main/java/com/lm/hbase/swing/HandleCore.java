@@ -90,13 +90,14 @@ public class HandleCore {
         return Boolean.parseBoolean(getStringValue(key));
     }
 
-    public static void setConf(String zkPort, String zkQuorum, String hbaseMaster) {
+    public static void setConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent) {
         if (confProps == null) {
             loadProperties();
         }
         confProps.put("hbase.zk.port", zkPort);
         confProps.put("hbase.zk.quorum", zkQuorum);
         confProps.put("hbase.master", hbaseMaster);
+        confProps.put("znode.parent", znodeParent);
         try {
             confProps.store(new FileOutputStream(FILE_PATH), null);
         } catch (FileNotFoundException e) {
@@ -115,9 +116,10 @@ public class HandleCore {
      * @return
      * @throws Exception
      */
-    public static ClusterStatus testConf(String zkPort, String zkQuorum, String hbaseMaster) throws Exception {
-        HbaseUtil.init(zkPort, zkQuorum, hbaseMaster);
-        setConf(zkPort, zkQuorum, hbaseMaster);
+    public static ClusterStatus testConf(String zkPort, String zkQuorum, String hbaseMaster,
+                                         String znodeParent) throws Exception {
+        HbaseUtil.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
+        setConf(zkPort, zkQuorum, hbaseMaster, znodeParent);
 
         // 尝试获取集群状态
         ClusterStatus clusterStatus = HbaseUtil.getClusterStatus();

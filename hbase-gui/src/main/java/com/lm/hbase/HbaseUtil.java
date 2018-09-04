@@ -38,11 +38,12 @@ public class HbaseUtil {
 
     private static Connection connection = null;
 
-    public static void init(String zkPort, String zkQuorum, String hbaseMaster) throws IOException {
+    public static void init(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent) throws IOException {
         Configuration configuration = HBaseConfiguration.create();
         configuration.set("hbase.zookeeper.property.clientPort", zkPort);
         configuration.set("hbase.zookeeper.quorum", zkQuorum);
         configuration.set("hbase.master", hbaseMaster);
+        configuration.set("zookeeper.znode.parent", znodeParent);
         configuration.setInt("hbase.rpc.timeout", 5000);
         configuration.setInt("hbase.client.operation.timeout", 10000);
         configuration.setInt("hbase.client.scanner.timeout.period", 200000);
@@ -61,16 +62,6 @@ public class HbaseUtil {
         if (connection != null) {
             connection.close();
         }
-    }
-
-    public static void main(String[] args) throws IOException {
-        // HbaseUtil.createTable(TableName.valueOf("job"), "name", "jobNumber", "sex", "age");
-
-        HbaseUtil.init("2181", "h2,h3,h4", "h1:16000");
-        HbaseUtil.createTable(TableName.valueOf("signlog"), "signature");
-
-        // HBasePageModel pageModel = new HBasePageModel(10);
-        // HbaseUtil.scanResultByPageFilter(TableName.valueOf("test"), null, null, null, Integer.MAX_VALUE, pageModel);
     }
 
     /**

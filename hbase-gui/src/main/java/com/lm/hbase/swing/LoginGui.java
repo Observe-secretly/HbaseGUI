@@ -26,16 +26,17 @@ import com.lm.hbase.HbaseUtil;
 public class LoginGui extends JDialog {
 
     private JPanel     contentPanel = new JPanel();
-    private JTextField textField;
-    private JTextField textField_1;
-    private JTextField textField_2;
+    private JTextField zkPortField;
+    private JTextField zkQuorumField;
+    private JTextField hbaseMasterField;
+    private JTextField znodeParentField;
 
     /**
      * Launch the application.
      */
     public static void main(String[] args) {
         try {
-            LoginGui dialog = new LoginGui(null, null, null);
+            LoginGui dialog = new LoginGui(null, null, null, null);
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             dialog.setVisible(true);
         } catch (Exception e) {
@@ -49,8 +50,9 @@ public class LoginGui extends JDialog {
             String zkPort = HandleCore.getStringValue("hbase.zk.port");
             String zkQuorum = HandleCore.getStringValue("hbase.zk.quorum");
             String hbaseMaster = HandleCore.getStringValue("hbase.master");
+            String znodeParent = HandleCore.getStringValue("znode.parent");
 
-            com.lm.hbase.swing.SwingConstants.loginGui = new LoginGui(zkPort, zkQuorum, hbaseMaster);
+            com.lm.hbase.swing.SwingConstants.loginGui = new LoginGui(zkPort, zkQuorum, hbaseMaster, znodeParent);
             com.lm.hbase.swing.SwingConstants.loginGui.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             com.lm.hbase.swing.SwingConstants.loginGui.setVisible(true);
 
@@ -62,7 +64,7 @@ public class LoginGui extends JDialog {
     /**
      * Create the dialog.
      */
-    public LoginGui(String zkPort, String zkQuorum, String hbaseMaster){
+    public LoginGui(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent){
         setTitle("配置Hbase");
         setBounds(100, 100, 450, 233);
         getContentPane().setLayout(new BorderLayout());
@@ -87,6 +89,7 @@ public class LoginGui extends JDialog {
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC,
                                                               FormSpecs.DEFAULT_ROWSPEC, }));
         {
@@ -95,10 +98,10 @@ public class LoginGui extends JDialog {
             contentPanel.add(lblNewLabel, "6, 4, right, default");
         }
         {
-            textField = new JTextField();
-            contentPanel.add(textField, "10, 4, 5, 1, fill, default");
-            textField.setColumns(10);
-            textField.setText(zkPort);
+            zkPortField = new JTextField();
+            contentPanel.add(zkPortField, "10, 4, 5, 1, fill, default");
+            zkPortField.setColumns(10);
+            zkPortField.setText(zkPort);
         }
         {
             JLabel lblNewLabel_1 = new JLabel("ZK.QUORUM");
@@ -106,10 +109,10 @@ public class LoginGui extends JDialog {
             contentPanel.add(lblNewLabel_1, "6, 8, right, default");
         }
         {
-            textField_1 = new JTextField();
-            contentPanel.add(textField_1, "10, 8, 5, 1, fill, default");
-            textField_1.setColumns(10);
-            textField_1.setText(zkQuorum);
+            zkQuorumField = new JTextField();
+            contentPanel.add(zkQuorumField, "10, 8, 5, 1, fill, default");
+            zkQuorumField.setColumns(10);
+            zkQuorumField.setText(zkQuorum);
         }
         {
             JLabel lblNewLabel_2 = new JLabel("HBASE.MASTER");
@@ -117,10 +120,21 @@ public class LoginGui extends JDialog {
             contentPanel.add(lblNewLabel_2, "6, 12, right, default");
         }
         {
-            textField_2 = new JTextField();
-            contentPanel.add(textField_2, "10, 12, 5, 1, fill, default");
-            textField_2.setColumns(10);
-            textField_2.setText(hbaseMaster);
+            hbaseMasterField = new JTextField();
+            contentPanel.add(hbaseMasterField, "10, 12, 5, 1, fill, default");
+            hbaseMasterField.setColumns(10);
+            hbaseMasterField.setText(hbaseMaster);
+        }
+        {
+            JLabel lblNewLabel_3 = new JLabel("ZNODE.PARENT");
+            lblNewLabel_3.setToolTipText("zookeeper.znode.parent");
+            contentPanel.add(lblNewLabel_3, "6, 14, right, default");
+        }
+        {
+            znodeParentField = new JTextField();
+            contentPanel.add(znodeParentField, "10, 14, 5, 1, fill, default");
+            znodeParentField.setColumns(10);
+            znodeParentField.setText(znodeParent);
         }
         {
             JPanel buttonPane = new JPanel();
@@ -145,9 +159,10 @@ public class LoginGui extends JDialog {
                     @Override
                     public void mouseReleased(MouseEvent e) {
                         try {
-                            ClusterStatus clusterStatus = HandleCore.testConf(textField.getText(),
-                                                                              textField_1.getText(),
-                                                                              textField_2.getText());
+                            ClusterStatus clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                                                              zkQuorumField.getText(),
+                                                                              hbaseMasterField.getText(),
+                                                                              znodeParentField.getText());
                             if (clusterStatus != null) {
                                 JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus.toString(),
                                                               "提示", JOptionPane.INFORMATION_MESSAGE);
@@ -188,9 +203,10 @@ public class LoginGui extends JDialog {
                     @Override
                     public void mouseReleased(MouseEvent e) {
                         try {
-                            ClusterStatus clusterStatus = HandleCore.testConf(textField.getText(),
-                                                                              textField_1.getText(),
-                                                                              textField_2.getText());
+                            ClusterStatus clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                                                              zkQuorumField.getText(),
+                                                                              hbaseMasterField.getText(),
+                                                                              znodeParentField.getText());
                             if (clusterStatus != null) {
                                 com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
                                 com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
