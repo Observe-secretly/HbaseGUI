@@ -78,7 +78,7 @@ public class ColumnFamily {
             Map.Entry<String, String> entry = iterator.next();
             if (index == cursor) {
                 qualifierColumn = new QualifierColumn(entry.getKey() == null ? null : entry.getKey().getBytes(),
-                                                      entry.getValue().getBytes());
+                                                      entry.getValue() == null ? null : entry.getValue().getBytes());
                 cursor++;
                 return 1;
             }
