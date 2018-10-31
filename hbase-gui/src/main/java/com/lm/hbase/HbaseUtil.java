@@ -403,6 +403,34 @@ public class HbaseUtil {
     }
 
     /**
+     * 清空表
+     * 
+     * @param tablename
+     * @param preserveSplits
+     */
+    public static void truncateTable(TableName tablename, boolean preserveSplits) {
+
+        Admin hBaseAdmin = null;
+        try {
+            Connection connection = getConn();
+            hBaseAdmin = connection.getAdmin();
+            hBaseAdmin.disableTable(tablename);
+            hBaseAdmin.truncateTable(tablename, preserveSplits);
+            hBaseAdmin.enableTable(tablename);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (hBaseAdmin != null) {
+                try {
+                    hBaseAdmin.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
      * 获取表结构
      * 
      * @param tablename

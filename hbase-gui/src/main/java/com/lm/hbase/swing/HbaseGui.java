@@ -160,6 +160,21 @@ public class HbaseGui {
         });
         popupMenu.add(chckbxmntmNewCheckItem);
 
+        JCheckBoxMenuItem truncateTableCheckItem = new JCheckBoxMenuItem("清空表");
+        truncateTableCheckItem.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                TableName tableName = list.getSelectedValue();
+                if (tableName != null) {
+                    HbaseUtil.truncateTable(tableName, true);
+                    JOptionPane.showMessageDialog(frmHbaseGui, "已清空", "提示", JOptionPane.INFORMATION_MESSAGE);
+                    initTableList(list);
+                }
+            }
+        });
+        popupMenu.add(truncateTableCheckItem);
+
         JCheckBoxMenuItem chckbxmntmNewCheckItem2 = new JCheckBoxMenuItem("统计总数");
         chckbxmntmNewCheckItem2.addMouseListener(new MouseAdapter() {
 
