@@ -184,8 +184,6 @@ public class HandleCore {
      * @param dataModel
      */
     public static void reloadTableFormat(TableName tableName, JTable table, HBasePageModel dataModel) {
-        // 查询表结构
-        HTableDescriptor thead = HbaseUtil.getDescribe(tableName);
         // 申明一个列头
         LinkedHashSet<String> columnNameSet = new LinkedHashSet<>();
         columnNameSet.add(NUMBER);
@@ -203,7 +201,7 @@ public class HandleCore {
             // 得到rowkey
             String rowKey = row.getRowKey();
             // 设置rowkey和序号
-            dataMap.get(NUMBER).put(rowKey, String.valueOf(i));
+            dataMap.get(NUMBER).put(rowKey, String.valueOf(i + 1));
             dataMap.get(ROW_KEY).put(rowKey, rowKey);
             Set<Map.Entry<String, ColumnFamily>> columnSet = row.getColumnFamilys().entrySet();// 所有列族
             for (Iterator iterator = columnSet.iterator(); iterator.hasNext();) {

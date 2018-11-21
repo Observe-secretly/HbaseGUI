@@ -536,7 +536,8 @@ public class HbaseGui {
                 pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
                                                                Chooser.DEFAULTFORMAT));
                 pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, filterList, version,
-                                                             pageModel);
+                                                             pageModel, true);
+                textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
                 HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
                 HandleCore.setPageInfomation(pageModel, bottom_message_label);
             } else {
@@ -587,13 +588,14 @@ public class HbaseGui {
                 textField_tab1_pageSize.setText(version.toString());
             }
 
-            textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
-
             pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(), Chooser.DEFAULTFORMAT));
             pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(), Chooser.DEFAULTFORMAT));
 
-            pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, null, version,
-                                                         pageModel);
+            pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, null, version, pageModel,
+                                                         false);
+
+            textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
+
             HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
             HandleCore.setPageInfomation(pageModel, bottom_message_label);
             tab1_nextpage_button.setEnabled(true);

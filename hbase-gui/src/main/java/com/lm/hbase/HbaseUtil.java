@@ -172,7 +172,7 @@ public class HbaseUtil {
 
     public static HBasePageModel scanResultByPageFilter(TableName tableName, byte[] startRowKey, byte[] endRowKey,
                                                         FilterList filterList, int maxVersions,
-                                                        HBasePageModel pageModel) {
+                                                        HBasePageModel pageModel, boolean firstPage) {
         if (pageModel == null) {
             pageModel = new HBasePageModel(10, tableName);
         }
@@ -190,29 +190,22 @@ public class HbaseUtil {
         try {
             Connection connection = getConn();
             table = connection.getTable(tableName);
-            int tempPageSize = pageModel.getPageSize();
-            boolean isEmptyStartRowKey = false;
-            if (startRowKey == null) {
-                // 则读取表的第一行记录，这里用到了笔者本人自己构建的一个表数据操作类。
+
+            if (startRowKey != null) {
+                pageModel.setPageEndRowKey(startRowKey);
+            }
+
+            if (pageModel.getPageEndRowKey() == null) {
                 Result firstResult = selectFirstResultRow(tableName, filterList);
                 if (firstResult == null || firstResult.isEmpty()) {
                     return pageModel;
                 }
                 startRowKey = firstResult.getRow();
-            }
-            if (pageModel.getPageStartRowKey() == null) {
-                isEmptyStartRowKey = true;
-                pageModel.setPageStartRowKey(startRowKey);
-            } else {
-                if (pageModel.getPageEndRowKey() != null) {
-                    pageModel.setPageStartRowKey(pageModel.getPageEndRowKey());
-                }
-                // 从第二页开始，每次都多取一条记录，因为第一条记录是要删除的。
-                tempPageSize += 1;
+                pageModel.setPageEndRowKey(startRowKey);
             }
 
             Scan scan = new Scan();
-            scan.setStartRow(pageModel.getPageStartRowKey());
+            scan.setStartRow(pageModel.getPageEndRowKey());
             if (pageModel.getMinStamp() != 0 && pageModel.getMaxStamp() != 0) {
                 scan.setTimeRange(pageModel.getMinStamp(), pageModel.getMaxStamp());
             }
@@ -220,7 +213,8 @@ public class HbaseUtil {
             if (endRowKey != null) {
                 scan.setStopRow(endRowKey);
             }
-            PageFilter pageFilter = new PageFilter(pageModel.getPageSize() + 1);
+
+            PageFilter pageFilter = new PageFilter(firstPage ? pageModel.getPageSize() : (pageModel.getPageSize() + 1));// 第二页包含第一页的最有一条数据，所以下一页要加+1
             if (filterList != null) {
                 filterList.addFilter(pageFilter);
                 scan.setFilter(filterList);
@@ -234,12 +228,15 @@ public class HbaseUtil {
             } else {
                 scan.setMaxVersions(maxVersions);
             }
+            long s = System.currentTimeMillis();
             ResultScanner scanner = table.getScanner(scan);
+            System.out.println("scan耗时：" + (System.currentTimeMillis() - s));
+            s = System.currentTimeMillis();
             List<Result> resultList = new ArrayList<Result>();
             int index = 0;
-            for (Result rs : scanner.next(tempPageSize)) {
-                if (isEmptyStartRowKey == false && index == 0) {
-                    index += 1;
+            for (Result rs : scanner.next(firstPage ? pageModel.getPageSize() : (pageModel.getPageSize() + 1))) {
+                if (!firstPage && index == 0) {// 第二页包含第一页的最有一条数据，所以这里要排除掉
+                    index++;
                     continue;
                 }
                 if (!rs.isEmpty()) {
@@ -251,10 +248,10 @@ public class HbaseUtil {
                     resultList.add(rs);
                     pageModel.addRow(row);
                 }
-                index += 1;
             }
             scanner.close();
             pageModel.setResultList(resultList);
+            System.out.println("数据组装耗时：" + (System.currentTimeMillis() - s));
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -274,8 +271,8 @@ public class HbaseUtil {
             pageModel.setPageStartRowKey(pageStartRowKey);
             pageModel.setPageEndRowKey(pageEndRowKey);
         }
-        int queryTotalCount = pageModel.getQueryTotalCount() + pageModel.getResultList().size();
-        pageModel.setQueryTotalCount(queryTotalCount);
+        // int queryTotalCount = pageModel.getQueryTotalCount() + pageModel.getResultList().size();
+        // pageModel.setQueryTotalCount(queryTotalCount);
         pageModel.initEndTime();
         pageModel.printTimeInfo();
         return pageModel;
@@ -302,7 +299,7 @@ public class HbaseUtil {
             ResultScanner scanner = table.getScanner(scan);
             Iterator<Result> iterator = scanner.iterator();
             int index = 0;
-            while (iterator.hasNext()) {
+            if (iterator.hasNext()) {
                 Result rs = iterator.next();
                 if (index == 0) {
                     scanner.close();
