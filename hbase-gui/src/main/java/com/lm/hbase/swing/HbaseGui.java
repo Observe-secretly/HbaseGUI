@@ -32,6 +32,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
@@ -132,13 +133,16 @@ public class HbaseGui {
 
         JPanel tableListPanel = new JPanel();
         tableListPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        tableListPanel.setLayout(new BorderLayout(1, 1));
+
         select.add(tableListPanel, BorderLayout.WEST);
-        tableListPanel.setLayout(new BorderLayout(0, 0));
 
         list = new JList<>();
         list.setFixedCellHeight(20);
         list.setBackground(SystemColor.window);
-        tableListPanel.add(list);
+        JScrollPane jlistScroll = new JScrollPane(list);
+        jlistScroll.setLayout(new ScrollPaneLayout());
+        tableListPanel.add(jlistScroll);
 
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setToolTipText("");
