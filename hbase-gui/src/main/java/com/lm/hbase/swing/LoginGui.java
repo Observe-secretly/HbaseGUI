@@ -202,22 +202,27 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        try {
-                            ClusterStatus clusterStatus = HandleCore.testConf(zkPortField.getText(),
-                                                                              zkQuorumField.getText(),
-                                                                              hbaseMasterField.getText(),
-                                                                              znodeParentField.getText());
-                            if (clusterStatus != null) {
-                                com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
-                                com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
-                            } else {
-                                JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                        synchronized (com.lm.hbase.swing.SwingConstants.loginGui) {
+                            if (!com.lm.hbase.swing.SwingConstants.loginGui.isVisible()) {
+                                return;
                             }
+                            try {
+                                ClusterStatus clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                                                                  zkQuorumField.getText(),
+                                                                                  hbaseMasterField.getText(),
+                                                                                  znodeParentField.getText());
+                                if (clusterStatus != null) {
+                                    com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
+                                    com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
+                                } else {
+                                    JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                                }
 
-                        } catch (Exception e2) {
-                            JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage());
+                            } catch (Exception e2) {
+                                JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage());
+                            }
+                            okButton.setEnabled(true);
                         }
-                        okButton.setEnabled(true);
                     }
                 });
                 okButton.setActionCommand("OK");

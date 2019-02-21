@@ -29,6 +29,8 @@ import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import org.apache.hadoop.hbase.filter.PageFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.lm.hbase.util.StringUtil;
+
 /**
  * 操作habse的工具类，包含基本的表操作和行操作
  * 
@@ -170,9 +172,43 @@ public class HbaseUtil {
         }
     }
 
+    private static String getValue(String type, byte[] b) {
+        if (StringUtil.isEmpty(type)) {
+            return Bytes.toString(b);
+        }
+
+        try {
+            switch (type.trim().toLowerCase()) {
+                case "long":
+                    return String.valueOf(Bytes.toLong(b));
+                case "int":
+                    return String.valueOf(Bytes.toInt(b));
+                case "short":
+                    return String.valueOf(Bytes.toShort(b));
+                case "flout":
+                    return String.valueOf(Bytes.toFloat(b));
+                case "double":
+                    return String.valueOf(Bytes.toDouble(b));
+                case "bigdecimal":
+                    return String.valueOf(Bytes.toBigDecimal(b));
+                case "boolean":
+                    return String.valueOf(Bytes.toBoolean(b));
+
+                default:
+                    return Bytes.toString(b);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "DATA CONVERSION EXCEPTION";
+        }
+
+    }
+
     public static HBasePageModel scanResultByPageFilter(TableName tableName, byte[] startRowKey, byte[] endRowKey,
                                                         FilterList filterList, int maxVersions,
-                                                        HBasePageModel pageModel, boolean firstPage) {
+                                                        HBasePageModel pageModel, boolean firstPage,
+                                                        Map<String, String> typeMapping) {
         if (pageModel == null) {
             pageModel = new HBasePageModel(10, tableName);
         }
@@ -205,6 +241,7 @@ public class HbaseUtil {
             }
 
             Scan scan = new Scan();
+            scan.setCaching(10);
             scan.setStartRow(pageModel.getPageEndRowKey());
             if (pageModel.getMinStamp() != 0 && pageModel.getMaxStamp() != 0) {
                 scan.setTimeRange(pageModel.getMinStamp(), pageModel.getMaxStamp());
@@ -242,8 +279,11 @@ public class HbaseUtil {
                 if (!rs.isEmpty()) {
                     Row row = new Row(Bytes.toString(rs.getRow()));
                     for (Cell c : rs.rawCells()) {
-                        row.add(Bytes.toString(CellUtil.cloneFamily(c)), Bytes.toString(CellUtil.cloneQualifier(c)),
-                                Bytes.toString(CellUtil.cloneValue(c)));
+                        String family = Bytes.toString(CellUtil.cloneFamily(c));
+                        String qualifier = Bytes.toString(CellUtil.cloneQualifier(c));
+                        row.add(family, qualifier,
+                                getValue((typeMapping == null ? null : typeMapping.get(family + "." + qualifier)),
+                                         CellUtil.cloneValue(c)));
                     }
                     resultList.add(rs);
                     pageModel.addRow(row);

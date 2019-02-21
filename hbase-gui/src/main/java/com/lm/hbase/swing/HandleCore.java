@@ -70,6 +70,20 @@ public class HandleCore {
         loadProperties();
     }
 
+    public static void setValue(String key, String value) {
+        if (confProps == null) {
+            loadProperties();
+        }
+        confProps.put(key, value);
+        try {
+            confProps.store(new FileOutputStream(FILE_PATH), null);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static String getStringValue(String key) {
         if (confProps == null) {
             return loadProperties().getProperty(key);
@@ -246,6 +260,97 @@ public class HandleCore {
 
         DefaultTableModel tableModel = new DefaultTableModel();
         tableModel.setDataVector(rowData, columnNameSet.toArray());
+
+        table.setModel(tableModel);
+
+        int rowCount = table.getRowCount();
+        table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
+        Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
+        table.updateUI();
+        table.scrollRectToVisible(rect);
+
+    }
+
+    public static void reloadMetaTableFormat(JTable table, Map<String, String> metaMap) {
+
+        // 把datamap转化成二维数组
+        String[][] rowData = new String[metaMap.size()][2];
+
+        int index = 0;
+        for (Map.Entry<String, String> entry : metaMap.entrySet()) {
+            rowData[index][0] = entry.getKey();
+            rowData[index][1] = entry.getValue();
+            index++;
+        }
+
+        DefaultTableModel tableModel = new DefaultTableModel();
+        tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
+
+        table.setModel(tableModel);
+
+        int rowCount = table.getRowCount();
+        table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
+        Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
+        table.updateUI();
+        table.scrollRectToVisible(rect);
+
+    }
+
+    public static void reloadMetaTableFormat(TableName tableName, JTable table) {
+
+        HBasePageModel dataModel = new HBasePageModel(1, tableName);
+        dataModel = HbaseUtil.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE, dataModel, true,
+                                                     null);
+
+        // 申明一个列头
+        LinkedHashSet<String> columnNameSet = new LinkedHashSet<>();
+
+        // 申明一个以[列族名+列修饰符]键的Map，用来存放所有列。每个column是一个以rowkey为键column为值的value
+        Map<String, Map<String, String>> dataMap = new LinkedHashMap<>();
+        // 创建一个序号列
+        dataMap.put(NUMBER, new LinkedHashMap<>());
+        // 创建一个rowkey列
+        dataMap.put(ROW_KEY, new LinkedHashMap<>());
+
+        for (int i = 0; i < dataModel.getRowList().size(); i++) {
+            Row row = dataModel.getRowList().get(i);
+            // 得到rowkey
+            String rowKey = row.getRowKey();
+            // 设置rowkey和序号
+            Set<Map.Entry<String, ColumnFamily>> columnSet = row.getColumnFamilys().entrySet();// 所有列族
+            for (Iterator iterator = columnSet.iterator(); iterator.hasNext();) {
+                Entry<String, ColumnFamily> entry = (Entry<String, ColumnFamily>) iterator.next();// 某个列族的所有列
+                for (Entry<String, String> column : entry.getValue().getColumns().entrySet()) {
+                    String tableHead = entry.getValue().getFamilyName() + SPLIT_MARK + column.getKey();
+                    columnNameSet.add(tableHead);
+
+                    // 从dataMap拿到对应列的map
+                    Map<String, String> columnMap = dataMap.get(tableHead);
+                    if (columnMap == null) {
+                        columnMap = new LinkedHashMap<>();
+                        columnMap.put(rowKey, column.getValue());
+                    } else {
+                        columnMap.put(rowKey, column.getValue());
+                    }
+                    dataMap.put(tableHead, columnMap);
+                }
+
+            }
+        }
+
+        // 把datamap转化成二维数组
+        String[][] rowData = new String[columnNameSet.size()][2];
+
+        int index = 0;
+        for (Iterator iterator = columnNameSet.iterator(); iterator.hasNext();) {
+            String columnKey = (String) iterator.next();
+            rowData[index][0] = columnKey;
+            rowData[index][1] = "String";
+            index++;
+        }
+
+        DefaultTableModel tableModel = new DefaultTableModel();
+        tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
 
         table.setModel(tableModel);
 
