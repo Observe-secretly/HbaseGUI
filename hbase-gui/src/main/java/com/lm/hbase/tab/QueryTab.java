@@ -9,6 +9,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -18,6 +20,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -57,8 +60,8 @@ public class QueryTab extends TabAbstract {
 
     private static HBasePageModel pageModel;
 
-    public QueryTab(JFrame jFrame){
-        super(jFrame);
+    public QueryTab(JFrame jFrame, JProgressBar processBar){
+        super(jFrame, processBar);
     }
 
     @Override
@@ -259,6 +262,8 @@ public class QueryTab extends TabAbstract {
      */
     class SelectEvent extends MouseAdapter {
 
+        private ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
+
         @Override
         public void mousePressed(MouseEvent e) {
             tab1_searchButton.setEnabled(false);
@@ -269,57 +274,72 @@ public class QueryTab extends TabAbstract {
             if (tab1_searchButton.isEnabled()) {
                 return;
             }
+            // 查询期间禁止再次点击查询按钮，禁止切换表。并添加等待效果
+            list.setEnabled(false);
+            QueryTab.this.processBar.setIndeterminate(true);
 
-            HandleCore.setPageInfomation(null, bottom_message_label);
-            TableName tableName = list.getSelectedValue();
-            // 获取分页大小
-            Integer page = 10;
-            try {
-                page = Integer.parseInt(textField_tab1_pageSize.getText());
-            } catch (Exception e2) {
-                textField_tab1_pageSize.setText(page.toString());
-            }
-            // 获取版本
-            Integer version = Integer.MAX_VALUE;
-            try {
-                version = Integer.parseInt(textField_tab1_version.getText());
-            } catch (Exception e2) {
-                textField_tab1_pageSize.setText(version.toString());
-            }
-            // 获取rowkey查询前缀（如果有）
-            String rowkeyPrefix = textField_tab1_rowKey_prefix.getText();
-            FilterList filterList = null;
-            // 获取startRowKey
+            threadPool.execute(new Runnable() {
 
-            if (!StringUtil.isEmpty(rowkeyPrefix)) {
-                Filter rowkeyFilter = new PrefixFilter(rowkeyPrefix.getBytes());
-                filterList = new FilterList(rowkeyFilter);
-            }
+                @Override
+                public void run() {
 
-            byte[] startRowKeyByte = null;
+                    HandleCore.setPageInfomation(null, bottom_message_label);
+                    TableName tableName = list.getSelectedValue();
+                    // 获取分页大小
+                    Integer page = 10;
+                    try {
+                        page = Integer.parseInt(textField_tab1_pageSize.getText());
+                    } catch (Exception e2) {
+                        textField_tab1_pageSize.setText(page.toString());
+                    }
+                    // 获取版本
+                    Integer version = Integer.MAX_VALUE;
+                    try {
+                        version = Integer.parseInt(textField_tab1_version.getText());
+                    } catch (Exception e2) {
+                        textField_tab1_pageSize.setText(version.toString());
+                    }
+                    // 获取rowkey查询前缀（如果有）
+                    String rowkeyPrefix = textField_tab1_rowKey_prefix.getText();
+                    FilterList filterList = null;
+                    // 获取startRowKey
 
-            String startRowKey = textField_tab1_start_rowkey.getText();
+                    if (!StringUtil.isEmpty(rowkeyPrefix)) {
+                        Filter rowkeyFilter = new PrefixFilter(rowkeyPrefix.getBytes());
+                        filterList = new FilterList(rowkeyFilter);
+                    }
 
-            if (!StringUtil.isEmpty(startRowKey)) {
-                startRowKeyByte = Bytes.toBytes(startRowKey);
-            }
+                    byte[] startRowKeyByte = null;
 
-            if (tableName != null) {
-                pageModel = new HBasePageModel(page, tableName);
-                pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(),
-                                                               Chooser.DEFAULTFORMAT));
-                pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
-                                                               Chooser.DEFAULTFORMAT));
+                    String startRowKey = textField_tab1_start_rowkey.getText();
 
-                pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, filterList, version,
-                                                             pageModel, true, getMetaData());
-                textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
-                HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
-                HandleCore.setPageInfomation(pageModel, bottom_message_label);
-            } else {
-                JOptionPane.showMessageDialog(QueryTab.this.jFrame, "请在右侧选择表", "提示", JOptionPane.INFORMATION_MESSAGE);
-            }
-            tab1_searchButton.setEnabled(true);
+                    if (!StringUtil.isEmpty(startRowKey)) {
+                        startRowKeyByte = Bytes.toBytes(startRowKey);
+                    }
+
+                    if (tableName != null) {
+                        pageModel = new HBasePageModel(page, tableName);
+                        pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(),
+                                                                       Chooser.DEFAULTFORMAT));
+                        pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
+                                                                       Chooser.DEFAULTFORMAT));
+
+                        pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, filterList,
+                                                                     version, pageModel, true, getMetaData());
+                        textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
+                        HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
+                        HandleCore.setPageInfomation(pageModel, bottom_message_label);
+
+                    } else {
+                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "请在右侧选择表", "提示",
+                                                      JOptionPane.INFORMATION_MESSAGE);
+                    }
+                    tab1_searchButton.setEnabled(true);
+                    list.setEnabled(true);
+                    QueryTab.this.processBar.setIndeterminate(false);
+                }
+            });
+
         }
     }
 
@@ -330,6 +350,8 @@ public class QueryTab extends TabAbstract {
      */
     class NextPage extends MouseAdapter {
 
+        private ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
+
         @Override
         public void mousePressed(MouseEvent e) {
             tab1_nextpage_button.setEnabled(false);
@@ -337,44 +359,60 @@ public class QueryTab extends TabAbstract {
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            if (pageModel == null) {
-                JOptionPane.showMessageDialog(QueryTab.this.jFrame, "请选择表并进行一次查询", "警告", JOptionPane.WARNING_MESSAGE);
-                tab1_nextpage_button.setEnabled(true);
-                return;
-            }
+            // 查询期间禁止再次点击查询按钮，禁止切换表。并添加等待效果
+            list.setEnabled(false);
+            QueryTab.this.processBar.setIndeterminate(true);
 
-            if (pageModel.getQueryTotalCount() % pageModel.getPageSize() != 0) {
-                JOptionPane.showMessageDialog(QueryTab.this.jFrame, "已经到了最后一页", "警告", JOptionPane.WARNING_MESSAGE);
-                tab1_nextpage_button.setEnabled(true);
-                return;
-            }
+            threadPool.execute(new Runnable() {
 
-            // 获取分页大小
-            Integer page = 10;
-            try {
-                page = Integer.parseInt(textField_tab1_pageSize.getText());
-            } catch (Exception e2) {
-                textField_tab1_pageSize.setText(page.toString());
-            }
-            // 获取版本
-            Integer version = Integer.MAX_VALUE;
-            try {
-                version = Integer.parseInt(textField_tab1_version.getText());
-            } catch (Exception e2) {
-                textField_tab1_pageSize.setText(version.toString());
-            }
+                @Override
+                public void run() {
+                    if (pageModel == null) {
+                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "请选择表并进行一次查询", "警告",
+                                                      JOptionPane.WARNING_MESSAGE);
+                        tab1_nextpage_button.setEnabled(true);
+                        return;
+                    }
 
-            pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(), Chooser.DEFAULTFORMAT));
-            pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(), Chooser.DEFAULTFORMAT));
+                    if (pageModel.getQueryTotalCount() % pageModel.getPageSize() != 0) {
+                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "已经到了最后一页", "警告",
+                                                      JOptionPane.WARNING_MESSAGE);
+                        tab1_nextpage_button.setEnabled(true);
+                        return;
+                    }
 
-            pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, null, version, pageModel,
-                                                         false, getMetaData());
+                    // 获取分页大小
+                    Integer page = 10;
+                    try {
+                        page = Integer.parseInt(textField_tab1_pageSize.getText());
+                    } catch (Exception e2) {
+                        textField_tab1_pageSize.setText(page.toString());
+                    }
+                    // 获取版本
+                    Integer version = Integer.MAX_VALUE;
+                    try {
+                        version = Integer.parseInt(textField_tab1_version.getText());
+                    } catch (Exception e2) {
+                        textField_tab1_pageSize.setText(version.toString());
+                    }
 
-            textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
+                    pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(),
+                                                                   Chooser.DEFAULTFORMAT));
+                    pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
+                                                                   Chooser.DEFAULTFORMAT));
 
-            HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
-            HandleCore.setPageInfomation(pageModel, bottom_message_label);
-            tab1_nextpage_button.setEnabled(true);
+                    pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, null, version,
+                                                                 pageModel, false, getMetaData());
+
+                    textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
+
+                    HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
+                    HandleCore.setPageInfomation(pageModel, bottom_message_label);
+                    tab1_nextpage_button.setEnabled(true);
+                    list.setEnabled(true);
+                    QueryTab.this.processBar.setIndeterminate(false);
+                }
+            });
 
         }
     }

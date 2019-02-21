@@ -16,6 +16,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
@@ -31,8 +32,8 @@ public class CreateTab extends TabAbstract {
     private JButton    tab3_create_table_button;
     private JTextArea  tab3_textArea;
 
-    public CreateTab(JFrame jFrame){
-        super(jFrame);
+    public CreateTab(JFrame jFrame, JProgressBar processBar){
+        super(jFrame, processBar);
     }
 
     @Override

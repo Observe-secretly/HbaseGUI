@@ -5,6 +5,7 @@ import java.awt.Component;
 import javax.swing.Icon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 
 public abstract class TabAbstract extends TabCommonUtil implements TabInterface {
 
@@ -12,8 +13,11 @@ public abstract class TabAbstract extends TabCommonUtil implements TabInterface 
 
     public JFrame              jFrame;
 
-    public TabAbstract(JFrame jFrame){
+    public JProgressBar        processBar;
+
+    public TabAbstract(JFrame jFrame, JProgressBar processBar){
         this.jFrame = jFrame;
+        this.processBar = processBar;
     }
 
     @Override

@@ -7,8 +7,8 @@ import java.awt.event.WindowEvent;
 import java.io.IOException;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 import javax.swing.border.TitledBorder;
 
@@ -20,7 +20,9 @@ import com.lm.hbase.tab.TabInterface;
 
 public class HbaseGui {
 
-    public JFrame frmHbaseGui;
+    public JFrame       frmHbaseGui;
+
+    public JProgressBar processBar;
 
     /**
      * Launch the application.
@@ -70,21 +72,21 @@ public class HbaseGui {
         JPanel panel = new JPanel();
         frmHbaseGui.getContentPane().add(panel, BorderLayout.SOUTH);
 
-        JLabel lblHBaSe = new JLabel("Message");
-        panel.add(lblHBaSe);
+        processBar = new JProgressBar(JProgressBar.CENTER);
+        panel.add(processBar);
 
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
         tabbedPane.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         frmHbaseGui.getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
-        TabInterface queryTab = new QueryTab(frmHbaseGui);
+        TabInterface queryTab = new QueryTab(frmHbaseGui, processBar);
         tabbedPane.addTab(queryTab.getTitle(), queryTab.getIcon(), queryTab.getComponent(), queryTab.getTip());
 
-        TabInterface metaDataTab = new MetaDataTab(frmHbaseGui);
+        TabInterface metaDataTab = new MetaDataTab(frmHbaseGui, processBar);
         tabbedPane.addTab(metaDataTab.getTitle(), metaDataTab.getIcon(), metaDataTab.getComponent(),
                           metaDataTab.getTip());
 
-        TabInterface createTab = new CreateTab(frmHbaseGui);
+        TabInterface createTab = new CreateTab(frmHbaseGui, processBar);
         tabbedPane.addTab(createTab.getTitle(), createTab.getIcon(), createTab.getComponent(), createTab.getTip());
 
         frmHbaseGui.setVisible(true);

@@ -9,6 +9,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,6 +18,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -37,8 +40,8 @@ public class MetaDataTab extends TabAbstract {
     private JScrollPane      tableScroll;
     private JButton          saveButton;
 
-    public MetaDataTab(JFrame jFrame){
-        super(jFrame);
+    public MetaDataTab(JFrame jFrame, JProgressBar processBar){
+        super(jFrame, processBar);
     }
 
     @Override
@@ -155,17 +158,30 @@ public class MetaDataTab extends TabAbstract {
         return panel;
     }
 
+    private ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
+
     @SuppressWarnings("unchecked")
     private void loadMataData(TableName tableName) {
-        // 1、 优先从映射文件中查询元数据
-        // 2、查询不到则去Hbase查询表结构，得到所有的字段。所有字段默认是string类型
-        String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
-        String cacheMetaData = HandleCore.getStringValue(propertiesKey);
-        if (!StringUtil.isEmpty(cacheMetaData)) {
-            HandleCore.reloadMetaTableFormat(contentTable, JSON.parseObject(cacheMetaData, Map.class));
-        } else {
-            HandleCore.reloadMetaTableFormat(tableName, contentTable);
-        }
+        list.setEnabled(false);
+        MetaDataTab.this.processBar.setIndeterminate(true);
+        threadPool.execute(new Runnable() {
+
+            @Override
+            public void run() {
+                // 1、 优先从映射文件中查询元数据
+                // 2、查询不到则去Hbase查询表结构，得到所有的字段。所有字段默认是string类型
+                String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
+                String cacheMetaData = HandleCore.getStringValue(propertiesKey);
+                if (!StringUtil.isEmpty(cacheMetaData)) {
+                    HandleCore.reloadMetaTableFormat(contentTable, JSON.parseObject(cacheMetaData, Map.class));
+                } else {
+                    HandleCore.reloadMetaTableFormat(tableName, contentTable);
+                }
+                list.setEnabled(true);
+                MetaDataTab.this.processBar.setIndeterminate(false);
+
+            }
+        });
 
     }
 
