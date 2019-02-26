@@ -103,11 +103,16 @@ public class QueryTab extends TabAbstract {
             @Override
             public void mouseReleased(MouseEvent e) {
                 TableName tableName = list.getSelectedValue();
-                if (tableName != null) {
-                    HbaseUtil.dropTable(tableName);
-                    JOptionPane.showMessageDialog(QueryTab.this.jFrame, "删除成功", "提示", JOptionPane.INFORMATION_MESSAGE);
-                    initTableList(list);
+                if (JOptionPane.showConfirmDialog(QueryTab.this.jFrame,
+                                                  "确定删除" + tableName.getNameAsString() + "表吗?") == 0) {
+                    if (tableName != null) {
+                        HbaseUtil.dropTable(tableName);
+                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "删除成功", "提示",
+                                                      JOptionPane.INFORMATION_MESSAGE);
+                        initTableList(list);
+                    }
                 }
+
             }
         });
         popupMenu.add(chckbxmntmNewCheckItem);
@@ -118,11 +123,16 @@ public class QueryTab extends TabAbstract {
             @Override
             public void mouseReleased(MouseEvent e) {
                 TableName tableName = list.getSelectedValue();
-                if (tableName != null) {
-                    HbaseUtil.truncateTable(tableName, true);
-                    JOptionPane.showMessageDialog(QueryTab.this.jFrame, "已清空", "提示", JOptionPane.INFORMATION_MESSAGE);
-                    initTableList(list);
+                if (JOptionPane.showConfirmDialog(QueryTab.this.jFrame,
+                                                  "确定清空" + tableName.getNameAsString() + "表吗?") == 0) {
+                    if (tableName != null) {
+                        HbaseUtil.truncateTable(tableName, true);
+                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "已清空", "提示",
+                                                      JOptionPane.INFORMATION_MESSAGE);
+                        initTableList(list);
+                    }
                 }
+
             }
         });
         popupMenu.add(truncateTableCheckItem);
