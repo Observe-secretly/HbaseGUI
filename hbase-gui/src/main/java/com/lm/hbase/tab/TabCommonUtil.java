@@ -50,7 +50,13 @@ public class TabCommonUtil {
         });
     }
 
-    // 表格自适应方法，需要在表格初始化后，父容器大小发生变化后以及表格模型修改后调用
+    /**
+     * 表格自适应方法，需要在表格初始化后，父容器大小发生变化后以及表格模型修改后调用
+     * 
+     * @param bool
+     * @param contentTable
+     * @param tableScroll
+     */
     public void resizeTable(boolean bool, JTable contentTable, JScrollPane tableScroll) {
         Dimension containerwidth = null;
         if (!bool) {

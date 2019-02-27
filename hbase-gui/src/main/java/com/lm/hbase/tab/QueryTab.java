@@ -28,6 +28,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
+import javax.swing.table.DefaultTableModel;
 
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.filter.Filter;
@@ -50,6 +51,7 @@ public class QueryTab extends TabAbstract {
     private JList<TableName>         list              = null;
     private JButton                  refreshTableButton;
     private JButton                  tab1_searchButton = new JButton("查询");
+    private JButton                  deleteButton;
     private JTextField               textField_tab1_version;
     private JTextField               textField_tab1_start_rowkey;
     private JTextField               textField_tab1_pageSize;
@@ -237,6 +239,10 @@ public class QueryTab extends TabAbstract {
         filtersPanel.add(filterCenterPanel, BorderLayout.CENTER);
         filterCenterPanel.setLayout(new FlowLayout());
 
+        deleteButton = new JButton("删除");
+        filterCenterPanel.add(deleteButton);
+        deleteButton.addMouseListener(new DeleteEvent());
+
         JLabel startRowkeylabel = new JLabel("StartRowKey:");
         filterCenterPanel.add(startRowkeylabel);
 
@@ -306,11 +312,24 @@ public class QueryTab extends TabAbstract {
         tableScroll = new JScrollPane(contentTable);
         searchPanel.add(tableScroll, BorderLayout.CENTER);
 
+        // 自动调整表格宽度
         contentTable.addComponentListener(new ComponentAdapter() {
 
             @Override
             public void componentResized(ComponentEvent e) {
                 resizeTable(true, contentTable, tableScroll);
+            }
+        });
+
+        contentTable.addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (contentTable.getSelectedRowCount() == 0) {
+                    deleteButton.setEnabled(false);
+                } else {
+                    deleteButton.setEnabled(true);
+                }
             }
         });
 
@@ -431,8 +450,6 @@ public class QueryTab extends TabAbstract {
      */
     class NextPage extends MouseAdapter {
 
-        private ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
-
         @Override
         public void mousePressed(MouseEvent e) {
             tab1_nextpage_button.setEnabled(false);
@@ -492,6 +509,54 @@ public class QueryTab extends TabAbstract {
                     enableAll();
                     QueryTab.this.processBar.setIndeterminate(false);
                 }
+            });
+
+        }
+    }
+
+    class DeleteEvent extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            deleteButton.setEnabled(false);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            disableAll();
+            QueryTab.this.processBar.setIndeterminate(true);
+
+            threadPool.execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    int selectedRowCount = contentTable.getSelectedRowCount();
+                    TableName tableName = list.getSelectedValue();
+                    if (selectedRowCount > 0 || tableName == null) {
+                        String[] rowkeys = new String[selectedRowCount];
+                        int[] selectRowIndexs = contentTable.getSelectedRows();
+                        for (int i = 0; i < selectedRowCount; i++) {
+                            rowkeys[i] = contentTable.getValueAt(selectRowIndexs[i], 1).toString();
+                        }
+
+                        HbaseUtil.deleteRow(tableName, rowkeys);
+                        DefaultTableModel model = (DefaultTableModel) contentTable.getModel();
+                        while (true) {
+                            if (contentTable.getSelectedRowCount() > 0) {
+                                model.removeRow(contentTable.getSelectedRow());
+                            } else {
+                                break;
+                            }
+                        }
+
+                    } else {
+                        deleteButton.setEnabled(false);
+                    }
+                    enableAll();
+                    QueryTab.this.processBar.setIndeterminate(false);
+
+                }
+
             });
 
         }
