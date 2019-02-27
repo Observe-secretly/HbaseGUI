@@ -13,10 +13,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -45,20 +45,23 @@ import com.lm.hbase.util.StringUtil;
 
 public class QueryTab extends TabAbstract {
 
-    private JList<TableName>      list              = null;
-    private JButton               tab1_searchButton = new JButton("查询");
-    private JTextField            textField_tab1_version;
-    private JTextField            textField_tab1_start_rowkey;
-    private JTextField            textField_tab1_pageSize;
-    private JTextField            textField_tab1_rowKey_prefix;
-    private JButton               tab1_nextpage_button;
-    private JTable                contentTable;
-    private JScrollPane           tableScroll;
-    private JTextField            textField_tab1_min_stamp;
-    private JTextField            textField_tab1_max_stamp;
-    private JLabel                bottom_message_label;
+    private ScheduledExecutorService threadPool        = Executors.newSingleThreadScheduledExecutor();
 
-    private static HBasePageModel pageModel;
+    private JList<TableName>         list              = null;
+    private JButton                  refreshTableButton;
+    private JButton                  tab1_searchButton = new JButton("查询");
+    private JTextField               textField_tab1_version;
+    private JTextField               textField_tab1_start_rowkey;
+    private JTextField               textField_tab1_pageSize;
+    private JTextField               textField_tab1_rowKey_prefix;
+    private JButton                  tab1_nextpage_button;
+    private JTable                   contentTable;
+    private JScrollPane              tableScroll;
+    private JTextField               textField_tab1_min_stamp;
+    private JTextField               textField_tab1_max_stamp;
+    private JLabel                   bottom_message_label;
+
+    private static HBasePageModel    pageModel;
 
     public QueryTab(JFrame jFrame, JProgressBar processBar){
         super(jFrame, processBar);
@@ -97,8 +100,8 @@ public class QueryTab extends TabAbstract {
         popupMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
         addPopup(list, popupMenu);
 
-        JCheckBoxMenuItem chckbxmntmNewCheckItem = new JCheckBoxMenuItem("删除表");
-        chckbxmntmNewCheckItem.addMouseListener(new MouseAdapter() {
+        JMenuItem removeTableItem = new JMenuItem("删除表");
+        removeTableItem.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -106,19 +109,35 @@ public class QueryTab extends TabAbstract {
                 if (JOptionPane.showConfirmDialog(QueryTab.this.jFrame,
                                                   "确定删除" + tableName.getNameAsString() + "表吗?") == 0) {
                     if (tableName != null) {
-                        HbaseUtil.dropTable(tableName);
-                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "删除成功", "提示",
-                                                      JOptionPane.INFORMATION_MESSAGE);
+
+                        threadPool.execute(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                disableAll();
+                                QueryTab.this.processBar.setIndeterminate(true);
+
+                                HbaseUtil.dropTable(tableName);
+                                JOptionPane.showMessageDialog(QueryTab.this.jFrame, "删除成功", "提示",
+                                                              JOptionPane.INFORMATION_MESSAGE);
+
+                                enableAll();
+                                QueryTab.this.processBar.setIndeterminate(false);
+
+                            }
+                        });
+
                         initTableList(list);
+
                     }
                 }
 
             }
         });
-        popupMenu.add(chckbxmntmNewCheckItem);
+        popupMenu.add(removeTableItem);
 
-        JCheckBoxMenuItem truncateTableCheckItem = new JCheckBoxMenuItem("清空表");
-        truncateTableCheckItem.addMouseListener(new MouseAdapter() {
+        JMenuItem truncateTableItem = new JMenuItem("清空表");
+        truncateTableItem.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -126,47 +145,83 @@ public class QueryTab extends TabAbstract {
                 if (JOptionPane.showConfirmDialog(QueryTab.this.jFrame,
                                                   "确定清空" + tableName.getNameAsString() + "表吗?") == 0) {
                     if (tableName != null) {
-                        HbaseUtil.truncateTable(tableName, true);
-                        JOptionPane.showMessageDialog(QueryTab.this.jFrame, "已清空", "提示",
-                                                      JOptionPane.INFORMATION_MESSAGE);
-                        initTableList(list);
+                        threadPool.execute(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                disableAll();
+                                QueryTab.this.processBar.setIndeterminate(true);
+
+                                HbaseUtil.truncateTable(tableName, true);
+                                JOptionPane.showMessageDialog(QueryTab.this.jFrame, "已清空", "提示",
+                                                              JOptionPane.INFORMATION_MESSAGE);
+                                initTableList(list);
+
+                                enableAll();
+                                QueryTab.this.processBar.setIndeterminate(false);
+
+                            }
+                        });
+
                     }
                 }
 
             }
         });
-        popupMenu.add(truncateTableCheckItem);
+        popupMenu.add(truncateTableItem);
 
-        JCheckBoxMenuItem chckbxmntmNewCheckItem2 = new JCheckBoxMenuItem("统计总数");
-        chckbxmntmNewCheckItem2.addMouseListener(new MouseAdapter() {
+        // 添加一个分割线
+        popupMenu.addSeparator();
+
+        JMenuItem countItem = new JMenuItem("统计总数");
+        countItem.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 TableName tableName = list.getSelectedValue();
-                if (tableName != null) {
-                    long count = HbaseUtil.rowCount(tableName);
-                    JOptionPane.showMessageDialog(QueryTab.this.jFrame, count, tableName.getNameAsString() + "数据总数",
-                                                  JOptionPane.INFORMATION_MESSAGE);
+
+                if (JOptionPane.showConfirmDialog(QueryTab.this.jFrame, "确定进行吗？大表可能需要较长时间统计") == 0) {
+                    if (tableName != null) {
+                        threadPool.execute(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                disableAll();
+                                QueryTab.this.processBar.setIndeterminate(true);
+
+                                long count = HbaseUtil.rowCount(tableName);
+                                JOptionPane.showMessageDialog(QueryTab.this.jFrame, count,
+                                                              tableName.getNameAsString() + "数据总数",
+                                                              JOptionPane.INFORMATION_MESSAGE);
+
+                                enableAll();
+                                QueryTab.this.processBar.setIndeterminate(false);
+
+                            }
+                        });
+
+                    }
                 }
+
             }
         });
-        popupMenu.add(chckbxmntmNewCheckItem2);
+        popupMenu.add(countItem);
 
-        JButton button = new JButton("<html><font color=red>刷新</font></html>");
-        button.addMouseListener(new MouseAdapter() {
+        refreshTableButton = new JButton("<html><font color=red>刷新</font></html>");
+        refreshTableButton.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                button.setEnabled(false);
+                refreshTableButton.setEnabled(false);
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
                 initTableList(list);
-                button.setEnabled(true);
+                refreshTableButton.setEnabled(true);
             }
         });
-        tableListPanel.add(button, BorderLayout.NORTH);
+        tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();
         searchPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -266,13 +321,31 @@ public class QueryTab extends TabAbstract {
     }
 
     /**
+     * 启用所有可操作的hbase的控件
+     */
+    private void disableAll() {
+        list.setEnabled(false);
+        tab1_searchButton.setEnabled(false);
+        tab1_nextpage_button.setEnabled(false);
+        refreshTableButton.setEnabled(false);
+    }
+
+    /**
+     * 禁用所有可操作的hbase的控件
+     */
+    private void enableAll() {
+        list.setEnabled(true);
+        tab1_searchButton.setEnabled(true);
+        tab1_nextpage_button.setEnabled(true);
+        refreshTableButton.setEnabled(true);
+    }
+
+    /**
      * 查询
      * 
      * @author limin 2018年8月13日 下午4:24:15
      */
     class SelectEvent extends MouseAdapter {
-
-        private ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
 
         @Override
         public void mousePressed(MouseEvent e) {
@@ -284,8 +357,7 @@ public class QueryTab extends TabAbstract {
             if (tab1_searchButton.isEnabled()) {
                 return;
             }
-            // 查询期间禁止再次点击查询按钮，禁止切换表。并添加等待效果
-            list.setEnabled(false);
+            disableAll();
             QueryTab.this.processBar.setIndeterminate(true);
 
             threadPool.execute(new Runnable() {
@@ -344,8 +416,7 @@ public class QueryTab extends TabAbstract {
                         JOptionPane.showMessageDialog(QueryTab.this.jFrame, "请在右侧选择表", "提示",
                                                       JOptionPane.INFORMATION_MESSAGE);
                     }
-                    tab1_searchButton.setEnabled(true);
-                    list.setEnabled(true);
+                    enableAll();
                     QueryTab.this.processBar.setIndeterminate(false);
                 }
             });
@@ -370,7 +441,7 @@ public class QueryTab extends TabAbstract {
         @Override
         public void mouseReleased(MouseEvent e) {
             // 查询期间禁止再次点击查询按钮，禁止切换表。并添加等待效果
-            list.setEnabled(false);
+            disableAll();
             QueryTab.this.processBar.setIndeterminate(true);
 
             threadPool.execute(new Runnable() {
@@ -418,8 +489,7 @@ public class QueryTab extends TabAbstract {
 
                     HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
                     HandleCore.setPageInfomation(pageModel, bottom_message_label);
-                    tab1_nextpage_button.setEnabled(true);
-                    list.setEnabled(true);
+                    enableAll();
                     QueryTab.this.processBar.setIndeterminate(false);
                 }
             });
