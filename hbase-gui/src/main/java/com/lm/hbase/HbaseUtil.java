@@ -46,7 +46,7 @@ public class HbaseUtil {
         configuration.set("hbase.zookeeper.quorum", zkQuorum);
         configuration.set("hbase.master", hbaseMaster);
         configuration.set("zookeeper.znode.parent", znodeParent);
-        configuration.setInt("hbase.rpc.timeout", 5000);
+        configuration.setInt("hbase.rpc.timeout", 50000);
         configuration.setInt("hbase.client.operation.timeout", 10000);
         configuration.setInt("hbase.client.scanner.timeout.period", 200000);
         connection = ConnectionFactory.createConnection(configuration);
@@ -251,7 +251,7 @@ public class HbaseUtil {
                 scan.setStopRow(endRowKey);
             }
 
-            PageFilter pageFilter = new PageFilter(firstPage ? pageModel.getPageSize() : (pageModel.getPageSize() + 1));// 第二页包含第一页的最有一条数据，所以下一页要加+1
+            PageFilter pageFilter = new PageFilter(firstPage ? pageModel.getPageSize() : (pageModel.getPageSize() + 1));// 第二页包含第一页的第一条数据，所以下一页要加+1
             if (filterList != null) {
                 filterList.addFilter(pageFilter);
                 scan.setFilter(filterList);
@@ -272,7 +272,7 @@ public class HbaseUtil {
             List<Result> resultList = new ArrayList<Result>();
             int index = 0;
             for (Result rs : scanner.next(firstPage ? pageModel.getPageSize() : (pageModel.getPageSize() + 1))) {
-                if (!firstPage && index == 0) {// 第二页包含第一页的最有一条数据，所以这里要排除掉
+                if (!firstPage && index == 0) {// 第二页包含第一页的第一条数据，所以这里要排除掉
                     index++;
                     continue;
                 }
