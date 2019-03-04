@@ -12,11 +12,9 @@ import java.awt.event.MouseEvent;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
@@ -24,6 +22,7 @@ import javax.swing.border.EtchedBorder;
 import org.apache.hadoop.hbase.TableName;
 
 import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.StringUtil;
 
 public class CreateTab extends TabAbstract {
@@ -32,8 +31,8 @@ public class CreateTab extends TabAbstract {
     private JButton    tab3_create_table_button;
     private JTextArea  tab3_textArea;
 
-    public CreateTab(JFrame jFrame, JProgressBar processBar){
-        super(jFrame, processBar);
+    public CreateTab(HbaseGui window){
+        super(window);
     }
 
     @Override
@@ -76,7 +75,7 @@ public class CreateTab extends TabAbstract {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                JDialog dialog = new JDialog(CreateTab.this.jFrame, "添加列族", true);
+                JDialog dialog = new JDialog(getFrame(), "添加列族", true);
                 dialog.setSize(200, 50);
 
                 int windowWidth = dialog.getWidth(); // 获得窗口宽
@@ -161,39 +160,51 @@ public class CreateTab extends TabAbstract {
                                                                         "");
             int index = createStatement.indexOf("]");
             if (index == -1) {
-                JOptionPane.showMessageDialog(CreateTab.this.jFrame, "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
                 tab3_create_table_button.setEnabled(true);
                 return;
             }
             String tableName = createStatement.substring(1, index);
             if (StringUtil.isEmpty(tableName)) {
-                JOptionPane.showMessageDialog(CreateTab.this.jFrame, "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
                 tab3_create_table_button.setEnabled(true);
                 return;
             }
 
             String temp = createStatement.substring(index + 1);
             if (StringUtil.isEmpty(temp)) {
-                JOptionPane.showMessageDialog(CreateTab.this.jFrame, "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
                 tab3_create_table_button.setEnabled(true);
                 return;
             }
             String[] familys = temp.replaceAll("\\{", "").split("}");
             if (familys == null || familys.length == 0) {
-                JOptionPane.showMessageDialog(CreateTab.this.jFrame, "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
                 tab3_create_table_button.setEnabled(true);
                 return;
             }
 
             try {
                 HbaseUtil.createTable(TableName.valueOf(tableName), familys);
-                JOptionPane.showMessageDialog(CreateTab.this.jFrame, "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e2) {
-                JOptionPane.showMessageDialog(CreateTab.this.jFrame, e2.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), e2.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             }
 
             tab3_create_table_button.setEnabled(true);
         }
+
+    }
+
+    @Override
+    public void enableAll() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void disableAll() {
+        // TODO Auto-generated method stub
 
     }
 

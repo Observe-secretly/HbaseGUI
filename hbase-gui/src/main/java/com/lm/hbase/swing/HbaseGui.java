@@ -2,10 +2,17 @@ package com.lm.hbase.swing;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -20,9 +27,18 @@ import com.lm.hbase.tab.TabInterface;
 
 public class HbaseGui {
 
-    public JFrame       frmHbaseGui;
+    public JFrame                   parentJframe;
 
-    public JProgressBar processBar;
+    public ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
+
+    public JProgressBar             processBar;
+
+    public JButton                  stopButton;
+
+    /**
+     * 所有的tabs
+     */
+    private List<TabInterface>      tabs       = new ArrayList<>();
 
     /**
      * Launch the application.
@@ -62,37 +78,43 @@ public class HbaseGui {
      * @wbp.parser.entryPoint
      */
     public void initialize() {
-        frmHbaseGui = new JFrame();
-        frmHbaseGui.setTitle("Hbase Gui");
-        frmHbaseGui.setBounds(10, 10, 1400, 800);
-        frmHbaseGui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frmHbaseGui.getContentPane().setLayout(new BorderLayout(0, 0));
-        frmHbaseGui.setResizable(false);// 禁止拉边框拉长拉短
+        parentJframe = new JFrame();
+        parentJframe.setTitle("Hbase Gui");
+        parentJframe.setBounds(10, 10, 1400, 800);
+        parentJframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        parentJframe.getContentPane().setLayout(new BorderLayout(0, 0));
+        parentJframe.setResizable(false);// 禁止拉边框拉长拉短
 
         JPanel panel = new JPanel();
-        frmHbaseGui.getContentPane().add(panel, BorderLayout.SOUTH);
+        parentJframe.getContentPane().add(panel, BorderLayout.SOUTH);
 
+        // 初始化进度条
         processBar = new JProgressBar(JProgressBar.CENTER);
+
+        // 创建一个终止按钮
+        stopButton = new JButton("停止");
+        stopButton.addMouseListener(new StopEvent());
+
+        panel.add(stopButton);
         panel.add(processBar);
 
-        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-        tabbedPane.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-        frmHbaseGui.getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        JTabbedPane tabbedPanel = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPanel.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+        parentJframe.getContentPane().add(tabbedPanel, BorderLayout.CENTER);
 
-        TabInterface queryTab = new QueryTab(frmHbaseGui, processBar);
-        tabbedPane.addTab(queryTab.getTitle(), queryTab.getIcon(), queryTab.getComponent(), queryTab.getTip());
+        TabInterface queryTab = new QueryTab(this);
+        registerTab(queryTab, tabbedPanel);
 
-        TabInterface metaDataTab = new MetaDataTab(frmHbaseGui, processBar);
-        tabbedPane.addTab(metaDataTab.getTitle(), metaDataTab.getIcon(), metaDataTab.getComponent(),
-                          metaDataTab.getTip());
+        TabInterface metaDataTab = new MetaDataTab(this);
+        registerTab(metaDataTab, tabbedPanel);
 
-        TabInterface createTab = new CreateTab(frmHbaseGui, processBar);
-        tabbedPane.addTab(createTab.getTitle(), createTab.getIcon(), createTab.getComponent(), createTab.getTip());
+        TabInterface createTab = new CreateTab(this);
+        registerTab(createTab, tabbedPanel);
 
-        frmHbaseGui.setVisible(true);
+        parentJframe.setVisible(true);
 
         // 添加关闭事件
-        frmHbaseGui.addWindowListener(new WindowAdapter() {
+        parentJframe.addWindowListener(new WindowAdapter() {
 
             @Override
             public void windowClosing(WindowEvent e) {
@@ -105,6 +127,32 @@ public class HbaseGui {
             }
 
         });
+    }
+
+    private void registerTab(TabInterface tab, JTabbedPane panel) {
+        panel.addTab(tab.getTitle(), tab.getIcon(), tab.getComponent(), tab.getTip());
+        this.tabs.add(tab);
+    }
+
+    class StopEvent extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            // 终止正在跑任务的线程
+            if (!threadPool.isShutdown() || !threadPool.isTerminated()) {
+                threadPool.shutdownNow();
+                threadPool = Executors.newSingleThreadScheduledExecutor();
+            }
+
+            // 禁用进度条
+            stopButton.setEnabled(false);
+            processBar.setIndeterminate(false);
+
+            // 解禁tab被禁用的按钮
+            for (TabInterface tab : tabs) {
+                tab.enableAll();
+            }
+        }
 
     }
 

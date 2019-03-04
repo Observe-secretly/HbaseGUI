@@ -13,12 +13,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -31,6 +29,7 @@ import org.apache.hadoop.hbase.TableName;
 
 import com.alibaba.fastjson.JSON;
 import com.lm.hbase.swing.HandleCore;
+import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.StringUtil;
 
 public class MetaDataTab extends TabAbstract {
@@ -40,8 +39,8 @@ public class MetaDataTab extends TabAbstract {
     private JScrollPane      tableScroll;
     private JButton          saveButton;
 
-    public MetaDataTab(JFrame jFrame, JProgressBar processBar){
-        super(jFrame, processBar);
+    public MetaDataTab(HbaseGui window){
+        super(window);
     }
 
     @Override
@@ -147,7 +146,7 @@ public class MetaDataTab extends TabAbstract {
 
                 String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
                 HandleCore.setValue(propertiesKey, JSON.toJSONString(map));
-                JOptionPane.showMessageDialog(MetaDataTab.this.jFrame, "保存成功", "提示", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(getFrame(), "保存成功", "提示", JOptionPane.INFORMATION_MESSAGE);
 
             }
         });
@@ -162,8 +161,7 @@ public class MetaDataTab extends TabAbstract {
 
     @SuppressWarnings("unchecked")
     private void loadMataData(TableName tableName) {
-        list.setEnabled(false);
-        MetaDataTab.this.processBar.setIndeterminate(true);
+        startTask();
         threadPool.execute(new Runnable() {
 
             @Override
@@ -177,12 +175,21 @@ public class MetaDataTab extends TabAbstract {
                 } else {
                     HandleCore.reloadMetaTableFormat(tableName, contentTable);
                 }
-                list.setEnabled(true);
-                MetaDataTab.this.processBar.setIndeterminate(false);
+                stopTask();
 
             }
         });
 
+    }
+
+    @Override
+    public void enableAll() {
+        list.setEnabled(true);
+    }
+
+    @Override
+    public void disableAll() {
+        list.setEnabled(false);
     }
 
 }
