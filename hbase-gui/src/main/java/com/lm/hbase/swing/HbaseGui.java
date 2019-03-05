@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import com.lm.hbase.HbaseUtil;
@@ -52,6 +53,8 @@ public class HbaseGui {
 
                 try {
                     // WebLookAndFeel.install();
+                    String lookAndFeel = "com.sun.java.swing.plaf.motif.MotifLookAndFeel";
+                    UIManager.setLookAndFeel(lookAndFeel);
 
                     com.lm.hbase.swing.SwingConstants.hbaseGui = new HbaseGui();
                 } catch (Exception e) {
@@ -93,6 +96,7 @@ public class HbaseGui {
 
         // 创建一个终止按钮
         stopButton = new JButton("停止");
+        stopButton.setEnabled(false);
         stopButton.addMouseListener(new StopEvent());
 
         panel.add(stopButton);

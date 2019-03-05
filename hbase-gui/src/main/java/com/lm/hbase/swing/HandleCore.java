@@ -185,7 +185,6 @@ public class HandleCore {
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
-        table.updateUI();
         table.scrollRectToVisible(rect);
     }
 
@@ -258,7 +257,7 @@ public class HandleCore {
             rowIndex++;
         }
 
-        DefaultTableModel tableModel = new DefaultTableModel();
+        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
         tableModel.setDataVector(rowData, columnNameSet.toArray());
 
         table.setModel(tableModel);
@@ -266,7 +265,6 @@ public class HandleCore {
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
-        table.updateUI();
         table.scrollRectToVisible(rect);
 
     }
@@ -283,7 +281,7 @@ public class HandleCore {
             index++;
         }
 
-        DefaultTableModel tableModel = new DefaultTableModel();
+        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
         tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
 
         table.setModel(tableModel);
@@ -291,7 +289,6 @@ public class HandleCore {
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
-        table.updateUI();
         table.scrollRectToVisible(rect);
 
     }
@@ -349,7 +346,7 @@ public class HandleCore {
             index++;
         }
 
-        DefaultTableModel tableModel = new DefaultTableModel();
+        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
         tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
 
         table.setModel(tableModel);
@@ -357,7 +354,6 @@ public class HandleCore {
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
-        table.updateUI();
         table.scrollRectToVisible(rect);
 
     }

@@ -413,7 +413,6 @@ public class QueryTab extends TabAbstract {
 
                         pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, filterList,
                                                                      version, pageModel, true, getMetaData());
-                        textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
                         HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
                         HandleCore.setPageInfomation(pageModel, bottom_message_label);
 
@@ -481,8 +480,6 @@ public class QueryTab extends TabAbstract {
 
                     pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, null, version,
                                                                  pageModel, false, getMetaData());
-
-                    textField_tab1_start_rowkey.setText(new String(pageModel.getPageEndRowKey()));
 
                     HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
                     HandleCore.setPageInfomation(pageModel, bottom_message_label);
