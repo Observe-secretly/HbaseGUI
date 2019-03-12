@@ -24,6 +24,7 @@ import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
 
 import org.apache.hadoop.hbase.TableName;
 
@@ -167,7 +168,8 @@ public class MetaDataTab extends TabAbstract {
             @Override
             public void run() {
                 // 清空table
-                contentTable.setModel(null);
+                DefaultTableModel tableModel = (DefaultTableModel) contentTable.getModel();
+                tableModel.setRowCount(0);
                 // 1、 优先从映射文件中查询元数据
                 // 2、查询不到则去Hbase查询表结构，得到所有的字段。所有字段默认是string类型
                 String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;

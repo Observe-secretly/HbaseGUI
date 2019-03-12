@@ -41,6 +41,8 @@ public class HbaseUtil {
     private static Connection connection = null;
 
     public static void init(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent) throws IOException {
+        System.out.println(zkQuorum);
+        System.out.println("初始化Hbase链接...");
         Configuration configuration = HBaseConfiguration.create();
         configuration.set("hbase.zookeeper.property.clientPort", zkPort);
         configuration.set("hbase.zookeeper.quorum", zkQuorum);
@@ -50,6 +52,7 @@ public class HbaseUtil {
         configuration.setInt("hbase.client.operation.timeout", 10000);
         configuration.setInt("hbase.client.scanner.timeout.period", 200000);
         connection = ConnectionFactory.createConnection(configuration);
+        System.out.println("Hbase初始化成功");
 
     }
 
