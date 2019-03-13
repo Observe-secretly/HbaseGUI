@@ -6,11 +6,15 @@ import java.awt.FlowLayout;
 import java.awt.SystemColor;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
@@ -24,6 +28,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.hadoop.hbase.TableName;
@@ -39,26 +45,35 @@ import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.Chooser;
 import com.lm.hbase.util.DateUtil;
+import com.lm.hbase.util.HbaseQualifier;
 import com.lm.hbase.util.StringUtil;
 
 public class QueryTab extends TabAbstract {
 
-    private JList<TableName>      list              = null;
-    private JButton               refreshTableButton;
-    private JButton               tab1_searchButton = new JButton("查询");
-    private JButton               deleteButton;
-    private JTextField            textField_tab1_version;
-    private JTextField            textField_tab1_start_rowkey;
-    private JTextField            textField_tab1_pageSize;
-    private JTextField            textField_tab1_rowKey_prefix;
-    private JButton               tab1_nextpage_button;
-    private JTable                contentTable;
-    private JScrollPane           tableScroll;
-    private JTextField            textField_tab1_min_stamp;
-    private JTextField            textField_tab1_max_stamp;
-    private JLabel                bottom_message_label;
+    private final static byte[]       COMBOBOX_DEFAULT_VALUE = "--".getBytes();
 
-    private static HBasePageModel pageModel;
+    private JList<TableName>          list                   = null;
+    private JButton                   refreshTableButton;
+    private JButton                   searchButton           = new JButton("查询");
+    private JButton                   deleteButton;
+    private JTextField                textField_tab1_version;
+    private DefaultValueTextField     textField_tab1_start_rowkey;
+    private JTextField                textField_tab1_pageSize;
+    private DefaultValueTextField     textField_tab1_rowKey_prefix;
+    private JButton                   tab1_nextpage_button;
+    private JTable                    contentTable;
+    private JScrollPane               tableScroll;
+    private JTextField                textField_tab1_min_stamp;
+    private JTextField                textField_tab1_max_stamp;
+    private JLabel                    bottom_message_label;
+
+    // item filter
+    private JComboBox<HbaseQualifier> fieldsComboBox;
+    private JLabel                    fieldTypeLabel;
+    private JComboBox<String>         filterComboBox;
+    private JTextField                filterValueTextField;
+
+    private static HBasePageModel     pageModel;
 
     public QueryTab(HbaseGui window){
         super(window);
@@ -98,116 +113,19 @@ public class QueryTab extends TabAbstract {
         addPopup(list, popupMenu);
 
         JMenuItem removeTableItem = new JMenuItem("删除表");
-        removeTableItem.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                TableName tableName = list.getSelectedValue();
-                if (JOptionPane.showConfirmDialog(getFrame(), "确定删除" + tableName.getNameAsString() + "表吗?") == 0) {
-                    if (tableName != null) {
-
-                        getSingleThreadPool().execute(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                startTask();
-
-                                HbaseUtil.dropTable(tableName);
-                                JOptionPane.showMessageDialog(getFrame(), "删除成功", "提示",
-                                                              JOptionPane.INFORMATION_MESSAGE);
-
-                                stopTask();
-
-                            }
-                        });
-
-                        initTableList(list);
-
-                    }
-                }
-
-            }
-        });
         popupMenu.add(removeTableItem);
 
         JMenuItem truncateTableItem = new JMenuItem("清空表");
-        truncateTableItem.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                TableName tableName = list.getSelectedValue();
-                if (JOptionPane.showConfirmDialog(getFrame(), "确定清空" + tableName.getNameAsString() + "表吗?") == 0) {
-                    if (tableName != null) {
-                        getSingleThreadPool().execute(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                startTask();
-
-                                HbaseUtil.truncateTable(tableName, true);
-                                JOptionPane.showMessageDialog(getFrame(), "已清空", "提示", JOptionPane.INFORMATION_MESSAGE);
-                                initTableList(list);
-
-                                stopTask();
-
-                            }
-                        });
-
-                    }
-                }
-
-            }
-        });
         popupMenu.add(truncateTableItem);
 
         // 添加一个分割线
         popupMenu.addSeparator();
 
         JMenuItem countItem = new JMenuItem("统计总数");
-        countItem.addMouseListener(new MouseAdapter() {
 
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                TableName tableName = list.getSelectedValue();
-
-                if (JOptionPane.showConfirmDialog(getFrame(), "确定进行吗？大表可能需要较长时间统计") == 0) {
-                    if (tableName != null) {
-                        getSingleThreadPool().execute(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                startTask();
-
-                                long count = HbaseUtil.rowCount(tableName);
-                                JOptionPane.showMessageDialog(getFrame(), count, tableName.getNameAsString() + "数据总数",
-                                                              JOptionPane.INFORMATION_MESSAGE);
-
-                                stopTask();
-
-                            }
-                        });
-
-                    }
-                }
-
-            }
-        });
         popupMenu.add(countItem);
 
         refreshTableButton = new JButton("<html><font color=red>刷新</font></html>");
-        refreshTableButton.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                refreshTableButton.setEnabled(false);
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                initTableList(list);
-                refreshTableButton.setEnabled(true);
-            }
-        });
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();
@@ -215,71 +133,96 @@ public class QueryTab extends TabAbstract {
         select.add(searchPanel, BorderLayout.CENTER);
         searchPanel.setLayout(new BorderLayout(0, 0));
 
+        // filtersPanel 位于table上侧 start
         JPanel filtersPanel = new JPanel();
         filtersPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         searchPanel.add(filtersPanel, BorderLayout.NORTH);
         filtersPanel.setLayout(new BorderLayout(0, 0));
+        // filtersPanel 位于table上侧 end
 
-        JPanel filterCenterPanel = new JPanel();
-        filtersPanel.add(filterCenterPanel, BorderLayout.CENTER);
-        filterCenterPanel.setLayout(new FlowLayout());
+        // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 start
+        JPanel filterWestPanel = new JPanel();
+        filtersPanel.add(filterWestPanel, BorderLayout.WEST);
+        filterWestPanel.setLayout(new FlowLayout());
 
         deleteButton = new JButton("删除");
-        filterCenterPanel.add(deleteButton);
+        filterWestPanel.add(deleteButton);
         deleteButton.addMouseListener(new DeleteEvent());
+        // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 end
 
-        JLabel startRowkeylabel = new JLabel("StartRowKey:");
-        filterCenterPanel.add(startRowkeylabel);
+        // filterNorthPanel 位于filtersPanel的中间，包含rowkey条件以及常用的查询条件查询 start
+        JPanel filterNorthPanel = new JPanel();
+        filtersPanel.add(filterNorthPanel, BorderLayout.CENTER);
+        filterNorthPanel.setLayout(new FlowLayout());
 
-        textField_tab1_start_rowkey = new JTextField();
-        filterCenterPanel.add(textField_tab1_start_rowkey);
-        textField_tab1_start_rowkey.setColumns(15);
+        textField_tab1_start_rowkey = new DefaultValueTextField("起始Rowkey");
+        filterNorthPanel.add(textField_tab1_start_rowkey);
+        textField_tab1_start_rowkey.setColumns(20);
+
+        textField_tab1_rowKey_prefix = new DefaultValueTextField("Rowkey前缀");
+        filterNorthPanel.add(textField_tab1_rowKey_prefix);
+        textField_tab1_rowKey_prefix.setColumns(10);
 
         JLabel versionLabel = new JLabel("版本号:");
-        filterCenterPanel.add(versionLabel);
+        filterNorthPanel.add(versionLabel);
 
         textField_tab1_version = new JTextField();
         textField_tab1_version.setToolTipText("默认查询最新版本");
-        filterCenterPanel.add(textField_tab1_version);
+        filterNorthPanel.add(textField_tab1_version);
         textField_tab1_version.setColumns(5);
         textField_tab1_version.setText(Integer.MAX_VALUE + "");
 
-        JLabel label_1 = new JLabel("分页大小:");
-        filterCenterPanel.add(label_1);
+        JLabel label_1 = new JLabel("分页:");
+        filterNorthPanel.add(label_1);
 
         textField_tab1_pageSize = new JTextField();
         textField_tab1_pageSize.setText("10");
-        filterCenterPanel.add(textField_tab1_pageSize);
-        textField_tab1_pageSize.setColumns(5);
-
-        JLabel label_rowKey_prefix = new JLabel("RowKey Prefix:");
-        filterCenterPanel.add(label_rowKey_prefix);
-
-        textField_tab1_rowKey_prefix = new JTextField();
-        filterCenterPanel.add(textField_tab1_rowKey_prefix);
-        textField_tab1_rowKey_prefix.setColumns(10);
+        filterNorthPanel.add(textField_tab1_pageSize);
+        textField_tab1_pageSize.setColumns(3);
 
         JLabel timeScopeLabel = new JLabel("Time:");
-        filterCenterPanel.add(timeScopeLabel);
+        filterNorthPanel.add(timeScopeLabel);
 
         textField_tab1_min_stamp = new JTextField();
         Chooser.getInstance().register(textField_tab1_min_stamp);
-        filterCenterPanel.add(textField_tab1_min_stamp);
+        filterNorthPanel.add(textField_tab1_min_stamp);
         textField_tab1_min_stamp.setColumns(10);
 
         textField_tab1_max_stamp = new JTextField();
         Chooser.getInstance().register(textField_tab1_max_stamp);
-        filterCenterPanel.add(textField_tab1_max_stamp);
+        filterNorthPanel.add(textField_tab1_max_stamp);
         textField_tab1_max_stamp.setColumns(10);
 
-        JPanel filterEastPanel = new JPanel();
-        FlowLayout fl_filterEastPanel = (FlowLayout) filterEastPanel.getLayout();
-        fl_filterEastPanel.setAlignment(FlowLayout.RIGHT);
-        filtersPanel.add(filterEastPanel, BorderLayout.EAST);
+        searchButton.addMouseListener(new SelectEvent());
+        filterNorthPanel.add(searchButton);
+        // filterNorthPanel 位于filtersPanel的中间，包含rowkey条件以及常用的查询条件查询 end
 
-        tab1_searchButton.addMouseListener(new SelectEvent());
-        filterEastPanel.add(tab1_searchButton);
+        // filterSouthPanel 位于filtersPanel的最下面 包含了条件查询filter start
+        JPanel filterSouthPanel = new JPanel();
+        filterSouthPanel.setLayout(new BorderLayout(0, 0));
+        filtersPanel.add(filterSouthPanel, BorderLayout.SOUTH);
 
+        JPanel itemFilterWestPanel = new JPanel();
+        itemFilterWestPanel.setLayout(new FlowLayout());
+        filterSouthPanel.add(itemFilterWestPanel, BorderLayout.WEST);
+
+        fieldsComboBox = new JComboBox<>();
+        fieldsComboBox.addItem(new HbaseQualifier(COMBOBOX_DEFAULT_VALUE, COMBOBOX_DEFAULT_VALUE, "--"));
+        itemFilterWestPanel.add(fieldsComboBox);
+
+        fieldTypeLabel = new JLabel("--");
+        itemFilterWestPanel.add(fieldTypeLabel);
+
+        filterComboBox = new JComboBox<>();
+        filterComboBox.addItem("--");
+        itemFilterWestPanel.add(filterComboBox);
+
+        filterValueTextField = new JTextField();
+        filterSouthPanel.add(filterValueTextField, BorderLayout.CENTER);
+        // filterSouthPanel 位于filtersPanel的最下面 包含了条件查询filter end
+        // 渲染字段过滤条件查询filter end
+
+        // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 start
         JPanel searchSouthPanel = new JPanel();
         searchSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         searchPanel.add(searchSouthPanel, BorderLayout.SOUTH);
@@ -292,31 +235,160 @@ public class QueryTab extends TabAbstract {
         tab1_nextpage_button = new JButton("加载下一页");
         tab1_nextpage_button.addMouseListener(new NextPage());
         searchSouthPanel.add(tab1_nextpage_button, BorderLayout.EAST);
+        // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 end
 
         contentTable = new JTable();
         tableScroll = new JScrollPane(contentTable);
         searchPanel.add(tableScroll, BorderLayout.CENTER);
 
-        // 自动调整表格宽度
-        contentTable.addComponentListener(new ComponentAdapter() {
+        /**
+         * 监听代码块 start
+         */
+        {
+            // 删除表
+            removeTableItem.addMouseListener(new MouseAdapter() {
 
-            @Override
-            public void componentResized(ComponentEvent e) {
-                resizeTable(true, contentTable, tableScroll);
-            }
-        });
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    TableName tableName = list.getSelectedValue();
+                    if (JOptionPane.showConfirmDialog(getFrame(), "确定删除" + tableName.getNameAsString() + "表吗?") == 0) {
+                        if (tableName != null) {
 
-        contentTable.addMouseListener(new MouseAdapter() {
+                            getSingleThreadPool().execute(new Runnable() {
 
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (contentTable.getSelectedRowCount() == 0) {
-                    deleteButton.setEnabled(false);
-                } else {
-                    deleteButton.setEnabled(true);
+                                @Override
+                                public void run() {
+                                    startTask();
+
+                                    HbaseUtil.dropTable(tableName);
+                                    JOptionPane.showMessageDialog(getFrame(), "删除成功", "提示",
+                                                                  JOptionPane.INFORMATION_MESSAGE);
+
+                                    stopTask();
+
+                                }
+                            });
+
+                            initTableList(list);
+
+                        }
+                    }
+
                 }
-            }
-        });
+            });
+
+            // 刷新
+            refreshTableButton.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    refreshTableButton.setEnabled(false);
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    initTableList(list);
+                    refreshTableButton.setEnabled(true);
+                }
+            });
+
+            // 统计总数
+            countItem.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    TableName tableName = list.getSelectedValue();
+
+                    if (JOptionPane.showConfirmDialog(getFrame(), "确定进行吗？大表可能需要较长时间统计") == 0) {
+                        if (tableName != null) {
+                            getSingleThreadPool().execute(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    startTask();
+
+                                    long count = HbaseUtil.rowCount(tableName);
+                                    JOptionPane.showMessageDialog(getFrame(), count,
+                                                                  tableName.getNameAsString() + "数据总数",
+                                                                  JOptionPane.INFORMATION_MESSAGE);
+
+                                    stopTask();
+
+                                }
+                            });
+
+                        }
+                    }
+
+                }
+            });
+
+            // 清空
+            truncateTableItem.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    TableName tableName = list.getSelectedValue();
+                    if (JOptionPane.showConfirmDialog(getFrame(), "确定清空" + tableName.getNameAsString() + "表吗?") == 0) {
+                        if (tableName != null) {
+                            getSingleThreadPool().execute(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    startTask();
+
+                                    HbaseUtil.truncateTable(tableName, true);
+                                    JOptionPane.showMessageDialog(getFrame(), "已清空", "提示",
+                                                                  JOptionPane.INFORMATION_MESSAGE);
+                                    initTableList(list);
+
+                                    stopTask();
+
+                                }
+                            });
+
+                        }
+                    }
+
+                }
+            });
+
+            // 自动调整表格宽度
+            contentTable.addComponentListener(new ComponentAdapter() {
+
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    resizeTable(true, contentTable, tableScroll);
+                }
+            });
+
+            // 选中表格的行时，控制删除是否需要显示
+            contentTable.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (contentTable.getSelectedRowCount() == 0) {
+                        deleteButton.setEnabled(false);
+                    } else {
+                        deleteButton.setEnabled(true);
+                    }
+                }
+            });
+
+            // 选中hbase表时的监听
+            list.addListSelectionListener(new ListSelectionListener() {
+
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (!e.getValueIsAdjusting()) {
+                        loadMataData(list.getSelectedValue());
+                    }
+
+                }
+            });
+
+        }
+        // end
 
         // 初始化表
         initTableList(list);
@@ -330,7 +402,7 @@ public class QueryTab extends TabAbstract {
     @Override
     public void disableAll() {
         list.setEnabled(false);
-        tab1_searchButton.setEnabled(false);
+        searchButton.setEnabled(false);
         tab1_nextpage_button.setEnabled(false);
         refreshTableButton.setEnabled(false);
     }
@@ -341,9 +413,42 @@ public class QueryTab extends TabAbstract {
     @Override
     public void enableAll() {
         list.setEnabled(true);
-        tab1_searchButton.setEnabled(true);
+        searchButton.setEnabled(true);
         tab1_nextpage_button.setEnabled(true);
         refreshTableButton.setEnabled(true);
+    }
+
+    private void loadMataData(TableName tableName) {
+        startTask();
+        getSingleThreadPool().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
+                String cacheMetaData = HandleCore.getStringValue(propertiesKey);
+
+                List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
+                // 如果存在元数据则替换类型
+                if (!StringUtil.isEmpty(cacheMetaData)) {
+                    Map<String, String> metaData = JSON.parseObject(cacheMetaData, Map.class);
+                    for (HbaseQualifier item : qualifierList) {
+                        if (!StringUtil.isEmpty(metaData.get(item.getDisplayName()))) {
+                            item.setType(metaData.get(item.getDisplayName()));
+                        }
+                    }
+                }
+                // 清空fieldsComboBox
+                fieldsComboBox.removeAllItems();
+                // 渲染条件
+                for (HbaseQualifier hbaseQualifier : qualifierList) {
+                    fieldsComboBox.addItem(hbaseQualifier);
+                }
+
+                stopTask();
+
+            }
+        });
+
     }
 
     /**
@@ -355,12 +460,12 @@ public class QueryTab extends TabAbstract {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            tab1_searchButton.setEnabled(false);
+            searchButton.setEnabled(false);
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            if (tab1_searchButton.isEnabled()) {
+            if (searchButton.isEnabled()) {
                 return;
             }
             startTask();
@@ -545,6 +650,45 @@ public class QueryTab extends TabAbstract {
             typeMapping = JSON.parseObject(mappingStr, Map.class);
         }
         return typeMapping;
+    }
+
+}
+
+class DefaultValueTextField extends JTextField {
+
+    private static final long serialVersionUID = -8757598274181885964L;
+    private String            defaultShowText;
+
+    public DefaultValueTextField(String defaultShowText){
+        this.defaultShowText = "* " + defaultShowText;
+        setText(this.defaultShowText);
+    }
+
+    {
+        this.addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (StringUtil.isEmpty(getText())) {
+                    setText(defaultShowText);
+                }
+
+            }
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                setText(null);
+            }
+        });
+    }
+
+    @Override
+    public String getText() {
+        String text = super.getText();
+        if (text.startsWith("* ")) {
+            return null;
+        }
+        return text;
     }
 
 }

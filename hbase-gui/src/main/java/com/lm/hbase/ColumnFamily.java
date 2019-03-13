@@ -5,25 +5,30 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.lm.hbase.util.StringUtil;
+import org.apache.hadoop.hbase.util.Bytes;
+
+import com.lm.hbase.util.QualifierValue;
 
 public class ColumnFamily {
 
-    private LinkedHashMap<String, String> columns         = new LinkedHashMap<>();
+    private LinkedHashMap<byte[], QualifierValue> columns         = new LinkedHashMap<>();
 
-    private String                        familyName;
+    private String                                familyName;
 
-    private int                           cursor          = 0;
+    private byte[]                                familyNameBytes;
 
-    private QualifierColumn               qualifierColumn = null;
+    private int                                   cursor          = 0;
+
+    private QualifierColumn                       qualifierColumn = null;
 
     /**
      * 设置列族名称
      * 
      * @param familyName
      */
-    public ColumnFamily(String familyName){
-        this.familyName = familyName;
+    public ColumnFamily(byte[] familyNameBytes){
+        this.familyName = Bytes.toString(familyNameBytes);
+        this.familyNameBytes = familyNameBytes;
     }
 
     /**
@@ -31,7 +36,7 @@ public class ColumnFamily {
      * 
      * @return
      */
-    public String get() {
+    public QualifierValue get() {
         return columns.get(null);
     }
 
@@ -41,7 +46,7 @@ public class ColumnFamily {
      * @param qualifier
      * @return
      */
-    public String get(String qualifier) {
+    public QualifierValue get(byte[] qualifier) {
         return columns.get(qualifier);
     }
 
@@ -51,8 +56,8 @@ public class ColumnFamily {
      * @param qualifier 列修饰符(可以理解成二级列名)
      * @param value 值
      */
-    public void add(String qualifier, String value) {
-        if (StringUtil.isEmpty(qualifier)) {
+    public void add(byte[] qualifier, QualifierValue value) {
+        if (qualifier == null || qualifier.length == 0) {
             qualifier = null;
         }
         this.columns.put(qualifier, value);
@@ -71,14 +76,14 @@ public class ColumnFamily {
      * @return 返回-1时代表已经取尽。返回1时代表取到了当前游标所在的值
      */
     public int hasNext() {
-        Iterator<Entry<String, String>> iterator = columns.entrySet().iterator();
+        Iterator<Entry<byte[], QualifierValue>> iterator = columns.entrySet().iterator();
 
         int index = 0;
         while (iterator.hasNext()) {
-            Map.Entry<String, String> entry = iterator.next();
+            Map.Entry<byte[], QualifierValue> entry = iterator.next();
             if (index == cursor) {
-                qualifierColumn = new QualifierColumn(entry.getKey() == null ? null : entry.getKey().getBytes(),
-                                                      entry.getValue() == null ? null : entry.getValue().getBytes());
+                qualifierColumn = new QualifierColumn(entry.getKey() == null ? null : entry.getKey(),
+                                                      entry.getValue() == null ? null : entry.getValue().getQualifier());
                 cursor++;
                 return 1;
             }
@@ -115,7 +120,7 @@ public class ColumnFamily {
         };
     }
 
-    public Map<String, String> getColumns() {
+    public Map<byte[], QualifierValue> getColumns() {
         return columns;
     }
 
@@ -123,14 +128,18 @@ public class ColumnFamily {
         return familyName;
     }
 
+    public byte[] getFamilyNameBytes() {
+        return familyNameBytes;
+    }
+
     @Override
     public String toString() {
         StringBuilder rowString = new StringBuilder();
-        Iterator<Entry<String, String>> iterator = columns.entrySet().iterator();
+        Iterator<Entry<byte[], QualifierValue>> iterator = columns.entrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry<String, String> entry = iterator.next();
-            rowString.append("{" + (StringUtil.isEmpty(entry.getKey()) ? "NULL" : entry.getKey()) + ":"
-                             + (StringUtil.isEmpty(entry.getValue()) ? "NULL" : entry.getValue()) + "}");
+            Map.Entry<byte[], QualifierValue> entry = iterator.next();
+            rowString.append("{" + (entry.getKey() == null ? "NULL" : Bytes.toString(entry.getKey())) + ":"
+                             + (entry.getValue() == null ? "NULL" : entry.getValue().getDisplayValue()) + "}");
         }
         return rowString.toString();
     }

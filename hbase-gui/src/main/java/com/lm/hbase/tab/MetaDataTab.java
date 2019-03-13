@@ -9,8 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.JButton;
 import javax.swing.JList;
@@ -158,12 +156,10 @@ public class MetaDataTab extends TabAbstract {
         return panel;
     }
 
-    private ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
-
     @SuppressWarnings("unchecked")
     private void loadMataData(TableName tableName) {
         startTask();
-        threadPool.execute(new Runnable() {
+        getSingleThreadPool().execute(new Runnable() {
 
             @Override
             public void run() {

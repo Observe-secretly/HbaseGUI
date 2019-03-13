@@ -5,9 +5,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hadoop.hbase.util.Bytes;
+
+import com.lm.hbase.util.QualifierValue;
+
 public class Row {
 
-    private LinkedHashMap<String, ColumnFamily> columnFamilys = new LinkedHashMap<String, ColumnFamily>();
+    private LinkedHashMap<byte[], ColumnFamily> columnFamilys = new LinkedHashMap<byte[], ColumnFamily>();
 
     private String                              rowKey;
 
@@ -15,7 +19,7 @@ public class Row {
         this.rowKey = rowKey;
     }
 
-    public void add(String columnFamilyName, String qualifier, String value) {
+    public void add(byte[] columnFamilyName, byte[] qualifier, QualifierValue value) {
         ColumnFamily columnFamily = columnFamilys.get(columnFamilyName);
         if (columnFamily == null) {
             columnFamily = new ColumnFamily(columnFamilyName);
@@ -31,21 +35,22 @@ public class Row {
         return rowKey;
     }
 
-    public ColumnFamily getColumnFamily(String columnFamilyName) {
+    public ColumnFamily getColumnFamily(byte[] columnFamilyName) {
         return columnFamilys.get(columnFamilyName);
     }
 
-    public LinkedHashMap<String, ColumnFamily> getColumnFamilys() {
+    public LinkedHashMap<byte[], ColumnFamily> getColumnFamilys() {
         return columnFamilys;
     }
 
     @Override
     public String toString() {
         StringBuilder rowString = new StringBuilder("RowKey:" + rowKey + "\n");
-        Iterator<Entry<String, ColumnFamily>> iterator = columnFamilys.entrySet().iterator();
+        Iterator<Entry<byte[], ColumnFamily>> iterator = columnFamilys.entrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry<String, ColumnFamily> entry = iterator.next();
-            rowString.append("ColumnFamilyName:" + entry.getKey() + ">" + entry.getValue().toString() + "\n");
+            Map.Entry<byte[], ColumnFamily> entry = iterator.next();
+            rowString.append("ColumnFamilyName:" + Bytes.toString(entry.getKey()) + ">" + entry.getValue().toString()
+                             + "\n");
         }
         rowString.append("<======================================>");
         return rowString.toString();

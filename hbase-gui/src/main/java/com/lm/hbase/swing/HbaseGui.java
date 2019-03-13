@@ -1,6 +1,7 @@
 package com.lm.hbase.swing;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -80,10 +81,11 @@ public class HbaseGui {
     public void initialize() {
         parentJframe = new JFrame();
         parentJframe.setTitle("Hbase Gui");
-        parentJframe.setBounds(10, 10, 1400, 800);
+        parentJframe.setBounds(10, 10, 1390, 800);
         parentJframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         parentJframe.getContentPane().setLayout(new BorderLayout(0, 0));
-        parentJframe.setResizable(false);// 禁止拉边框拉长拉短
+        parentJframe.setMinimumSize(new Dimension(1390, 400));
+        // parentJframe.setResizable(false);// 禁止拉边框拉长拉短
 
         JPanel panel = new JPanel();
         parentJframe.getContentPane().add(panel, BorderLayout.SOUTH);

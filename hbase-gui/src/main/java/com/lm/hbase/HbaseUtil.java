@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
@@ -29,6 +30,8 @@ import org.apache.hadoop.hbase.filter.FirstKeyOnlyFilter;
 import org.apache.hadoop.hbase.filter.PageFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
+import com.lm.hbase.util.HbaseQualifier;
+import com.lm.hbase.util.QualifierValue;
 import com.lm.hbase.util.StringUtil;
 
 /**
@@ -149,7 +152,7 @@ public class HbaseUtil {
             List<org.apache.hadoop.hbase.client.Row> puts = new ArrayList<>();
             for (Row row : rowList) {// 行
                 Put put = new Put(row.getRowKey().getBytes());
-                Iterator<Map.Entry<String, ColumnFamily>> iterator = row.getColumnFamilys().entrySet().iterator();
+                Iterator<Map.Entry<byte[], ColumnFamily>> iterator = row.getColumnFamilys().entrySet().iterator();
                 while (iterator.hasNext()) {// 列族
                     ColumnFamily columnFamily = iterator.next().getValue();
                     while (columnFamily.hasNext() != -1) {// 列
@@ -175,7 +178,7 @@ public class HbaseUtil {
         }
     }
 
-    private static String getValue(String type, byte[] b) {
+    private static String getDisplayValue(String type, byte[] b) {
         if (StringUtil.isEmpty(type)) {
             return Bytes.toString(b);
         }
@@ -282,11 +285,14 @@ public class HbaseUtil {
                 if (!rs.isEmpty()) {
                     Row row = new Row(Bytes.toString(rs.getRow()));
                     for (Cell c : rs.rawCells()) {
-                        String family = Bytes.toString(CellUtil.cloneFamily(c));
-                        String qualifier = Bytes.toString(CellUtil.cloneQualifier(c));
+                        byte[] family = CellUtil.cloneFamily(c);
+                        byte[] qualifier = CellUtil.cloneQualifier(c);
                         row.add(family, qualifier,
-                                getValue((typeMapping == null ? null : typeMapping.get(family + "." + qualifier)),
-                                         CellUtil.cloneValue(c)));
+                                new QualifierValue(qualifier,
+                                                   getDisplayValue((typeMapping == null ? null : typeMapping.get(family
+                                                                                                                 + "."
+                                                                                                                 + qualifier)),
+                                                                   CellUtil.cloneValue(c))));
                     }
                     resultList.add(rs);
                     pageModel.addRow(row);
@@ -493,6 +499,29 @@ public class HbaseUtil {
             }
         }
         return null;
+    }
+
+    public static List<HbaseQualifier> getTableQualifiers(TableName tableName) {
+        HBasePageModel dataModel = new HBasePageModel(1, tableName);
+        dataModel = HbaseUtil.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE, dataModel, true,
+                                                     null);
+
+        List<HbaseQualifier> result = new ArrayList<>();
+
+        for (int i = 0; i < dataModel.getRowList().size(); i++) {
+            Row row = dataModel.getRowList().get(i);
+            Set<Map.Entry<byte[], ColumnFamily>> columnSet = row.getColumnFamilys().entrySet();// 所有列族
+            for (Iterator iterator = columnSet.iterator(); iterator.hasNext();) {
+                Entry<byte[], ColumnFamily> entry = (Entry<byte[], ColumnFamily>) iterator.next();// 某个列族的所有列
+                for (Entry<byte[], QualifierValue> column : entry.getValue().getColumns().entrySet()) {
+                    result.add(new HbaseQualifier(entry.getKey(), column.getKey(), "string"));
+                }
+
+            }
+        }
+
+        return result;
+
     }
 
     public static ClusterStatus getClusterStatus() throws Exception {
