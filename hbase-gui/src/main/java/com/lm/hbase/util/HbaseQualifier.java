@@ -57,7 +57,7 @@ public class HbaseQualifier {
 
     @Override
     public String toString() {
-        return this.displayName + "|" + type;
+        return this.displayName;
     }
 
 }

@@ -289,9 +289,9 @@ public class HbaseUtil {
                         byte[] qualifier = CellUtil.cloneQualifier(c);
                         row.add(family, qualifier,
                                 new QualifierValue(qualifier,
-                                                   getDisplayValue((typeMapping == null ? null : typeMapping.get(family
+                                                   getDisplayValue((typeMapping == null ? null : typeMapping.get(Bytes.toString(family)
                                                                                                                  + "."
-                                                                                                                 + qualifier)),
+                                                                                                                 + Bytes.toString(qualifier))),
                                                                    CellUtil.cloneValue(c))));
                     }
                     resultList.add(rs);

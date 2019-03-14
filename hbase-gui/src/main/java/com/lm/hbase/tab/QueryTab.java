@@ -10,6 +10,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +35,15 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.filter.BinaryPrefixComparator;
+import org.apache.hadoop.hbase.filter.ByteArrayComparable;
+import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.PrefixFilter;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
+import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.alibaba.fastjson.JSON;
@@ -69,8 +77,9 @@ public class QueryTab extends TabAbstract {
 
     // item filter
     private JComboBox<HbaseQualifier> fieldsComboBox;
-    private JLabel                    fieldTypeLabel;
-    private JComboBox<String>         filterComboBox;
+    private JComboBox<String>         fieldTypeComboBox;
+    private JComboBox<String>         comparatorComboBox;
+    private JComboBox<String>         filterOperatorComboBox;
     private JTextField                filterValueTextField;
 
     private static HBasePageModel     pageModel;
@@ -210,12 +219,31 @@ public class QueryTab extends TabAbstract {
         fieldsComboBox.addItem(new HbaseQualifier(COMBOBOX_DEFAULT_VALUE, COMBOBOX_DEFAULT_VALUE, "--"));
         itemFilterWestPanel.add(fieldsComboBox);
 
-        fieldTypeLabel = new JLabel("--");
-        itemFilterWestPanel.add(fieldTypeLabel);
+        fieldTypeComboBox = new JComboBox<>();
+        fieldTypeComboBox.addItem("String");
+        fieldTypeComboBox.addItem("Int");
+        fieldTypeComboBox.addItem("Short");
+        fieldTypeComboBox.addItem("Long");
+        fieldTypeComboBox.addItem("Float");
+        fieldTypeComboBox.addItem("Double");
+        fieldTypeComboBox.addItem("BigDecimal");
+        itemFilterWestPanel.add(fieldTypeComboBox);
 
-        filterComboBox = new JComboBox<>();
-        filterComboBox.addItem("--");
-        itemFilterWestPanel.add(filterComboBox);
+        filterOperatorComboBox = new JComboBox<>();
+        filterOperatorComboBox.addItem("=");
+        filterOperatorComboBox.addItem(">");
+        filterOperatorComboBox.addItem("<");
+        filterOperatorComboBox.addItem("≥");
+        filterOperatorComboBox.addItem("≤");
+        filterOperatorComboBox.addItem("≠");
+        itemFilterWestPanel.add(filterOperatorComboBox);
+
+        comparatorComboBox = new JComboBox<>();
+        comparatorComboBox.addItem("(子串比较器)SubstringComparator");
+        comparatorComboBox.addItem("(前缀比较器)BinaryPrefixComparator");
+        comparatorComboBox.addItem("(正则比较器)RegexStringComparator");
+
+        itemFilterWestPanel.add(comparatorComboBox);
 
         filterValueTextField = new JTextField();
         filterSouthPanel.add(filterValueTextField, BorderLayout.CENTER);
@@ -451,6 +479,105 @@ public class QueryTab extends TabAbstract {
 
     }
 
+    private FilterList getFilter() {
+
+        List<Filter> fs = new ArrayList<>();
+
+        if (!StringUtil.isEmpty(filterValueTextField.getText())) {
+            HbaseQualifier colume = fieldsComboBox.getItemAt(fieldsComboBox.getSelectedIndex());
+
+            SingleColumnValueFilter filter = new SingleColumnValueFilter(colume.getFamily(), colume.getQualifier(),
+                                                                         getCompareOp(), getComparator());
+            fs.add(filter);
+        }
+        // 获取rowkey查询前缀（如果有）
+        String rowkeyPrefix = textField_tab1_rowKey_prefix.getText();
+
+        // 获取startRowKey
+        if (!StringUtil.isEmpty(rowkeyPrefix)) {
+            Filter filter = new PrefixFilter(rowkeyPrefix.getBytes());
+            fs.add(filter);
+        }
+
+        if (fs.size() != 0) {
+            FilterList filterList = new FilterList(fs);
+            return filterList;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * 根据选择操作转换成枚举
+     * 
+     * @return
+     */
+    private CompareOp getCompareOp() {
+
+        String operator = filterOperatorComboBox.getItemAt(filterOperatorComboBox.getSelectedIndex());
+        switch (operator) {
+            case "=":
+                return CompareOp.EQUAL;
+            case ">":
+                return CompareOp.GREATER;
+            case "<":
+                return CompareOp.LESS;
+            case "≥":
+                return CompareOp.GREATER_OR_EQUAL;
+            case "≤":
+                return CompareOp.LESS_OR_EQUAL;
+            case "≠":
+                return CompareOp.NOT_EQUAL;
+
+            default:
+                return null;
+        }
+
+    }
+
+    private byte[] fileValue(String type, String v) {
+
+        try {
+            switch (type.toLowerCase()) {
+                case "string":
+                    return Bytes.toBytes(v);
+                case "int":
+                    return Bytes.toBytes(Integer.parseInt(v));
+                case "short":
+                    return Bytes.toBytes(Short.parseShort(v));
+                case "long":
+                    return Bytes.toBytes(Long.parseLong(v));
+                case "float":
+                    return Bytes.toBytes(Float.parseFloat(v));
+                case "double":
+                    return Bytes.toBytes(Double.parseDouble(v));
+                case "bigdecimal":
+                    return Bytes.toBytes(new BigDecimal(v));
+                default:
+                    return Bytes.toBytes(v);
+            }
+
+        } catch (Exception e) {
+            return Bytes.toBytes(v);
+        }
+
+    }
+
+    private ByteArrayComparable getComparator() {
+        String type = fieldTypeComboBox.getItemAt(fieldTypeComboBox.getSelectedIndex());
+
+        String comparator = comparatorComboBox.getItemAt(comparatorComboBox.getSelectedIndex());
+
+        if (comparator.toLowerCase().endsWith(BinaryPrefixComparator.class.getSimpleName().toLowerCase())) {// 前缀比较器
+            return new BinaryPrefixComparator(fileValue(type, filterValueTextField.getText()));
+        } else if (comparator.toLowerCase().endsWith(SubstringComparator.class.getSimpleName().toLowerCase())) {// 字串比较器
+            return new SubstringComparator(filterValueTextField.getText());
+        } else if (comparator.toLowerCase().endsWith(RegexStringComparator.class.getSimpleName().toLowerCase())) {// 支持正则
+            return new RegexStringComparator(filterValueTextField.getText());
+        }
+        return null;
+    }
+
     /**
      * 查询
      * 
@@ -491,15 +618,6 @@ public class QueryTab extends TabAbstract {
                     } catch (Exception e2) {
                         textField_tab1_pageSize.setText(version.toString());
                     }
-                    // 获取rowkey查询前缀（如果有）
-                    String rowkeyPrefix = textField_tab1_rowKey_prefix.getText();
-                    FilterList filterList = null;
-                    // 获取startRowKey
-
-                    if (!StringUtil.isEmpty(rowkeyPrefix)) {
-                        Filter rowkeyFilter = new PrefixFilter(rowkeyPrefix.getBytes());
-                        filterList = new FilterList(rowkeyFilter);
-                    }
 
                     byte[] startRowKeyByte = null;
 
@@ -516,7 +634,7 @@ public class QueryTab extends TabAbstract {
                         pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
                                                                        Chooser.DEFAULTFORMAT));
 
-                        pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, filterList,
+                        pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, getFilter(),
                                                                      version, pageModel, true, getMetaData());
                         HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
                         HandleCore.setPageInfomation(pageModel, bottom_message_label);
@@ -583,8 +701,8 @@ public class QueryTab extends TabAbstract {
                     pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
                                                                    Chooser.DEFAULTFORMAT));
 
-                    pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, null, version,
-                                                                 pageModel, false, getMetaData());
+                    pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, getFilter(),
+                                                                 version, pageModel, false, getMetaData());
 
                     HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
                     HandleCore.setPageInfomation(pageModel, bottom_message_label);
