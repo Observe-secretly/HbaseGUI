@@ -8,6 +8,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
@@ -410,6 +412,22 @@ public class QueryTab extends TabAbstract {
                 public void valueChanged(ListSelectionEvent e) {
                     if (!e.getValueIsAdjusting()) {
                         loadMataData(list.getSelectedValue());
+                    }
+
+                }
+            });
+
+            // 监听筛选条件选择事件，用于动态调整类型下拉框
+            fieldsComboBox.addItemListener(new ItemListener() {
+
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    HbaseQualifier item = (HbaseQualifier) e.getItem();
+                    for (int i = 0; i < fieldTypeComboBox.getItemCount(); i++) {
+                        String type = fieldTypeComboBox.getItemAt(i);
+                        if (item.getType().equalsIgnoreCase(type)) {
+                            fieldTypeComboBox.setSelectedIndex(i);
+                        }
                     }
 
                 }
