@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -74,7 +75,7 @@ public class MetaDataTab extends TabAbstract {
         popupMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
         addPopup(list, popupMenu);
 
-        JButton refreshTableButton = new JButton("<html><font color=red>刷新</font></html>");
+        JButton refreshTableButton = new JButton("刷新", new ImageIcon("src/main/resources/img/Search.png"));
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel southPanel = new JPanel();
@@ -91,7 +92,7 @@ public class MetaDataTab extends TabAbstract {
         southPanel.add(searchSouthPanel, BorderLayout.SOUTH);
         searchSouthPanel.setLayout(new BorderLayout(0, 0));
 
-        saveButton = new JButton("保存元数据");
+        saveButton = new JButton("保存元数据", new ImageIcon("src/main/resources/img/save.png"));
         searchSouthPanel.add(saveButton, BorderLayout.EAST);
 
         /*

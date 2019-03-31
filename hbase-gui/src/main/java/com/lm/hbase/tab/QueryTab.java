@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -64,7 +65,8 @@ public class QueryTab extends TabAbstract {
 
     private JList<TableName>          list                   = null;
     private JButton                   refreshTableButton;
-    private JButton                   searchButton           = new JButton("查询");
+    private JButton                   searchButton           = new JButton("查询",
+                                                                           new ImageIcon("src/main/resources/img/Search.png"));
     private JButton                   deleteButton;
     private JTextField                textField_tab1_version;
     private DefaultValueTextField     textField_tab1_start_rowkey;
@@ -136,7 +138,7 @@ public class QueryTab extends TabAbstract {
 
         popupMenu.add(countItem);
 
-        refreshTableButton = new JButton("<html><font color=red>刷新</font></html>");
+        refreshTableButton = new JButton("刷新", new ImageIcon("src/main/resources/img/Search.png"));
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();
@@ -156,7 +158,7 @@ public class QueryTab extends TabAbstract {
         filtersPanel.add(filterWestPanel, BorderLayout.WEST);
         filterWestPanel.setLayout(new FlowLayout());
 
-        deleteButton = new JButton("删除");
+        deleteButton = new JButton("删除", new ImageIcon("src/main/resources/img/Garbage.png"));
         filterWestPanel.add(deleteButton);
         deleteButton.addMouseListener(new DeleteEvent());
         // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 end
@@ -183,7 +185,7 @@ public class QueryTab extends TabAbstract {
         textField_tab1_version.setColumns(5);
         textField_tab1_version.setText(Integer.MAX_VALUE + "");
 
-        JLabel label_1 = new JLabel("分页:");
+        JLabel label_1 = new JLabel(new ImageIcon("src/main/resources/img/Page.png"));
         filterNorthPanel.add(label_1);
 
         textField_tab1_pageSize = new JTextField();
@@ -191,7 +193,7 @@ public class QueryTab extends TabAbstract {
         filterNorthPanel.add(textField_tab1_pageSize);
         textField_tab1_pageSize.setColumns(3);
 
-        JLabel timeScopeLabel = new JLabel("Time:");
+        JLabel timeScopeLabel = new JLabel(new ImageIcon("src/main/resources/img/Calendar.png"));
         filterNorthPanel.add(timeScopeLabel);
 
         textField_tab1_min_stamp = new JTextField();
@@ -219,6 +221,7 @@ public class QueryTab extends TabAbstract {
 
         fieldsComboBox = new JComboBox<>();
         fieldsComboBox.addItem(new HbaseQualifier(COMBOBOX_DEFAULT_VALUE, COMBOBOX_DEFAULT_VALUE, "--"));
+        fieldsComboBox.setEditable(true);
         itemFilterWestPanel.add(fieldsComboBox);
 
         fieldTypeComboBox = new JComboBox<>();
@@ -262,7 +265,7 @@ public class QueryTab extends TabAbstract {
         bottom_message_label.setHorizontalAlignment(SwingConstants.CENTER);
         searchSouthPanel.add(bottom_message_label, BorderLayout.CENTER);
 
-        tab1_nextpage_button = new JButton("加载下一页");
+        tab1_nextpage_button = new JButton("加载下一页", new ImageIcon("src/main/resources/img/next.png"));
         tab1_nextpage_button.addMouseListener(new NextPage());
         searchSouthPanel.add(tab1_nextpage_button, BorderLayout.EAST);
         // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 end
@@ -418,20 +421,7 @@ public class QueryTab extends TabAbstract {
             });
 
             // 监听筛选条件选择事件，用于动态调整类型下拉框
-            fieldsComboBox.addItemListener(new ItemListener() {
-
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    HbaseQualifier item = (HbaseQualifier) e.getItem();
-                    for (int i = 0; i < fieldTypeComboBox.getItemCount(); i++) {
-                        String type = fieldTypeComboBox.getItemAt(i);
-                        if (item.getType().equalsIgnoreCase(type)) {
-                            fieldTypeComboBox.setSelectedIndex(i);
-                        }
-                    }
-
-                }
-            });
+            fieldsComboBox.addItemListener(new AutoAdapterFieldTypeItemListener());
 
         }
         // end
@@ -440,6 +430,17 @@ public class QueryTab extends TabAbstract {
         initTableList(list);
 
         return select;
+    }
+
+    private HbaseQualifier customField(String inputString) {
+        int sbIndex = inputString.indexOf(".");
+        if (sbIndex <= 0) {
+            // 输入的字段没有列族信息
+            return null;
+        }
+        return new HbaseQualifier(inputString.substring(0, sbIndex).getBytes(),
+                                  inputString.substring(sbIndex + 1).getBytes(), "string");
+
     }
 
     /**
@@ -501,8 +502,18 @@ public class QueryTab extends TabAbstract {
 
         List<Filter> fs = new ArrayList<>();
 
+        HbaseQualifier colume = fieldsComboBox.getItemAt(fieldsComboBox.getSelectedIndex());
+        if (colume == null && fieldsComboBox.getSelectedItem() != null
+            && fieldsComboBox.getSelectedItem() instanceof HbaseQualifier) {// 自定义字段的index是-1
+            colume = (HbaseQualifier) fieldsComboBox.getSelectedItem();
+        }
+
+        // 未输入条件或值
+        if (colume == null || StringUtil.isEmpty(filterValueTextField.getText())) {
+            return null;
+        }
+
         if (!StringUtil.isEmpty(filterValueTextField.getText())) {
-            HbaseQualifier colume = fieldsComboBox.getItemAt(fieldsComboBox.getSelectedIndex());
 
             SingleColumnValueFilter filter = new SingleColumnValueFilter(colume.getFamily(), colume.getQualifier(),
                                                                          getCompareOp(), getComparator());
@@ -786,6 +797,40 @@ public class QueryTab extends TabAbstract {
             typeMapping = JSON.parseObject(mappingStr, Map.class);
         }
         return typeMapping;
+    }
+
+    class AutoAdapterFieldTypeItemListener implements ItemListener {
+
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            HbaseQualifier item = null;
+            if (fieldsComboBox.getSelectedIndex() > 0 && fieldsComboBox.getSelectedItem() instanceof HbaseQualifier) {
+                item = (HbaseQualifier) fieldsComboBox.getSelectedItem();
+            } else if (fieldsComboBox.getSelectedIndex() == -1 && fieldsComboBox.getSelectedItem() != null) {// 自定义字段
+                String inputString = fieldsComboBox.getSelectedItem().toString();
+                item = customField(inputString);
+                // 添加到下拉框里面
+                if (item == null) {
+                    // TODO
+                    return;
+                }
+                // 由于addItem后会再次调用itemStateChanged 陷入死循环，所以先移除，等添加完自定义field到ComboBox后在添加监听
+                fieldsComboBox.removeItemListener(this);
+                fieldsComboBox.addItem(item);
+                fieldsComboBox.setSelectedIndex(fieldsComboBox.getItemCount() - 1);
+                fieldsComboBox.addItemListener(this);
+            } else {
+                return;
+            }
+
+            for (int i = 0; i < fieldTypeComboBox.getItemCount(); i++) {
+                String type = fieldTypeComboBox.getItemAt(i);
+                if (item.getType().equalsIgnoreCase(type)) {
+                    fieldTypeComboBox.setSelectedIndex(i);
+                }
+            }
+
+        }
     }
 
 }

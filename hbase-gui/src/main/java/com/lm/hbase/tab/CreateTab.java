@@ -10,6 +10,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -51,14 +52,14 @@ public class CreateTab extends TabAbstract {
         table.add(tableNorthPanel, BorderLayout.NORTH);
         tableNorthPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        JLabel label_2 = new JLabel("表名：");
+        JLabel label_2 = new JLabel(new ImageIcon("src/main/resources/img/table.png"));
         tableNorthPanel.add(label_2);
 
         textField_tab3_tableName = new JTextField();
         tableNorthPanel.add(textField_tab3_tableName);
         textField_tab3_tableName.setColumns(10);
 
-        JButton button_2 = new JButton("+ 添加列族");
+        JButton button_2 = new JButton("添加列族", new ImageIcon("src/main/resources/img/add.png"));
         tableNorthPanel.add(button_2);
 
         JPanel tableCenterPanel = new JPanel();
@@ -76,7 +77,7 @@ public class CreateTab extends TabAbstract {
             @Override
             public void mouseReleased(MouseEvent e) {
                 JDialog dialog = new JDialog(getFrame(), "添加列族", true);
-                dialog.setSize(200, 50);
+                dialog.setSize(200, 70);
 
                 int windowWidth = dialog.getWidth(); // 获得窗口宽
                 int windowHeight = dialog.getHeight(); // 获得窗口高
@@ -137,7 +138,7 @@ public class CreateTab extends TabAbstract {
         tableSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         table.add(tableSouthPanel, BorderLayout.SOUTH);
 
-        tab3_create_table_button = new JButton("创建");
+        tab3_create_table_button = new JButton("创建", new ImageIcon("src/main/resources/img/new.png"));
         tableSouthPanel.add(tab3_create_table_button);
         tab3_create_table_button.addMouseListener(new CreateTable());
 

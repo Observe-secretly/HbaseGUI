@@ -180,7 +180,7 @@ public class LoginGui extends JDialog {
                 buttonPane.add(testButton, "1, 2, left, top");
             }
             {
-                JButton cancelButton = new JButton("Cancel");
+                JButton cancelButton = new JButton("close");
                 cancelButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -192,7 +192,7 @@ public class LoginGui extends JDialog {
                 buttonPane.add(cancelButton, "4, 2, left, top");
             }
             {
-                JButton okButton = new JButton("OK");
+                JButton okButton = new JButton("connect");
                 okButton.addMouseListener(new MouseAdapter() {
 
                     @Override
