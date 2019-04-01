@@ -442,6 +442,7 @@ public class QueryTab extends TabAbstract {
         // 清空table
         contentTable.setModel(new DefaultTableModel());
         pageModel = null;
+        HandleCore.cleanPageInfomation(bottom_message_label);
     }
 
     private HbaseQualifier customField(String inputString) {

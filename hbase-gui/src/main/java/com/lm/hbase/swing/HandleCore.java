@@ -313,17 +313,16 @@ public class HandleCore {
             return;
         }
 
-        // long total = HbaseUtil.rowCount(dataModel.getTableName());
-
         StringBuilder info = new StringBuilder();
         info.append("第" + dataModel.getPageIndex() + "页  ");
         info.append(dataModel.getPageSize() + "条/页  ");
-        // info.append("共" + (int) Math.ceil(total / (float) dataModel.getPageSize()) + "页 ");
-        // info.append("总数：" + total);
         info.append("耗时：" + dataModel.getTimeIntervalBySecond());
 
         jlabel.setText(info.toString());
+    }
 
+    public static void cleanPageInfomation(JLabel jlabel) {
+        jlabel.setText("");
     }
 
 }
