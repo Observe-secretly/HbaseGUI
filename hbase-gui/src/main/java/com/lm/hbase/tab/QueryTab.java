@@ -374,6 +374,7 @@ public class QueryTab extends TabAbstract {
                                     JOptionPane.showMessageDialog(getFrame(), "已清空", "提示",
                                                                   JOptionPane.INFORMATION_MESSAGE);
                                     initTableList(list);
+                                    cleanTable();
 
                                     stopTask();
 
@@ -415,6 +416,8 @@ public class QueryTab extends TabAbstract {
                 public void valueChanged(ListSelectionEvent e) {
                     if (!e.getValueIsAdjusting()) {
                         loadMataData(list.getSelectedValue());
+                        // 清空table
+                        cleanTable();
                     }
 
                 }
@@ -430,6 +433,15 @@ public class QueryTab extends TabAbstract {
         initTableList(list);
 
         return select;
+    }
+
+    /**
+     * 清空tableUI
+     */
+    private void cleanTable() {
+        // 清空table
+        contentTable.setModel(new DefaultTableModel());
+        pageModel = null;
     }
 
     private HbaseQualifier customField(String inputString) {
@@ -701,12 +713,14 @@ public class QueryTab extends TabAbstract {
                     if (pageModel == null) {
                         JOptionPane.showMessageDialog(getFrame(), "请选择表并进行一次查询", "警告", JOptionPane.WARNING_MESSAGE);
                         tab1_nextpage_button.setEnabled(true);
+                        stopTask();
                         return;
                     }
 
                     if (pageModel.getQueryTotalCount() % pageModel.getPageSize() != 0) {
                         JOptionPane.showMessageDialog(getFrame(), "已经到了最后一页", "警告", JOptionPane.WARNING_MESSAGE);
                         tab1_nextpage_button.setEnabled(true);
+                        stopTask();
                         return;
                     }
 
