@@ -23,6 +23,7 @@ import javax.swing.border.EtchedBorder;
 import org.apache.hadoop.hbase.TableName;
 
 import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.common.Env;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.StringUtil;
 
@@ -52,14 +53,14 @@ public class CreateTab extends TabAbstract {
         table.add(tableNorthPanel, BorderLayout.NORTH);
         tableNorthPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        JLabel label_2 = new JLabel(new ImageIcon("src/main/resources/img/table.png"));
+        JLabel label_2 = new JLabel(new ImageIcon(Env.IMG_DIR + "table.png"));
         tableNorthPanel.add(label_2);
 
         textField_tab3_tableName = new JTextField();
         tableNorthPanel.add(textField_tab3_tableName);
         textField_tab3_tableName.setColumns(10);
 
-        JButton button_2 = new JButton("添加列族", new ImageIcon("src/main/resources/img/add.png"));
+        JButton button_2 = new JButton("添加列族", new ImageIcon(Env.IMG_DIR + "add.png"));
         tableNorthPanel.add(button_2);
 
         JPanel tableCenterPanel = new JPanel();
@@ -138,7 +139,7 @@ public class CreateTab extends TabAbstract {
         tableSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         table.add(tableSouthPanel, BorderLayout.SOUTH);
 
-        tab3_create_table_button = new JButton("创建", new ImageIcon("src/main/resources/img/new.png"));
+        tab3_create_table_button = new JButton("创建", new ImageIcon(Env.IMG_DIR + "new.png"));
         tableSouthPanel.add(tab3_create_table_button);
         tab3_create_table_button.addMouseListener(new CreateTable());
 

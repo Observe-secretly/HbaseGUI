@@ -27,6 +27,7 @@ import com.lm.hbase.ColumnFamily;
 import com.lm.hbase.HBasePageModel;
 import com.lm.hbase.HbaseUtil;
 import com.lm.hbase.Row;
+import com.lm.hbase.common.Env;
 import com.lm.hbase.util.QualifierValue;
 
 public class HandleCore {
@@ -39,8 +40,9 @@ public class HandleCore {
 
     private static final String SPLIT_MARK = ".";
 
-    private static final String FILE_PATH  = System.getProperty("user.dir") + System.getProperty("file.separator")
-                                             + "hbase-client.conf";
+    private static String getConfFilePath() {
+        return Env.CONF_DIR + "hbase-client.conf";
+    }
 
     /**
      * 获取配置文件，如果不存在则创建
@@ -50,7 +52,7 @@ public class HandleCore {
     private static Properties loadProperties() {
         confProps = new Properties();
         try {
-            File conf = new File(FILE_PATH);
+            File conf = new File(getConfFilePath());
             if (!conf.exists()) {
                 conf.createNewFile();
             }
@@ -73,7 +75,7 @@ public class HandleCore {
         }
         confProps.put(key, value);
         try {
-            confProps.store(new FileOutputStream(FILE_PATH), null);
+            confProps.store(new FileOutputStream(getConfFilePath()), null);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -110,7 +112,7 @@ public class HandleCore {
         confProps.put("hbase.master", hbaseMaster);
         confProps.put("znode.parent", znodeParent);
         try {
-            confProps.store(new FileOutputStream(FILE_PATH), null);
+            confProps.store(new FileOutputStream(getConfFilePath()), null);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

@@ -28,6 +28,7 @@ import javax.swing.table.DefaultTableModel;
 import org.apache.hadoop.hbase.TableName;
 
 import com.alibaba.fastjson.JSON;
+import com.lm.hbase.common.Env;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.StringUtil;
@@ -75,7 +76,7 @@ public class MetaDataTab extends TabAbstract {
         popupMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
         addPopup(list, popupMenu);
 
-        JButton refreshTableButton = new JButton("刷新", new ImageIcon("src/main/resources/img/Search.png"));
+        JButton refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel southPanel = new JPanel();
@@ -92,7 +93,7 @@ public class MetaDataTab extends TabAbstract {
         southPanel.add(searchSouthPanel, BorderLayout.SOUTH);
         searchSouthPanel.setLayout(new BorderLayout(0, 0));
 
-        saveButton = new JButton("保存元数据", new ImageIcon("src/main/resources/img/save.png"));
+        saveButton = new JButton("保存元数据", new ImageIcon(Env.IMG_DIR + "save.png"));
         searchSouthPanel.add(saveButton, BorderLayout.EAST);
 
         /*

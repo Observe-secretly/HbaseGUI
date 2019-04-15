@@ -52,6 +52,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import com.alibaba.fastjson.JSON;
 import com.lm.hbase.HBasePageModel;
 import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.common.Env;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.Chooser;
@@ -66,7 +67,7 @@ public class QueryTab extends TabAbstract {
     private JList<TableName>          list                   = null;
     private JButton                   refreshTableButton;
     private JButton                   searchButton           = new JButton("查询",
-                                                                           new ImageIcon("src/main/resources/img/Search.png"));
+                                                                           new ImageIcon(Env.IMG_DIR + "Search.png"));
     private JButton                   deleteButton;
     private JTextField                textField_tab1_version;
     private DefaultValueTextField     textField_tab1_start_rowkey;
@@ -138,7 +139,7 @@ public class QueryTab extends TabAbstract {
 
         popupMenu.add(countItem);
 
-        refreshTableButton = new JButton("刷新", new ImageIcon("src/main/resources/img/Search.png"));
+        refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();
@@ -158,7 +159,7 @@ public class QueryTab extends TabAbstract {
         filtersPanel.add(filterWestPanel, BorderLayout.WEST);
         filterWestPanel.setLayout(new FlowLayout());
 
-        deleteButton = new JButton("删除", new ImageIcon("src/main/resources/img/Garbage.png"));
+        deleteButton = new JButton("删除", new ImageIcon(Env.IMG_DIR + "Garbage.png"));
         filterWestPanel.add(deleteButton);
         deleteButton.addMouseListener(new DeleteEvent());
         // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 end
@@ -185,7 +186,7 @@ public class QueryTab extends TabAbstract {
         textField_tab1_version.setColumns(5);
         textField_tab1_version.setText(Integer.MAX_VALUE + "");
 
-        JLabel label_1 = new JLabel(new ImageIcon("src/main/resources/img/Page.png"));
+        JLabel label_1 = new JLabel(new ImageIcon(Env.IMG_DIR + "Page.png"));
         filterNorthPanel.add(label_1);
 
         textField_tab1_pageSize = new JTextField();
@@ -193,7 +194,7 @@ public class QueryTab extends TabAbstract {
         filterNorthPanel.add(textField_tab1_pageSize);
         textField_tab1_pageSize.setColumns(3);
 
-        JLabel timeScopeLabel = new JLabel(new ImageIcon("src/main/resources/img/Calendar.png"));
+        JLabel timeScopeLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "Calendar.png"));
         filterNorthPanel.add(timeScopeLabel);
 
         textField_tab1_min_stamp = new JTextField();
@@ -265,7 +266,7 @@ public class QueryTab extends TabAbstract {
         bottom_message_label.setHorizontalAlignment(SwingConstants.CENTER);
         searchSouthPanel.add(bottom_message_label, BorderLayout.CENTER);
 
-        tab1_nextpage_button = new JButton("加载下一页", new ImageIcon("src/main/resources/img/next.png"));
+        tab1_nextpage_button = new JButton("加载下一页", new ImageIcon(Env.IMG_DIR + "next.png"));
         tab1_nextpage_button.addMouseListener(new NextPage());
         searchSouthPanel.add(tab1_nextpage_button, BorderLayout.EAST);
         // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 end
