@@ -69,15 +69,16 @@ public class QueryTab extends TabAbstract {
     private JButton                   searchButton           = new JButton("查询",
                                                                            new ImageIcon(Env.IMG_DIR + "Search.png"));
     private JButton                   deleteButton;
-    private JTextField                textField_tab1_version;
-    private DefaultValueTextField     textField_tab1_start_rowkey;
-    private JTextField                textField_tab1_pageSize;
-    private DefaultValueTextField     textField_tab1_rowKey_prefix;
-    private JButton                   tab1_nextpage_button;
+    private DefaultValueTextField     textField_start_rowkey;
+    private DefaultValueTextField     textField_end_rowkey;
+    private JTextField                textField_version;
+    private JTextField                textField_pageSize;
+    private DefaultValueTextField     textField_rowKey_prefix;
+    private JButton                   nextpage_button;
     private JTable                    contentTable;
     private JScrollPane               tableScroll;
-    private JTextField                textField_tab1_min_stamp;
-    private JTextField                textField_tab1_max_stamp;
+    private JTextField                textField_min_stamp;
+    private JTextField                textField_max_stamp;
     private JLabel                    bottom_message_label;
 
     // item filter
@@ -169,43 +170,47 @@ public class QueryTab extends TabAbstract {
         filtersPanel.add(filterNorthPanel, BorderLayout.CENTER);
         filterNorthPanel.setLayout(new FlowLayout());
 
-        textField_tab1_start_rowkey = new DefaultValueTextField("起始Rowkey");
-        filterNorthPanel.add(textField_tab1_start_rowkey);
-        textField_tab1_start_rowkey.setColumns(20);
+        textField_start_rowkey = new DefaultValueTextField("start rowkey");
+        filterNorthPanel.add(textField_start_rowkey);
+        textField_start_rowkey.setColumns(10);
 
-        textField_tab1_rowKey_prefix = new DefaultValueTextField("Rowkey前缀");
-        filterNorthPanel.add(textField_tab1_rowKey_prefix);
-        textField_tab1_rowKey_prefix.setColumns(10);
+        textField_end_rowkey = new DefaultValueTextField("end rowkey");
+        filterNorthPanel.add(textField_end_rowkey);
+        textField_end_rowkey.setColumns(10);
+
+        textField_rowKey_prefix = new DefaultValueTextField("Rowkey前缀");
+        filterNorthPanel.add(textField_rowKey_prefix);
+        textField_rowKey_prefix.setColumns(10);
 
         JLabel versionLabel = new JLabel("版本号:");
         filterNorthPanel.add(versionLabel);
 
-        textField_tab1_version = new JTextField();
-        textField_tab1_version.setToolTipText("默认查询最新版本");
-        filterNorthPanel.add(textField_tab1_version);
-        textField_tab1_version.setColumns(5);
-        textField_tab1_version.setText(Integer.MAX_VALUE + "");
+        textField_version = new JTextField();
+        textField_version.setToolTipText("默认查询最新版本");
+        filterNorthPanel.add(textField_version);
+        textField_version.setColumns(5);
+        textField_version.setText(Integer.MAX_VALUE + "");
 
         JLabel label_1 = new JLabel(new ImageIcon(Env.IMG_DIR + "Page.png"));
         filterNorthPanel.add(label_1);
 
-        textField_tab1_pageSize = new JTextField();
-        textField_tab1_pageSize.setText("10");
-        filterNorthPanel.add(textField_tab1_pageSize);
-        textField_tab1_pageSize.setColumns(3);
+        textField_pageSize = new JTextField();
+        textField_pageSize.setText("10");
+        filterNorthPanel.add(textField_pageSize);
+        textField_pageSize.setColumns(3);
 
         JLabel timeScopeLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "Calendar.png"));
         filterNorthPanel.add(timeScopeLabel);
 
-        textField_tab1_min_stamp = new JTextField();
-        Chooser.getInstance().register(textField_tab1_min_stamp);
-        filterNorthPanel.add(textField_tab1_min_stamp);
-        textField_tab1_min_stamp.setColumns(10);
+        textField_min_stamp = new JTextField();
+        Chooser.getInstance().register(textField_min_stamp);
+        filterNorthPanel.add(textField_min_stamp);
+        textField_min_stamp.setColumns(10);
 
-        textField_tab1_max_stamp = new JTextField();
-        Chooser.getInstance().register(textField_tab1_max_stamp);
-        filterNorthPanel.add(textField_tab1_max_stamp);
-        textField_tab1_max_stamp.setColumns(10);
+        textField_max_stamp = new JTextField();
+        Chooser.getInstance().register(textField_max_stamp);
+        filterNorthPanel.add(textField_max_stamp);
+        textField_max_stamp.setColumns(10);
 
         searchButton.addMouseListener(new SelectEvent());
         filterNorthPanel.add(searchButton);
@@ -266,9 +271,9 @@ public class QueryTab extends TabAbstract {
         bottom_message_label.setHorizontalAlignment(SwingConstants.CENTER);
         searchSouthPanel.add(bottom_message_label, BorderLayout.CENTER);
 
-        tab1_nextpage_button = new JButton("加载下一页", new ImageIcon(Env.IMG_DIR + "next.png"));
-        tab1_nextpage_button.addMouseListener(new NextPage());
-        searchSouthPanel.add(tab1_nextpage_button, BorderLayout.EAST);
+        nextpage_button = new JButton("加载下一页", new ImageIcon(Env.IMG_DIR + "next.png"));
+        nextpage_button.addMouseListener(new NextPage());
+        searchSouthPanel.add(nextpage_button, BorderLayout.EAST);
         // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 end
 
         contentTable = new JTable();
@@ -464,7 +469,7 @@ public class QueryTab extends TabAbstract {
     public void disableAll() {
         list.setEnabled(false);
         searchButton.setEnabled(false);
-        tab1_nextpage_button.setEnabled(false);
+        nextpage_button.setEnabled(false);
         refreshTableButton.setEnabled(false);
     }
 
@@ -475,7 +480,7 @@ public class QueryTab extends TabAbstract {
     public void enableAll() {
         list.setEnabled(true);
         searchButton.setEnabled(true);
-        tab1_nextpage_button.setEnabled(true);
+        nextpage_button.setEnabled(true);
         refreshTableButton.setEnabled(true);
     }
 
@@ -534,7 +539,7 @@ public class QueryTab extends TabAbstract {
             fs.add(filter);
         }
         // 获取rowkey查询前缀（如果有）
-        String rowkeyPrefix = textField_tab1_rowKey_prefix.getText();
+        String rowkeyPrefix = textField_rowKey_prefix.getText();
 
         // 获取startRowKey
         if (!StringUtil.isEmpty(rowkeyPrefix)) {
@@ -650,35 +655,41 @@ public class QueryTab extends TabAbstract {
                     // 获取分页大小
                     Integer page = 10;
                     try {
-                        page = Integer.parseInt(textField_tab1_pageSize.getText());
+                        page = Integer.parseInt(textField_pageSize.getText());
                     } catch (Exception e2) {
-                        textField_tab1_pageSize.setText(page.toString());
+                        textField_pageSize.setText(page.toString());
                     }
                     // 获取版本
                     Integer version = Integer.MAX_VALUE;
                     try {
-                        version = Integer.parseInt(textField_tab1_version.getText());
+                        version = Integer.parseInt(textField_version.getText());
                     } catch (Exception e2) {
-                        textField_tab1_pageSize.setText(version.toString());
+                        textField_pageSize.setText(version.toString());
                     }
 
                     byte[] startRowKeyByte = null;
+                    byte[] endRowKeyByte = null;
 
-                    String startRowKey = textField_tab1_start_rowkey.getText();
+                    String startRowKey = textField_start_rowkey.getText();
+                    String endRowKey = textField_end_rowkey.getText();
 
                     if (!StringUtil.isEmpty(startRowKey)) {
                         startRowKeyByte = Bytes.toBytes(startRowKey);
                     }
+                    if (!StringUtil.isEmpty(endRowKey)) {
+                        endRowKeyByte = Bytes.toBytes(endRowKey);
+                    }
 
                     if (tableName != null) {
                         pageModel = new HBasePageModel(page, tableName);
-                        pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(),
+                        pageModel.setMinStamp(DateUtil.convertMinStamp(textField_min_stamp.getText(),
                                                                        Chooser.DEFAULTFORMAT));
-                        pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
+                        pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(),
                                                                        Chooser.DEFAULTFORMAT));
 
-                        pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, null, getFilter(),
-                                                                     version, pageModel, true, getMetaData());
+                        pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, endRowKeyByte,
+                                                                     getFilter(), version, pageModel, true,
+                                                                     getMetaData());
                         HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
                         HandleCore.setPageInfomation(pageModel, bottom_message_label);
 
@@ -701,7 +712,7 @@ public class QueryTab extends TabAbstract {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            tab1_nextpage_button.setEnabled(false);
+            nextpage_button.setEnabled(false);
         }
 
         @Override
@@ -714,14 +725,14 @@ public class QueryTab extends TabAbstract {
                 public void run() {
                     if (pageModel == null) {
                         JOptionPane.showMessageDialog(getFrame(), "请选择表并进行一次查询", "警告", JOptionPane.WARNING_MESSAGE);
-                        tab1_nextpage_button.setEnabled(true);
+                        nextpage_button.setEnabled(true);
                         stopTask();
                         return;
                     }
 
                     if (pageModel.getQueryTotalCount() % pageModel.getPageSize() != 0) {
                         JOptionPane.showMessageDialog(getFrame(), "已经到了最后一页", "警告", JOptionPane.WARNING_MESSAGE);
-                        tab1_nextpage_button.setEnabled(true);
+                        nextpage_button.setEnabled(true);
                         stopTask();
                         return;
                     }
@@ -729,25 +740,39 @@ public class QueryTab extends TabAbstract {
                     // 获取分页大小
                     Integer page = 10;
                     try {
-                        page = Integer.parseInt(textField_tab1_pageSize.getText());
+                        page = Integer.parseInt(textField_pageSize.getText());
                     } catch (Exception e2) {
-                        textField_tab1_pageSize.setText(page.toString());
+                        textField_pageSize.setText(page.toString());
                     }
                     // 获取版本
                     Integer version = Integer.MAX_VALUE;
                     try {
-                        version = Integer.parseInt(textField_tab1_version.getText());
+                        version = Integer.parseInt(textField_version.getText());
                     } catch (Exception e2) {
-                        textField_tab1_pageSize.setText(version.toString());
+                        textField_pageSize.setText(version.toString());
                     }
 
-                    pageModel.setMinStamp(DateUtil.convertMinStamp(textField_tab1_min_stamp.getText(),
+                    byte[] startRowKeyByte = null;
+                    byte[] endRowKeyByte = null;
+
+                    String startRowKey = textField_start_rowkey.getText();
+                    String endRowKey = textField_end_rowkey.getText();
+
+                    if (!StringUtil.isEmpty(startRowKey)) {
+                        startRowKeyByte = Bytes.toBytes(startRowKey);
+                    }
+                    if (!StringUtil.isEmpty(endRowKey)) {
+                        endRowKeyByte = Bytes.toBytes(endRowKey);
+                    }
+
+                    pageModel.setMinStamp(DateUtil.convertMinStamp(textField_min_stamp.getText(),
                                                                    Chooser.DEFAULTFORMAT));
-                    pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_tab1_max_stamp.getText(),
+                    pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(),
                                                                    Chooser.DEFAULTFORMAT));
 
-                    pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), null, null, getFilter(),
-                                                                 version, pageModel, false, getMetaData());
+                    pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), startRowKeyByte,
+                                                                 endRowKeyByte, getFilter(), version, pageModel, false,
+                                                                 getMetaData());
 
                     HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
                     HandleCore.setPageInfomation(pageModel, bottom_message_label);

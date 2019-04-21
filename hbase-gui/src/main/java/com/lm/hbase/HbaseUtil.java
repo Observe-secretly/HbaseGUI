@@ -233,27 +233,29 @@ public class HbaseUtil {
             Connection connection = getConn();
             table = connection.getTable(tableName);
 
-            if (startRowKey != null) {
-                pageModel.setPageEndRowKey(startRowKey);
+            if (pageModel.getPageStartRowKey() == null && startRowKey != null) {
+                pageModel.setPageStartRowKey(startRowKey);
             }
 
-            if (pageModel.getPageEndRowKey() == null) {
+            if (pageModel.getPageStartRowKey() == null) {
                 Result firstResult = selectFirstResultRow(tableName, filterList);
                 if (firstResult == null || firstResult.isEmpty()) {
                     return pageModel;
                 }
                 startRowKey = firstResult.getRow();
-                pageModel.setPageEndRowKey(startRowKey);
+                pageModel.setPageStartRowKey(startRowKey);
             }
 
             Scan scan = new Scan();
             scan.setCaching(10);
-            scan.setStartRow(pageModel.getPageEndRowKey());
+            scan.setStartRow(pageModel.getPageStartRowKey());
             if (pageModel.getMinStamp() != 0 && pageModel.getMaxStamp() != 0) {
                 scan.setTimeRange(pageModel.getMinStamp(), pageModel.getMaxStamp());
             }
 
-            if (endRowKey != null) {
+            if (pageModel.getPageEndRowKey() != null) {
+                scan.setStopRow(pageModel.getPageEndRowKey());
+            } else if (endRowKey != null) {
                 scan.setStopRow(endRowKey);
             }
 
@@ -315,13 +317,11 @@ public class HbaseUtil {
         pageModel.setPageIndex(pageIndex);
         if (pageModel.getResultList().size() > 0) {
             // 获取本次分页数据首行和末行的行键信息
-            byte[] pageStartRowKey = pageModel.getResultList().get(0).getRow();
+            // byte[] pageStartRowKey = pageModel.getResultList().get(0).getRow();
             byte[] pageEndRowKey = pageModel.getResultList().get(pageModel.getResultList().size() - 1).getRow();
-            pageModel.setPageStartRowKey(pageStartRowKey);
-            pageModel.setPageEndRowKey(pageEndRowKey);
+            pageModel.setPageStartRowKey(pageEndRowKey);
+            pageModel.setPageEndRowKey(endRowKey);
         }
-        // int queryTotalCount = pageModel.getQueryTotalCount() + pageModel.getResultList().size();
-        // pageModel.setQueryTotalCount(queryTotalCount);
         pageModel.initEndTime();
         pageModel.printTimeInfo();
         return pageModel;
