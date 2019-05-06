@@ -12,7 +12,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,34 +36,24 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.filter.BinaryPrefixComparator;
-import org.apache.hadoop.hbase.filter.ByteArrayComparable;
-import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.hadoop.hbase.filter.FilterList;
-import org.apache.hadoop.hbase.filter.PrefixFilter;
-import org.apache.hadoop.hbase.filter.RegexStringComparator;
-import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
-import org.apache.hadoop.hbase.filter.SubstringComparator;
-import org.apache.hadoop.hbase.util.Bytes;
-
 import com.alibaba.fastjson.JSON;
-import com.lm.hbase.HBasePageModel;
-import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.adapter.FilterFactory;
+import com.lm.hbase.adapter.HbaseUtil;
+import com.lm.hbase.adapter.entity.HBasePageModel;
+import com.lm.hbase.adapter.entity.HbaseQualifier;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.Chooser;
 import com.lm.hbase.util.DateUtil;
-import com.lm.hbase.util.HbaseQualifier;
+import com.lm.hbase.util.MyBytesUtil;
 import com.lm.hbase.util.StringUtil;
 
 public class QueryTab extends TabAbstract {
 
     private final static byte[]       COMBOBOX_DEFAULT_VALUE = "--".getBytes();
 
-    private JList<TableName>          list                   = null;
+    private JList<String>             list                   = null;
     private JButton                   refreshTableButton;
     private JButton                   searchButton           = new JButton("查询",
                                                                            new ImageIcon(Env.IMG_DIR + "Search.png"));
@@ -241,18 +230,16 @@ public class QueryTab extends TabAbstract {
         itemFilterWestPanel.add(fieldTypeComboBox);
 
         filterOperatorComboBox = new JComboBox<>();
-        filterOperatorComboBox.addItem("=");
-        filterOperatorComboBox.addItem(">");
-        filterOperatorComboBox.addItem("<");
-        filterOperatorComboBox.addItem("≥");
-        filterOperatorComboBox.addItem("≤");
-        filterOperatorComboBox.addItem("≠");
+        for (String item : FilterFactory.getCompareOpSimpleList()) {
+            filterOperatorComboBox.addItem(item);
+        }
+
         itemFilterWestPanel.add(filterOperatorComboBox);
 
         comparatorComboBox = new JComboBox<>();
-        comparatorComboBox.addItem("(子串比较器)SubstringComparator");
-        comparatorComboBox.addItem("(前缀比较器)BinaryPrefixComparator");
-        comparatorComboBox.addItem("(正则比较器)RegexStringComparator");
+        for (Class f : FilterFactory.getAllComparatorClass()) {
+            comparatorComboBox.addItem(f.getSimpleName());
+        }
 
         itemFilterWestPanel.add(comparatorComboBox);
 
@@ -289,8 +276,8 @@ public class QueryTab extends TabAbstract {
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    TableName tableName = list.getSelectedValue();
-                    if (JOptionPane.showConfirmDialog(getFrame(), "确定删除" + tableName.getNameAsString() + "表吗?") == 0) {
+                    String tableName = list.getSelectedValue();
+                    if (JOptionPane.showConfirmDialog(getFrame(), "确定删除" + tableName + "表吗?") == 0) {
                         if (tableName != null) {
 
                             getSingleThreadPool().execute(new Runnable() {
@@ -336,7 +323,7 @@ public class QueryTab extends TabAbstract {
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    TableName tableName = list.getSelectedValue();
+                    String tableName = list.getSelectedValue();
 
                     if (JOptionPane.showConfirmDialog(getFrame(), "确定进行吗？大表可能需要较长时间统计") == 0) {
                         if (tableName != null) {
@@ -347,8 +334,7 @@ public class QueryTab extends TabAbstract {
                                     startTask();
 
                                     long count = HbaseUtil.rowCount(tableName);
-                                    JOptionPane.showMessageDialog(getFrame(), count,
-                                                                  tableName.getNameAsString() + "数据总数",
+                                    JOptionPane.showMessageDialog(getFrame(), count, tableName + "数据总数",
                                                                   JOptionPane.INFORMATION_MESSAGE);
 
                                     stopTask();
@@ -367,8 +353,8 @@ public class QueryTab extends TabAbstract {
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    TableName tableName = list.getSelectedValue();
-                    if (JOptionPane.showConfirmDialog(getFrame(), "确定清空" + tableName.getNameAsString() + "表吗?") == 0) {
+                    String tableName = list.getSelectedValue();
+                    if (JOptionPane.showConfirmDialog(getFrame(), "确定清空" + tableName + "表吗?") == 0) {
                         if (tableName != null) {
                             getSingleThreadPool().execute(new Runnable() {
 
@@ -406,7 +392,7 @@ public class QueryTab extends TabAbstract {
             contentTable.addMouseListener(new MouseAdapter() {
 
                 @Override
-                public void mouseClicked(MouseEvent e) {
+                public void mousePressed(MouseEvent e) {
                     if (contentTable.getSelectedRowCount() == 0) {
                         deleteButton.setEnabled(false);
                     } else {
@@ -484,13 +470,13 @@ public class QueryTab extends TabAbstract {
         refreshTableButton.setEnabled(true);
     }
 
-    private void loadMataData(TableName tableName) {
+    private void loadMataData(String tableName) {
         startTask();
         getSingleThreadPool().execute(new Runnable() {
 
             @Override
             public void run() {
-                String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
+                String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
                 String cacheMetaData = HandleCore.getStringValue(propertiesKey);
 
                 List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
@@ -517,9 +503,9 @@ public class QueryTab extends TabAbstract {
 
     }
 
-    private FilterList getFilter() {
+    private List<Object> getFilter() {
 
-        List<Filter> fs = new ArrayList<>();
+        List<Object> fs = new ArrayList<>();
 
         HbaseQualifier colume = fieldsComboBox.getItemAt(fieldsComboBox.getSelectedIndex());
         if (colume == null && fieldsComboBox.getSelectedItem() != null
@@ -534,96 +520,27 @@ public class QueryTab extends TabAbstract {
 
         if (!StringUtil.isEmpty(filterValueTextField.getText())) {
 
-            SingleColumnValueFilter filter = new SingleColumnValueFilter(colume.getFamily(), colume.getQualifier(),
-                                                                         getCompareOp(), getComparator());
-            fs.add(filter);
+            String compareOpSimple = filterOperatorComboBox.getItemAt(filterOperatorComboBox.getSelectedIndex());
+            String comparatorClassName = comparatorComboBox.getItemAt(comparatorComboBox.getSelectedIndex());
+            String fieldType = fieldTypeComboBox.getItemAt(fieldTypeComboBox.getSelectedIndex());
+            String fieldValue = filterValueTextField.getText();
+            fs.add(FilterFactory.createSingleColumnValueFilter(colume.getFamily(), colume.getQualifier(),
+                                                               compareOpSimple, comparatorClassName, fieldType,
+                                                               fieldValue));
         }
         // 获取rowkey查询前缀（如果有）
         String rowkeyPrefix = textField_rowKey_prefix.getText();
 
         // 获取startRowKey
         if (!StringUtil.isEmpty(rowkeyPrefix)) {
-            Filter filter = new PrefixFilter(rowkeyPrefix.getBytes());
-            fs.add(filter);
+            fs.add(FilterFactory.createRowkeyPrefixFilter(rowkeyPrefix.getBytes()));
         }
 
         if (fs.size() != 0) {
-            FilterList filterList = new FilterList(fs);
-            return filterList;
+            return fs;
         } else {
             return null;
         }
-    }
-
-    /**
-     * 根据选择操作转换成枚举
-     * 
-     * @return
-     */
-    private CompareOp getCompareOp() {
-
-        String operator = filterOperatorComboBox.getItemAt(filterOperatorComboBox.getSelectedIndex());
-        switch (operator) {
-            case "=":
-                return CompareOp.EQUAL;
-            case ">":
-                return CompareOp.GREATER;
-            case "<":
-                return CompareOp.LESS;
-            case "≥":
-                return CompareOp.GREATER_OR_EQUAL;
-            case "≤":
-                return CompareOp.LESS_OR_EQUAL;
-            case "≠":
-                return CompareOp.NOT_EQUAL;
-
-            default:
-                return null;
-        }
-
-    }
-
-    private byte[] fileValue(String type, String v) {
-
-        try {
-            switch (type.toLowerCase()) {
-                case "string":
-                    return Bytes.toBytes(v);
-                case "int":
-                    return Bytes.toBytes(Integer.parseInt(v));
-                case "short":
-                    return Bytes.toBytes(Short.parseShort(v));
-                case "long":
-                    return Bytes.toBytes(Long.parseLong(v));
-                case "float":
-                    return Bytes.toBytes(Float.parseFloat(v));
-                case "double":
-                    return Bytes.toBytes(Double.parseDouble(v));
-                case "bigdecimal":
-                    return Bytes.toBytes(new BigDecimal(v));
-                default:
-                    return Bytes.toBytes(v);
-            }
-
-        } catch (Exception e) {
-            return Bytes.toBytes(v);
-        }
-
-    }
-
-    private ByteArrayComparable getComparator() {
-        String type = fieldTypeComboBox.getItemAt(fieldTypeComboBox.getSelectedIndex());
-
-        String comparator = comparatorComboBox.getItemAt(comparatorComboBox.getSelectedIndex());
-
-        if (comparator.toLowerCase().endsWith(BinaryPrefixComparator.class.getSimpleName().toLowerCase())) {// 前缀比较器
-            return new BinaryPrefixComparator(fileValue(type, filterValueTextField.getText()));
-        } else if (comparator.toLowerCase().endsWith(SubstringComparator.class.getSimpleName().toLowerCase())) {// 字串比较器
-            return new SubstringComparator(filterValueTextField.getText());
-        } else if (comparator.toLowerCase().endsWith(RegexStringComparator.class.getSimpleName().toLowerCase())) {// 支持正则
-            return new RegexStringComparator(filterValueTextField.getText());
-        }
-        return null;
     }
 
     /**
@@ -651,7 +568,7 @@ public class QueryTab extends TabAbstract {
                 public void run() {
 
                     HandleCore.setPageInfomation(null, bottom_message_label);
-                    TableName tableName = list.getSelectedValue();
+                    String tableName = list.getSelectedValue();
                     // 获取分页大小
                     Integer page = 10;
                     try {
@@ -674,10 +591,10 @@ public class QueryTab extends TabAbstract {
                     String endRowKey = textField_end_rowkey.getText();
 
                     if (!StringUtil.isEmpty(startRowKey)) {
-                        startRowKeyByte = Bytes.toBytes(startRowKey);
+                        startRowKeyByte = MyBytesUtil.toBytes(startRowKey);
                     }
                     if (!StringUtil.isEmpty(endRowKey)) {
-                        endRowKeyByte = Bytes.toBytes(endRowKey);
+                        endRowKeyByte = MyBytesUtil.toBytes(endRowKey);
                     }
 
                     if (tableName != null) {
@@ -759,10 +676,10 @@ public class QueryTab extends TabAbstract {
                     String endRowKey = textField_end_rowkey.getText();
 
                     if (!StringUtil.isEmpty(startRowKey)) {
-                        startRowKeyByte = Bytes.toBytes(startRowKey);
+                        startRowKeyByte = MyBytesUtil.toBytes(startRowKey);
                     }
                     if (!StringUtil.isEmpty(endRowKey)) {
-                        endRowKeyByte = Bytes.toBytes(endRowKey);
+                        endRowKeyByte = MyBytesUtil.toBytes(endRowKey);
                     }
 
                     pageModel.setMinStamp(DateUtil.convertMinStamp(textField_min_stamp.getText(),
@@ -799,8 +716,8 @@ public class QueryTab extends TabAbstract {
                 @Override
                 public void run() {
                     int selectedRowCount = contentTable.getSelectedRowCount();
-                    TableName tableName = list.getSelectedValue();
-                    if (selectedRowCount > 0 || tableName == null) {
+                    String tableName = list.getSelectedValue();
+                    if (selectedRowCount > 0 || tableName != null) {
                         String[] rowkeys = new String[selectedRowCount];
                         int[] selectRowIndexs = contentTable.getSelectedRows();
                         for (int i = 0; i < selectedRowCount; i++) {
@@ -831,7 +748,7 @@ public class QueryTab extends TabAbstract {
 
     private Map<String, String> getMetaData() {
         // 尝试获取字段类型映射
-        String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
+        String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
         String mappingStr = HandleCore.getStringValue(propertiesKey);
         Map<String, String> typeMapping = null;
         if (!StringUtil.isEmpty(mappingStr)) {

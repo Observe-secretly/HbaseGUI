@@ -19,16 +19,13 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import org.apache.hadoop.hbase.ClusterStatus;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.util.Bytes;
-
-import com.lm.hbase.ColumnFamily;
-import com.lm.hbase.HBasePageModel;
-import com.lm.hbase.HbaseUtil;
-import com.lm.hbase.Row;
+import com.lm.hbase.adapter.ColumnFamily;
+import com.lm.hbase.adapter.HbaseUtil;
+import com.lm.hbase.adapter.Row;
+import com.lm.hbase.adapter.entity.HBasePageModel;
+import com.lm.hbase.adapter.entity.QualifierValue;
 import com.lm.hbase.common.Env;
-import com.lm.hbase.util.QualifierValue;
+import com.lm.hbase.util.MyBytesUtil;
 
 public class HandleCore {
 
@@ -129,13 +126,13 @@ public class HandleCore {
      * @return
      * @throws Exception
      */
-    public static ClusterStatus testConf(String zkPort, String zkQuorum, String hbaseMaster,
-                                         String znodeParent) throws Exception {
+    public static String testConf(String zkPort, String zkQuorum, String hbaseMaster,
+                                  String znodeParent) throws Exception {
         HbaseUtil.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
         setConf(zkPort, zkQuorum, hbaseMaster, znodeParent);
 
         // 尝试获取集群状态
-        ClusterStatus clusterStatus = HbaseUtil.getClusterStatus();
+        String clusterStatus = HbaseUtil.getClusterStatus();
         return clusterStatus;
     }
 
@@ -147,7 +144,7 @@ public class HandleCore {
      * @param table
      * @param dataModel
      */
-    public static void reloadTableFormat(TableName tableName, JTable table, HBasePageModel dataModel) {
+    public static void reloadTableFormat(String tableName, JTable table, HBasePageModel dataModel) {
         // 申明一个列头
         LinkedHashSet<String> columnNameSet = new LinkedHashSet<>();
         columnNameSet.add(NUMBER);
@@ -172,7 +169,8 @@ public class HandleCore {
                 Entry<byte[], ColumnFamily> entry = (Entry<byte[], ColumnFamily>) iterator.next();// 某个列族的所有列
                 for (Entry<byte[], QualifierValue> column : entry.getValue().getColumns().entrySet()) {
                     // 构建列头
-                    String tableHead = entry.getValue().getFamilyName() + SPLIT_MARK + Bytes.toString(column.getKey());
+                    String tableHead = entry.getValue().getFamilyName() + SPLIT_MARK
+                                       + MyBytesUtil.byteToString(column.getKey(), 0, column.getKey().length);
                     // 维护列头
                     columnNameSet.add(tableHead);
 
@@ -244,7 +242,7 @@ public class HandleCore {
 
     }
 
-    public static void reloadMetaTableFormat(TableName tableName, JTable table) {
+    public static void reloadMetaTableFormat(String tableName, JTable table) {
 
         HBasePageModel dataModel = new HBasePageModel(1, tableName);
         dataModel = HbaseUtil.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE, dataModel, true,
@@ -269,7 +267,8 @@ public class HandleCore {
             for (Iterator iterator = columnSet.iterator(); iterator.hasNext();) {
                 Entry<byte[], ColumnFamily> entry = (Entry<byte[], ColumnFamily>) iterator.next();// 某个列族的所有列
                 for (Entry<byte[], QualifierValue> column : entry.getValue().getColumns().entrySet()) {
-                    String tableHead = entry.getValue().getFamilyName() + SPLIT_MARK + Bytes.toString(column.getKey());
+                    String tableHead = entry.getValue().getFamilyName() + SPLIT_MARK
+                                       + MyBytesUtil.byteToString(column.getKey(), 0, column.getKey().length);
                     columnNameSet.add(tableHead);
 
                     // 从dataMap拿到对应列的map

@@ -25,8 +25,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
-import org.apache.hadoop.hbase.TableName;
-
 import com.alibaba.fastjson.JSON;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.swing.HandleCore;
@@ -35,10 +33,10 @@ import com.lm.hbase.util.StringUtil;
 
 public class MetaDataTab extends TabAbstract {
 
-    private JList<TableName> list;
-    private JTable           contentTable;
-    private JScrollPane      tableScroll;
-    private JButton          saveButton;
+    private JList<String> list;
+    private JTable        contentTable;
+    private JScrollPane   tableScroll;
+    private JButton       saveButton;
 
     public MetaDataTab(HbaseGui window){
         super(window);
@@ -145,7 +143,7 @@ public class MetaDataTab extends TabAbstract {
                     map.put(contentTable.getValueAt(i, 0).toString(), contentTable.getValueAt(i, 1).toString());
                 }
 
-                String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
+                String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
                 HandleCore.setValue(propertiesKey, JSON.toJSONString(map));
                 JOptionPane.showMessageDialog(getFrame(), "保存成功", "提示", JOptionPane.INFORMATION_MESSAGE);
 
@@ -159,7 +157,7 @@ public class MetaDataTab extends TabAbstract {
     }
 
     @SuppressWarnings("unchecked")
-    private void loadMataData(TableName tableName) {
+    private void loadMataData(String tableName) {
         startTask();
         getSingleThreadPool().execute(new Runnable() {
 
@@ -170,7 +168,7 @@ public class MetaDataTab extends TabAbstract {
                 tableModel.setRowCount(0);
                 // 1、 优先从映射文件中查询元数据
                 // 2、查询不到则去Hbase查询表结构，得到所有的字段。所有字段默认是string类型
-                String propertiesKey = list.getSelectedValue().getNameAsString() + PROPERTIES_SUFFIX;
+                String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
                 String cacheMetaData = HandleCore.getStringValue(propertiesKey);
                 if (!StringUtil.isEmpty(cacheMetaData)) {
                     HandleCore.reloadMetaTableFormat(contentTable, JSON.parseObject(cacheMetaData, Map.class));

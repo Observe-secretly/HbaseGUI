@@ -10,9 +10,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
-import org.apache.hadoop.hbase.TableName;
-
-import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.adapter.HbaseUtil;
 
 public class TabCommonUtil {
 
@@ -22,8 +20,8 @@ public class TabCommonUtil {
      * @param list
      * @wbp.parser.entryPoint
      */
-    public void initTableList(JList<TableName> list) {
-        TableName[] tableNames = HbaseUtil.getListTableNames();
+    public void initTableList(JList<String> list) {
+        String[] tableNames = HbaseUtil.getListTableNames();
         if (tableNames != null) {
             list.setListData(tableNames);
         }

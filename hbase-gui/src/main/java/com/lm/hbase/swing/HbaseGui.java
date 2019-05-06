@@ -7,7 +7,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -21,7 +20,9 @@ import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
 import javax.swing.border.TitledBorder;
 
-import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.adapter.HbaseUtil;
+import com.lm.hbase.common.Env;
+import com.lm.hbase.driver.DriverClassLoader;
 import com.lm.hbase.tab.CreateTab;
 import com.lm.hbase.tab.MetaDataTab;
 import com.lm.hbase.tab.QueryTab;
@@ -45,9 +46,15 @@ public class HbaseGui {
     /**
      * Launch the application.
      * 
+     * @throws Throwable
      * @wbp.parser.entryPoint
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Throwable {
+
+        String verion = "1.3.1";
+        // DownloadDriver.load("1.3.1", "/Users/limin/apache-maven-3.2.3");
+        DriverClassLoader.loadClasspath(verion);
+
         EventQueue.invokeLater(new Runnable() {
 
             public void run() {
@@ -95,7 +102,7 @@ public class HbaseGui {
         processBar = new JProgressBar(JProgressBar.CENTER);
 
         // 创建一个终止按钮
-        stopLabel = new JLabel(new ImageIcon("src/main/resources/img/stop.png"));
+        stopLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "stop.png"));
         stopLabel.setEnabled(false);
         stopLabel.addMouseListener(new StopEvent());
 
@@ -124,7 +131,7 @@ public class HbaseGui {
             public void windowClosing(WindowEvent e) {
                 try {
                     HbaseUtil.close();
-                } catch (IOException e1) {
+                } catch (Exception e1) {
                     e1.printStackTrace();
                 }
                 super.windowClosing(e);

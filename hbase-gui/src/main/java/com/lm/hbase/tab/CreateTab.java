@@ -20,9 +20,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 
-import org.apache.hadoop.hbase.TableName;
-
-import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.StringUtil;
@@ -187,7 +185,7 @@ public class CreateTab extends TabAbstract {
             }
 
             try {
-                HbaseUtil.createTable(TableName.valueOf(tableName), familys);
+                HbaseUtil.createTable(tableName, familys);
                 JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e2) {
                 JOptionPane.showMessageDialog(getFrame(), e2.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
