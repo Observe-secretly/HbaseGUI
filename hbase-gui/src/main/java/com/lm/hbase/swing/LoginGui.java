@@ -5,9 +5,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -15,21 +15,23 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import org.apache.hadoop.hbase.ClusterStatus;
-
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import com.lm.hbase.HbaseUtil;
+import com.lm.hbase.adapter.HbaseUtil;
 
 public class LoginGui extends JDialog {
 
-    private JPanel     contentPanel = new JPanel();
-    private JTextField zkPortField;
-    private JTextField zkQuorumField;
-    private JTextField hbaseMasterField;
-    private JTextField znodeParentField;
+    private static final long serialVersionUID = 7686127697988572348L;
+
+    private JPanel            contentPanel     = new JPanel();
+    private JTextField        zkPortField;
+    private JTextField        zkQuorumField;
+    private JTextField        hbaseMasterField;
+    private JTextField        znodeParentField;
+
+    private JComboBox<String> driverVersionComboBox;
 
     /**
      * Launch the application.
@@ -83,15 +85,18 @@ public class LoginGui extends JDialog {
                                                                  FormSpecs.RELATED_GAP_COLSPEC,
                                                                  FormSpecs.DEFAULT_COLSPEC,
                                                                  FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 ColumnSpec.decode("default:grow"), },
+                                                                 ColumnSpec.decode("default:grow"),
+                                                                 FormSpecs.RELATED_GAP_COLSPEC,
+                                                                 FormSpecs.DEFAULT_COLSPEC },
                                               new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC,
-                                                              FormSpecs.DEFAULT_ROWSPEC, }));
+                                                              FormSpecs.DEFAULT_ROWSPEC }));
         {
             JLabel lblNewLabel = new JLabel("ZK.PORT");
             lblNewLabel.setToolTipText("hbase.zookeeper.property.clientPort");
@@ -137,6 +142,17 @@ public class LoginGui extends JDialog {
             znodeParentField.setText(znodeParent);
         }
         {
+            JLabel lblNewLabel_4 = new JLabel("Hbase Version");
+            lblNewLabel_4.setToolTipText("切换版本需要重启应用");
+            contentPanel.add(lblNewLabel_4, "6, 16, right, default");
+        }
+        {
+            driverVersionComboBox = new JComboBox<>();
+            driverVersionComboBox.addItem("");
+            driverVersionComboBox.addItem("1.3.1");
+            contentPanel.add(driverVersionComboBox, "10, 16, 7, 1, fill, default");
+        }
+        {
             JPanel buttonPane = new JPanel();
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("127px"),
@@ -159,13 +175,12 @@ public class LoginGui extends JDialog {
                     @Override
                     public void mouseReleased(MouseEvent e) {
                         try {
-                            ClusterStatus clusterStatus = HandleCore.testConf(zkPortField.getText(),
-                                                                              zkQuorumField.getText(),
-                                                                              hbaseMasterField.getText(),
-                                                                              znodeParentField.getText());
+                            String clusterStatus = HandleCore.testConf(zkPortField.getText(), zkQuorumField.getText(),
+                                                                       hbaseMasterField.getText(),
+                                                                       znodeParentField.getText());
                             if (clusterStatus != null) {
-                                JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus.toString(),
-                                                              "提示", JOptionPane.INFORMATION_MESSAGE);
+                                JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus, "提示",
+                                                              JOptionPane.INFORMATION_MESSAGE);
                             } else {
                                 JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误", JOptionPane.ERROR_MESSAGE);
                             }
@@ -180,7 +195,7 @@ public class LoginGui extends JDialog {
                 buttonPane.add(testButton, "1, 2, left, top");
             }
             {
-                JButton cancelButton = new JButton("Cancel");
+                JButton cancelButton = new JButton("close");
                 cancelButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -192,7 +207,7 @@ public class LoginGui extends JDialog {
                 buttonPane.add(cancelButton, "4, 2, left, top");
             }
             {
-                JButton okButton = new JButton("OK");
+                JButton okButton = new JButton("connect");
                 okButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -202,22 +217,27 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        try {
-                            ClusterStatus clusterStatus = HandleCore.testConf(zkPortField.getText(),
-                                                                              zkQuorumField.getText(),
-                                                                              hbaseMasterField.getText(),
-                                                                              znodeParentField.getText());
-                            if (clusterStatus != null) {
-                                com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
-                                com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
-                            } else {
-                                JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                        synchronized (com.lm.hbase.swing.SwingConstants.loginGui) {
+                            if (!com.lm.hbase.swing.SwingConstants.loginGui.isVisible()) {
+                                return;
                             }
+                            try {
+                                String clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                                                           zkQuorumField.getText(),
+                                                                           hbaseMasterField.getText(),
+                                                                           znodeParentField.getText());
+                                if (clusterStatus != null) {
+                                    com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
+                                    com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
+                                } else {
+                                    JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                                }
 
-                        } catch (Exception e2) {
-                            JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage());
+                            } catch (Exception e2) {
+                                JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage());
+                            }
+                            okButton.setEnabled(true);
                         }
-                        okButton.setEnabled(true);
                     }
                 });
                 okButton.setActionCommand("OK");
@@ -231,7 +251,7 @@ public class LoginGui extends JDialog {
             public void windowClosed(WindowEvent e) {
                 try {
                     HbaseUtil.close();
-                } catch (IOException e1) {
+                } catch (Exception e1) {
                     e1.printStackTrace();
                 }
                 super.windowClosed(e);
