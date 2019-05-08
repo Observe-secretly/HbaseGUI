@@ -42,6 +42,7 @@ import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.HbaseQualifier;
 import com.lm.hbase.common.Env;
+import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.Chooser;
@@ -477,7 +478,7 @@ public class QueryTab extends TabAbstract {
             @Override
             public void run() {
                 String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-                String cacheMetaData = HandleCore.getStringValue(propertiesKey);
+                String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
 
                 List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
                 // 如果存在元数据则替换类型
@@ -749,7 +750,7 @@ public class QueryTab extends TabAbstract {
     private Map<String, String> getMetaData() {
         // 尝试获取字段类型映射
         String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-        String mappingStr = HandleCore.getStringValue(propertiesKey);
+        String mappingStr = HbaseClientConf.getStringValue(propertiesKey);
         Map<String, String> typeMapping = null;
         if (!StringUtil.isEmpty(mappingStr)) {
             typeMapping = JSON.parseObject(mappingStr, Map.class);

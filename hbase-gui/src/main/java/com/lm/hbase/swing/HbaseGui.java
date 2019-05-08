@@ -22,7 +22,6 @@ import javax.swing.border.TitledBorder;
 
 import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.Env;
-import com.lm.hbase.driver.DriverClassLoader;
 import com.lm.hbase.tab.CreateTab;
 import com.lm.hbase.tab.MetaDataTab;
 import com.lm.hbase.tab.QueryTab;
@@ -50,10 +49,6 @@ public class HbaseGui {
      * @wbp.parser.entryPoint
      */
     public static void main(String[] args) throws Throwable {
-
-        String verion = "1.3.1";
-        // DownloadDriver.load("1.3.1", "/Users/limin/apache-maven-3.2.3");
-        DriverClassLoader.loadClasspath(verion);
 
         EventQueue.invokeLater(new Runnable() {
 

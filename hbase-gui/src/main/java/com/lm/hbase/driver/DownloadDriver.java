@@ -28,31 +28,43 @@ public class DownloadDriver {
         url.append(version);
         url.append(".pom");
         return url.toString();
+    }
 
+    private static String getJarUrl(String version) {
+        StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
+        url.append("/" + version + "/");
+        url.append("hbase-client-");
+        url.append(version);
+        url.append(".jar");
+        return url.toString();
     }
 
     public static boolean load(String version, String mavenHome) throws Throwable {
 
         String outputDir = Env.DRIVER_DIR + version;
-        // 如果驱动存在则删除重新下载
-        System.out.println("clean driver dir");
+        // XXX 如果驱动存在则不处理。后续完善可以添加校验功能
         File outputFileDir = new File(outputDir);
         if (outputFileDir.exists()) {
-            delFolder(outputDir);
-        }
-        // 创建版本目录
-        outputFileDir.mkdir();
+            return true;
+        } else {
+            // 创建版本目录
+            outputFileDir.mkdir();
 
-        // 下载pom
+        }
+
+        // 下载pom已经client jar
         System.out.println("download pom file to " + outputDir);
         HttpURLConnection con = HttpURLConnectionFactory.getConn(getPomUrl(version));
         HttpURLConnectionFactory.downloadFile(con, outputDir, "pom.xml");
+        con = HttpURLConnectionFactory.getConn(getJarUrl(version));
+        HttpURLConnectionFactory.downloadFile(con, outputDir, "hbase-client-" + version + ".jar");
         System.out.println("download pom file success");
 
         File pomFile = new File(outputDir);
         StringBuilder cmd = new StringBuilder("dependency:copy-dependencies -DoutputDirectory=");
         cmd.append(outputDir);
 
+        // 执行maven命令下载并拷贝依赖jar
         return executeMavenCmd(cmd.toString(), pomFile, mavenHome);
     }
 
@@ -76,47 +88,6 @@ public class DownloadDriver {
             return false;
         }
         return false;
-    }
-
-    private static void delFolder(String folderPath) {
-        try {
-            delAllFile(folderPath); // 删除完里面所有内容
-            String filePath = folderPath;
-            filePath = filePath.toString();
-            java.io.File myFilePath = new java.io.File(filePath);
-            myFilePath.delete(); // 删除空文件夹
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static boolean delAllFile(String path) {
-        boolean flag = false;
-        File file = new File(path);
-        if (!file.exists()) {
-            return flag;
-        }
-        if (!file.isDirectory()) {
-            return flag;
-        }
-        String[] tempList = file.list();
-        File temp = null;
-        for (int i = 0; i < tempList.length; i++) {
-            if (path.endsWith(File.separator)) {
-                temp = new File(path + tempList[i]);
-            } else {
-                temp = new File(path + File.separator + tempList[i]);
-            }
-            if (temp.isFile()) {
-                temp.delete();
-            }
-            if (temp.isDirectory()) {
-                delAllFile(path + "/" + tempList[i]);// 先删除文件夹里面的文件
-                delFolder(path + "/" + tempList[i]);// 再删除空文件夹
-                flag = true;
-            }
-        }
-        return flag;
     }
 
 }

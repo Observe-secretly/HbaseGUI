@@ -1,18 +1,11 @@
 package com.lm.hbase.swing;
 
 import java.awt.Rectangle;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.swing.JLabel;
@@ -24,12 +17,10 @@ import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.Row;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.QualifierValue;
-import com.lm.hbase.common.Env;
+import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.util.MyBytesUtil;
 
 public class HandleCore {
-
-    private static Properties   confProps  = null;
 
     private static final String NUMBER     = "Number";
 
@@ -37,88 +28,8 @@ public class HandleCore {
 
     private static final String SPLIT_MARK = ".";
 
-    private static String getConfFilePath() {
-        return Env.CONF_DIR + "hbase-client.conf";
-    }
-
     /**
-     * 获取配置文件，如果不存在则创建
-     * 
-     * @return
-     */
-    private static Properties loadProperties() {
-        confProps = new Properties();
-        try {
-            File conf = new File(getConfFilePath());
-            if (!conf.exists()) {
-                conf.createNewFile();
-            }
-            confProps.load(new InputStreamReader(new FileInputStream(conf)));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return confProps;
-    }
-
-    public static void reloadConf() {
-        loadProperties();
-    }
-
-    public static void setValue(String key, String value) {
-        if (confProps == null) {
-            loadProperties();
-        }
-        confProps.put(key, value);
-        try {
-            confProps.store(new FileOutputStream(getConfFilePath()), null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static String getStringValue(String key) {
-        if (confProps == null) {
-            return loadProperties().getProperty(key);
-        } else {
-            return confProps.getProperty(key);
-        }
-    }
-
-    public static Integer getIntegerValue(String key) {
-        return Integer.parseInt(getStringValue(key));
-    }
-
-    public static Long getLongValue(String key) {
-        return Long.parseLong(getStringValue(key));
-    }
-
-    public static Boolean getBooleanValue(String key) {
-        return Boolean.parseBoolean(getStringValue(key));
-    }
-
-    public static void setConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent) {
-        if (confProps == null) {
-            loadProperties();
-        }
-        confProps.put("hbase.zk.port", zkPort);
-        confProps.put("hbase.zk.quorum", zkQuorum);
-        confProps.put("hbase.master", hbaseMaster);
-        confProps.put("znode.parent", znodeParent);
-        try {
-            confProps.store(new FileOutputStream(getConfFilePath()), null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 测试hbase配置
+     * 测试 import com.lm.hbase.conf.HbaseClientConf;hbase配置
      * 
      * @param zkPort
      * @param zkQuorum
@@ -126,10 +37,10 @@ public class HandleCore {
      * @return
      * @throws Exception
      */
-    public static String testConf(String zkPort, String zkQuorum, String hbaseMaster,
-                                  String znodeParent) throws Exception {
+    public static String testConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent,
+                                  String version, String mavenHome) throws Exception {
         HbaseUtil.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
-        setConf(zkPort, zkQuorum, hbaseMaster, znodeParent);
+        HbaseClientConf.setConf(zkPort, zkQuorum, hbaseMaster, znodeParent, version, mavenHome);
 
         // 尝试获取集群状态
         String clusterStatus = HbaseUtil.getClusterStatus();
