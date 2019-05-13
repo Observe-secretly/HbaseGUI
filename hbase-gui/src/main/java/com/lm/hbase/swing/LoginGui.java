@@ -2,6 +2,7 @@
 package com.lm.hbase.swing;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -10,6 +11,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.net.HttpURLConnection;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -18,8 +21,9 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -37,17 +41,27 @@ import com.lm.hbase.util.network.HttpURLConnectionFactory;
 
 public class LoginGui extends JDialog {
 
-    private static final long serialVersionUID = 7686127697988572348L;
+    private static final long       serialVersionUID          = 7686127697988572348L;
 
-    private JPanel            contentPanel     = new JPanel();
-    private JTextField        zkPortField;
-    private JTextField        zkQuorumField;
-    private JTextField        hbaseMasterField;
-    private JTextField        znodeParentField;
-    private JTextField        mavenHomeField;
+    public ScheduledExecutorService threadPool                = Executors.newSingleThreadScheduledExecutor();
 
-    private JComboBox<String> driverVersionComboBox;
-    private JButton           reloadDriverVersionButton;
+    private JPanel                  contentPanel              = new JPanel();
+    private JTextField              zkPortField;
+    private JTextField              zkQuorumField;
+    private JTextField              hbaseMasterField;
+    private JTextField              znodeParentField;
+    private JTextField              mavenHomeField;
+
+    private JButton                 testButton                = new JButton("Test Connection");
+    private JButton                 cancelButton              = new JButton("close");
+    private JButton                 okButton                  = new JButton("connect");
+    private JButton                 reloadDriverVersionButton = new JButton(new ImageIcon(Env.IMG_DIR + "Update.png"));
+
+    private JComboBox<String>       driverVersionComboBox;
+
+    public JLabel                   progressInfoLabel         = new JLabel();
+    public JProgressBar             processBar                = new JProgressBar();
+    public JLabel                   stopLabel                 = new JLabel(new ImageIcon(Env.IMG_DIR + "stop.png"));;
 
     public static void openDialog() {
         try {
@@ -75,9 +89,8 @@ public class LoginGui extends JDialog {
     public LoginGui(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent, String hbaseVersion,
                     String mavenHome){
         setTitle("配置Hbase");
-        setBounds(100, 100, 450, 300);
+        setBounds(100, 100, 450, 310);
         getContentPane().setLayout(new BorderLayout());
-        contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
                                                                  FormSpecs.DEFAULT_COLSPEC,
@@ -175,20 +188,20 @@ public class LoginGui extends JDialog {
                 driverVersionComboBox.addItem(item);
                 if (item.equalsIgnoreCase(hbaseVersion)) {
                     driverVersionComboBox.setSelectedIndex(confVersionIndex);
-                    loadDriver(hbaseVersion, false);
+                    asyncLoadDriver(hbaseVersion, false);
                 }
             }
             driverVersionComboBox.addItemListener(new VersionListener());
 
             contentPanel.add(driverVersionComboBox, "10, 18, 1, 1, fill, default");
 
-            reloadDriverVersionButton = new JButton(new ImageIcon(Env.IMG_DIR + "Update.png"));
             reloadDriverVersionButton.addMouseListener(new ReloadVersion());
             contentPanel.add(reloadDriverVersionButton, "10, 18, 5, 1, right, default");
         }
 
         {
             JPanel buttonPane = new JPanel();
+            buttonPane.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("127px"),
                                                                    ColumnSpec.decode("147px"),
@@ -196,10 +209,10 @@ public class LoginGui extends JDialog {
                                                                    ColumnSpec.decode("75px"),
                                                                    FormSpecs.RELATED_GAP_COLSPEC,
                                                                    ColumnSpec.decode("86px"), },
-                                                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
+                                                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("29px"),
+                                                                FormSpecs.RELATED_GAP_ROWSPEC,
                                                                 RowSpec.decode("29px"), }));
             {
-                JButton testButton = new JButton("Test Connection");
                 testButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -216,30 +229,44 @@ public class LoginGui extends JDialog {
                             testButton.setEnabled(true);
                             return;
                         }
-                        try {
-                            String clusterStatus = HandleCore.testConf(zkPortField.getText(), zkQuorumField.getText(),
-                                                                       hbaseMasterField.getText(),
-                                                                       znodeParentField.getText(),
-                                                                       driverVersionComboBox.getSelectedItem().toString(),
-                                                                       mavenHomeField.getText());
-                            if (clusterStatus != null) {
-                                JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus, "提示",
-                                                              JOptionPane.INFORMATION_MESSAGE);
-                            } else {
-                                JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误", JOptionPane.ERROR_MESSAGE);
+
+                        startTask();
+
+                        threadPool.execute(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                try {
+                                    String clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                                                               zkQuorumField.getText(),
+                                                                               hbaseMasterField.getText(),
+                                                                               znodeParentField.getText(),
+                                                                               driverVersionComboBox.getSelectedItem().toString(),
+                                                                               mavenHomeField.getText());
+                                    if (clusterStatus != null) {
+                                        JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus,
+                                                                      "提示", JOptionPane.INFORMATION_MESSAGE);
+                                    } else {
+                                        JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误",
+                                                                      JOptionPane.ERROR_MESSAGE);
+                                    }
+
+                                } catch (Exception e2) {
+                                    JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage(),
+                                                                  "错误", JOptionPane.ERROR_MESSAGE);
+                                } finally {
+                                    endTask();
+                                }
+
                             }
 
-                        } catch (Exception e2) {
-                            JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage(), "错误",
-                                                          JOptionPane.ERROR_MESSAGE);
-                        }
-                        testButton.setEnabled(true);
+                        });
+
                     }
                 });
                 buttonPane.add(testButton, "1, 2, left, top");
             }
             {
-                JButton cancelButton = new JButton("close");
                 cancelButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -251,7 +278,6 @@ public class LoginGui extends JDialog {
                 buttonPane.add(cancelButton, "4, 2, left, top");
             }
             {
-                JButton okButton = new JButton("connect");
                 okButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -272,30 +298,60 @@ public class LoginGui extends JDialog {
                                 okButton.setEnabled(true);
                                 return;
                             }
-                            try {
-                                String clusterStatus = HandleCore.testConf(zkPortField.getText(),
-                                                                           zkQuorumField.getText(),
-                                                                           hbaseMasterField.getText(),
-                                                                           znodeParentField.getText(),
-                                                                           driverVersionComboBox.getSelectedItem().toString(),
-                                                                           mavenHomeField.getText());
-                                if (clusterStatus != null) {
-                                    com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
-                                    com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
-                                } else {
-                                    JOptionPane.showMessageDialog(contentPanel, "连接失败");
-                                }
 
-                            } catch (Exception e2) {
-                                JOptionPane.showMessageDialog(contentPanel, "连接失败.\n" + e2.getLocalizedMessage());
-                            }
-                            okButton.setEnabled(true);
+                            startTask();
+                            stopLabel.setEnabled(true);
+                            processBar.setIndeterminate(true);
+
+                            threadPool.execute(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    try {
+                                        String clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                                                                   zkQuorumField.getText(),
+                                                                                   hbaseMasterField.getText(),
+                                                                                   znodeParentField.getText(),
+                                                                                   driverVersionComboBox.getSelectedItem().toString(),
+                                                                                   mavenHomeField.getText());
+                                        if (clusterStatus != null) {
+                                            com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
+                                            com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
+                                        } else {
+                                            JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                                        }
+
+                                    } catch (Exception e2) {
+                                        JOptionPane.showMessageDialog(contentPanel,
+                                                                      "连接失败.\n" + e2.getLocalizedMessage());
+                                    } finally {
+                                        endTask();
+                                    }
+
+                                }
+                            });
+
                         }
                     }
                 });
                 okButton.setActionCommand("OK");
                 buttonPane.add(okButton, "6, 2, left, top");
                 getRootPane().setDefaultButton(okButton);
+            }
+            {
+                JPanel processPanel = new JPanel();
+                processPanel.setLayout(new FlowLayout(5));
+
+                stopLabel.addMouseListener(new StopEvent());
+                stopLabel.setEnabled(false);
+
+                processBar.setIndeterminate(false);
+
+                processPanel.add(stopLabel, 0);
+                processPanel.add(processBar, 1);
+                processPanel.add(progressInfoLabel, 2);
+
+                buttonPane.add(processPanel, "1, 4,6,1 fill, default");
             }
         }
 
@@ -312,17 +368,35 @@ public class LoginGui extends JDialog {
                 System.exit(0);
 
             }
+
+        });
+    }
+
+    public void asyncLoadDriver(String version, boolean reload) {
+        startTask();
+        threadPool.execute(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    loadDriver(version, reload);
+                } finally {
+                    endTask();
+                }
+
+            }
         });
     }
 
     public void loadDriver(String version, boolean reload) {
+
         String outputDir = Env.DRIVER_DIR + version;
         File outputFileDir = new File(outputDir);
         if (!outputFileDir.exists()) {
             // TODO 0、下载适配程序 1、加载驱动；2、添加设置maven目录的功能；3、现实加载进度；4、异步
             // 加载hbase client驱动
             try {
-                String mavenHome = driverVersionComboBox == null ? null : driverVersionComboBox.getSelectedItem().toString();
+                String mavenHome = mavenHomeField == null ? null : mavenHomeField.getText();
                 if (StringUtil.isEmpty(mavenHome)) {
                     mavenHome = HbaseClientConf.getStringValue("maven.home");
                 }
@@ -394,7 +468,7 @@ public class LoginGui extends JDialog {
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 String version = e.getItem().toString();
-                loadDriver(version, false);
+                asyncLoadDriver(version, false);
                 // TODO 需要重启应用
                 // TODO 如果 DESELECTED 的Item是NULL则不重启
 
@@ -413,6 +487,7 @@ public class LoginGui extends JDialog {
 
         @Override
         public void mousePressed(MouseEvent e) {
+            startTask();
             reloadDriverVersionButton.setEnabled(false);
         }
 
@@ -422,17 +497,55 @@ public class LoginGui extends JDialog {
                 return;
             }
 
+            if (StringUtil.isEmpty(mavenHomeField.getText())) {
+                JOptionPane.showMessageDialog(contentPanel, "请设置MavenHome", "错误", JOptionPane.ERROR_MESSAGE);
+                endTask();
+                return;
+            }
+
             String version = driverVersionComboBox.getSelectedItem().toString();
             if (StringUtil.isEmpty(version)) {
                 JOptionPane.showMessageDialog(contentPanel, "请设置hbaseVersion", "错误", JOptionPane.ERROR_MESSAGE);
                 reloadDriverVersionButton.setEnabled(true);
+                endTask();
                 return;
             }
 
-            loadDriver(version, true);
-
-            reloadDriverVersionButton.setEnabled(true);
+            asyncLoadDriver(version, true);
         }
 
     }
+
+    class StopEvent extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            // 终止正在跑任务的线程
+            if (!threadPool.isShutdown() || !threadPool.isTerminated()) {
+                threadPool.shutdownNow();
+                threadPool = Executors.newSingleThreadScheduledExecutor();
+            }
+
+            endTask();
+        }
+    }
+
+    private void endTask() {
+        reloadDriverVersionButton.setEnabled(true);
+        testButton.setEnabled(true);
+        cancelButton.setEnabled(true);
+        okButton.setEnabled(true);
+        processBar.setIndeterminate(false);
+        stopLabel.setEnabled(false);
+    }
+
+    private void startTask() {
+        reloadDriverVersionButton.setEnabled(false);
+        testButton.setEnabled(false);
+        cancelButton.setEnabled(false);
+        okButton.setEnabled(false);
+        processBar.setIndeterminate(true);
+        stopLabel.setEnabled(true);
+    }
+
 }
