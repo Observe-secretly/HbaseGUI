@@ -38,6 +38,7 @@ public class MetaDataTab extends TabAbstract {
     private JTable        contentTable;
     private JScrollPane   tableScroll;
     private JButton       saveButton;
+    private JButton       refreshTableButton;
 
     public MetaDataTab(HbaseGui window){
         super(window);
@@ -75,7 +76,7 @@ public class MetaDataTab extends TabAbstract {
         popupMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
         addPopup(list, popupMenu);
 
-        JButton refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
+        refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel southPanel = new JPanel();
@@ -109,8 +110,17 @@ public class MetaDataTab extends TabAbstract {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                initTableList(list);
-                refreshTableButton.setEnabled(true);
+                getSingleThreadPool().execute(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        startTask();
+                        initTableList(list);
+                        stopTask();
+                    }
+
+                });
+
             }
         });
 
@@ -186,11 +196,15 @@ public class MetaDataTab extends TabAbstract {
     @Override
     public void enableAll() {
         list.setEnabled(true);
+        refreshTableButton.setEnabled(true);
+        saveButton.setEnabled(true);
     }
 
     @Override
     public void disableAll() {
         list.setEnabled(false);
+        refreshTableButton.setEnabled(false);
+        saveButton.setEnabled(false);
     }
 
 }

@@ -314,8 +314,16 @@ public class QueryTab extends TabAbstract {
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    initTableList(list);
-                    refreshTableButton.setEnabled(true);
+                    getSingleThreadPool().execute(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            startTask();
+                            initTableList(list);
+                            stopTask();
+                        }
+
+                    });
                 }
             });
 
