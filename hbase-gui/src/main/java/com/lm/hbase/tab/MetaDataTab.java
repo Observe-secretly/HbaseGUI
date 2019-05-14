@@ -37,6 +37,9 @@ public class MetaDataTab extends TabAbstract {
     private JList<String> list;
     private JTable        contentTable;
     private JScrollPane   tableScroll;
+    private JButton       removeMataDataBut;
+    private JButton       addMataDataBut;
+    private JButton       refreshMataDataBut;
     private JButton       saveButton;
     private JButton       refreshTableButton;
 
@@ -88,78 +91,151 @@ public class MetaDataTab extends TabAbstract {
         tableScroll = new JScrollPane(contentTable);
         southPanel.add(tableScroll, BorderLayout.CENTER);
 
-        JPanel searchSouthPanel = new JPanel();
-        searchSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        southPanel.add(searchSouthPanel, BorderLayout.SOUTH);
-        searchSouthPanel.setLayout(new BorderLayout(0, 0));
+        JPanel mataSouthPanel = new JPanel();
+        mataSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        southPanel.add(mataSouthPanel, BorderLayout.SOUTH);
 
+        addMataDataBut = new JButton(new ImageIcon(Env.IMG_DIR + "add.png"));
+        removeMataDataBut = new JButton(new ImageIcon(Env.IMG_DIR + "Garbage.png"));
+        refreshMataDataBut = new JButton(new ImageIcon(Env.IMG_DIR + "Update.png"));
         saveButton = new JButton("保存元数据", new ImageIcon(Env.IMG_DIR + "save.png"));
-        searchSouthPanel.add(saveButton, BorderLayout.EAST);
+
+        addMataDataBut.setEnabled(false);
+        removeMataDataBut.setEnabled(false);
+        refreshMataDataBut.setEnabled(false);
+        saveButton.setEnabled(false);
+
+        mataSouthPanel.add(addMataDataBut);
+        mataSouthPanel.add(removeMataDataBut);
+        mataSouthPanel.add(refreshMataDataBut);
+        mataSouthPanel.add(saveButton);
 
         /*
          * 添加各种监听
          */
+        {
 
-        // 给刷新按钮添加监听
-        refreshTableButton.addMouseListener(new MouseAdapter() {
+            // 给刷新按钮添加监听
+            refreshTableButton.addMouseListener(new MouseAdapter() {
 
-            @Override
-            public void mousePressed(MouseEvent e) {
-                refreshTableButton.setEnabled(false);
-            }
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    refreshTableButton.setEnabled(false);
+                }
 
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                getSingleThreadPool().execute(new Runnable() {
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    getSingleThreadPool().execute(new Runnable() {
 
-                    @Override
-                    public void run() {
-                        startTask();
-                        initTableList(list);
-                        stopTask();
+                        @Override
+                        public void run() {
+                            startTask();
+                            initTableList(list);
+                            stopTask();
+                        }
+
+                    });
+
+                }
+            });
+
+            // 表格自适应监听
+            contentTable.addComponentListener(new ComponentAdapter() {
+
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    resizeTable(true, contentTable, tableScroll);
+                }
+            });
+
+            // 选中hbase表时的监听
+            list.addListSelectionListener(new ListSelectionListener() {
+
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (!e.getValueIsAdjusting()) {
+                        loadMataData(list.getSelectedValue(), false);
+                    }
+                }
+            });
+
+            // 添加自定义属性监听
+            addMataDataBut.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    DefaultTableModel tableModel = (DefaultTableModel) contentTable.getModel();
+                    tableModel.addRow(new String[] { "<CustomField>", "String" });
+                }
+            });
+
+            // 删除原数据列监听
+            removeMataDataBut.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    int selectedRowCount = contentTable.getSelectedRowCount();
+                    String tableName = list.getSelectedValue();
+                    if (selectedRowCount > 0 || tableName != null) {
+                        String[] rowkeys = new String[selectedRowCount];
+                        int[] selectRowIndexs = contentTable.getSelectedRows();
+                        for (int i = 0; i < selectedRowCount; i++) {
+                            rowkeys[i] = contentTable.getValueAt(selectRowIndexs[i], 1).toString();
+                        }
+
+                        DefaultTableModel model = (DefaultTableModel) contentTable.getModel();
+                        while (true) {
+                            if (contentTable.getSelectedRowCount() > 0) {
+                                model.removeRow(contentTable.getSelectedRow());
+                            } else {
+                                break;
+                            }
+                        }
+
+                    }
+                    removeMataDataBut.setEnabled(false);
+                }
+            });
+
+            // 选中表格的行时，控制删除是否需要显示
+            contentTable.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (contentTable.getSelectedRowCount() == 0) {
+                        removeMataDataBut.setEnabled(false);
+                    } else {
+                        removeMataDataBut.setEnabled(true);
+                    }
+                }
+            });
+
+            refreshMataDataBut.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    loadMataData(list.getSelectedValue(), true);
+                }
+            });
+
+            // 保存按钮监听
+            saveButton.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    Map<String, String> map = new HashMap<>();
+                    for (int i = 0; i < contentTable.getRowCount(); i++) {
+                        map.put(contentTable.getValueAt(i, 0).toString(), contentTable.getValueAt(i, 1).toString());
                     }
 
-                });
+                    String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
+                    HbaseClientConf.setValue(propertiesKey, JSON.toJSONString(map));
+                    JOptionPane.showMessageDialog(getFrame(), "保存成功", "提示", JOptionPane.INFORMATION_MESSAGE);
 
-            }
-        });
-
-        // 表格自适应监听
-        contentTable.addComponentListener(new ComponentAdapter() {
-
-            @Override
-            public void componentResized(ComponentEvent e) {
-                resizeTable(true, contentTable, tableScroll);
-            }
-        });
-
-        // 选中hbase表时的监听
-        list.addListSelectionListener(new ListSelectionListener() {
-
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    loadMataData(list.getSelectedValue());
                 }
+            });
 
-            }
-        });
-
-        saveButton.addMouseListener(new MouseAdapter() {
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                Map<String, String> map = new HashMap<>();
-                for (int i = 0; i < contentTable.getRowCount(); i++) {
-                    map.put(contentTable.getValueAt(i, 0).toString(), contentTable.getValueAt(i, 1).toString());
-                }
-
-                String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-                HbaseClientConf.setValue(propertiesKey, JSON.toJSONString(map));
-                JOptionPane.showMessageDialog(getFrame(), "保存成功", "提示", JOptionPane.INFORMATION_MESSAGE);
-
-            }
-        });
+        }
 
         // 初始化表
         initTableList(list);
@@ -168,7 +244,7 @@ public class MetaDataTab extends TabAbstract {
     }
 
     @SuppressWarnings("unchecked")
-    private void loadMataData(String tableName) {
+    private void loadMataData(String tableName, boolean onlyLoadHbase) {
         startTask();
         getSingleThreadPool().execute(new Runnable() {
 
@@ -181,13 +257,12 @@ public class MetaDataTab extends TabAbstract {
                 // 2、查询不到则去Hbase查询表结构，得到所有的字段。所有字段默认是string类型
                 String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
                 String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
-                if (!StringUtil.isEmpty(cacheMetaData)) {
+                if (!StringUtil.isEmpty(cacheMetaData) && !onlyLoadHbase) {
                     HandleCore.reloadMetaTableFormat(contentTable, JSON.parseObject(cacheMetaData, Map.class));
                 } else {
                     HandleCore.reloadMetaTableFormat(tableName, contentTable);
                 }
                 stopTask();
-
             }
         });
 
@@ -196,15 +271,22 @@ public class MetaDataTab extends TabAbstract {
     @Override
     public void enableAll() {
         list.setEnabled(true);
-        refreshTableButton.setEnabled(true);
+        addMataDataBut.setEnabled(true);
+        refreshMataDataBut.setEnabled(true);
         saveButton.setEnabled(true);
+        refreshTableButton.setEnabled(true);
+        removeMataDataBut.setEnabled(true);
     }
 
     @Override
     public void disableAll() {
         list.setEnabled(false);
-        refreshTableButton.setEnabled(false);
+        addMataDataBut.setEnabled(false);
+        refreshMataDataBut.setEnabled(false);
         saveButton.setEnabled(false);
+        refreshTableButton.setEnabled(false);
+        removeMataDataBut.setEnabled(false);
+
     }
 
 }
