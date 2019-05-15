@@ -2,6 +2,7 @@
 package com.lm.hbase.swing;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -89,7 +90,9 @@ public class LoginGui extends JDialog {
     public LoginGui(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent, String hbaseVersion,
                     String mavenHome){
         setTitle("配置Hbase");
-        setBounds(100, 100, 450, 310);
+        setBounds(100, 100, 500, 310);
+        this.setMinimumSize(new Dimension(500, 310));
+        this.setResizable(false);// 禁止拉边框拉长拉短
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
@@ -106,10 +109,10 @@ public class LoginGui extends JDialog {
                                                                  FormSpecs.DEFAULT_COLSPEC,
                                                                  FormSpecs.RELATED_GAP_COLSPEC,
                                                                  ColumnSpec.decode("default:grow"),
-                                                                 FormSpecs.DEFAULT_COLSPEC,
                                                                  FormSpecs.RELATED_GAP_COLSPEC,
                                                                  FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC },
+                                                                 FormSpecs.RELATED_GAP_COLSPEC,
+                                                                 FormSpecs.DEFAULT_COLSPEC, },
                                               new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
@@ -203,15 +206,16 @@ public class LoginGui extends JDialog {
             JPanel buttonPane = new JPanel();
             buttonPane.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
-            buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("127px"),
-                                                                   ColumnSpec.decode("147px"),
+            buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("130px"),
+                                                                   ColumnSpec.decode("150px"),
                                                                    FormSpecs.RELATED_GAP_COLSPEC,
-                                                                   ColumnSpec.decode("75px"),
+                                                                   ColumnSpec.decode("80px"),
                                                                    FormSpecs.RELATED_GAP_COLSPEC,
-                                                                   ColumnSpec.decode("86px"), },
-                                                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, RowSpec.decode("29px"),
+                                                                   ColumnSpec.decode("130px"), },
+                                                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
+                                                                FormSpecs.DEFAULT_ROWSPEC,
                                                                 FormSpecs.RELATED_GAP_ROWSPEC,
-                                                                RowSpec.decode("29px"), }));
+                                                                FormSpecs.DEFAULT_ROWSPEC, }));
             {
                 testButton.addMouseListener(new MouseAdapter() {
 
@@ -340,7 +344,7 @@ public class LoginGui extends JDialog {
             }
             {
                 JPanel processPanel = new JPanel();
-                processPanel.setLayout(new FlowLayout(5));
+                processPanel.setLayout(new FlowLayout(3));
 
                 stopLabel.addMouseListener(new StopEvent());
                 stopLabel.setEnabled(false);
@@ -351,7 +355,7 @@ public class LoginGui extends JDialog {
                 processPanel.add(processBar, 1);
                 processPanel.add(progressInfoLabel, 2);
 
-                buttonPane.add(processPanel, "1, 4,6,1 fill, default");
+                buttonPane.add(processPanel, "1,4,6,1, fill, fill");
             }
         }
 
@@ -379,7 +383,10 @@ public class LoginGui extends JDialog {
             @Override
             public void run() {
                 try {
+                    Thread.sleep(2000);
                     loadDriver(version, reload);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 } finally {
                     endTask();
                 }
@@ -404,14 +411,16 @@ public class LoginGui extends JDialog {
                     JOptionPane.showMessageDialog(this, "请设置MavenHome", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                DownloadDriver.load(version, mavenHome);
+                DownloadDriver.load(version, mavenHome, progressInfoLabel);
             } catch (Throwable e1) {
                 e1.printStackTrace();
             }
 
             // 加载适配程序
             try {
+                progressInfoLabel.setText("download adapter jar ....");
                 loadHbaseAdapterJar(version);
+                progressInfoLabel.setText("download adapter jar success");
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -422,7 +431,9 @@ public class LoginGui extends JDialog {
             }
         }
 
+        progressInfoLabel.setText("Classloader load all jars  ....");
         DriverClassLoader.loadClasspath(version);
+        progressInfoLabel.setText("The jar necessary for the  " + version + " version is loaded");
     }
 
     public void loadHbaseAdapterJar(String version) throws Throwable {

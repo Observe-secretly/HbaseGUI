@@ -4,6 +4,8 @@ import java.io.File;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 
+import javax.swing.JLabel;
+
 import org.apache.maven.shared.invoker.DefaultInvocationRequest;
 import org.apache.maven.shared.invoker.DefaultInvoker;
 import org.apache.maven.shared.invoker.InvocationRequest;
@@ -39,7 +41,7 @@ public class DownloadDriver {
         return url.toString();
     }
 
-    public static boolean load(String version, String mavenHome) throws Throwable {
+    public static boolean load(String version, String mavenHome, JLabel progressInfoLabel) throws Throwable {
 
         String outputDir = Env.DRIVER_DIR + version;
         // XXX 如果驱动存在则不处理。后续完善可以添加校验功能
@@ -53,19 +55,28 @@ public class DownloadDriver {
         }
 
         // 下载pom已经client jar
+        progressInfoLabel.setText("download pom file ...");
         System.out.println("download pom file to " + outputDir);
         HttpURLConnection con = HttpURLConnectionFactory.getConn(getPomUrl(version));
         HttpURLConnectionFactory.downloadFile(con, outputDir, "pom.xml");
+        progressInfoLabel.setText("download hbase-client-" + version + ".jar ...");
         con = HttpURLConnectionFactory.getConn(getJarUrl(version));
         HttpURLConnectionFactory.downloadFile(con, outputDir, "hbase-client-" + version + ".jar");
-        System.out.println("download pom file success");
 
         File pomFile = new File(outputDir);
         StringBuilder cmd = new StringBuilder("dependency:copy-dependencies -DoutputDirectory=");
         cmd.append(outputDir);
 
+        progressInfoLabel.setText("download hbase-client dependencies jars  ...");
         // 执行maven命令下载并拷贝依赖jar
-        return executeMavenCmd(cmd.toString(), pomFile, mavenHome);
+        boolean result = executeMavenCmd(cmd.toString(), pomFile, mavenHome);
+        if (result) {
+            progressInfoLabel.setText("download hbase-client dependencies jars  success");
+        } else {
+            progressInfoLabel.setText("download hbase-client dependencies jars  error");
+        }
+
+        return result;
     }
 
     public static boolean executeMavenCmd(String cmd, File pomFile, String mavenHome) {
