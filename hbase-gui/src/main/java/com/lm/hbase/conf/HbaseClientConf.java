@@ -97,4 +97,20 @@ public class HbaseClientConf {
         }
     }
 
+    public static void remove(String key) {
+        if (confProps == null) {
+            loadProperties();
+        }
+
+        confProps.remove(key);
+
+        try {
+            confProps.store(new FileOutputStream(getConfFilePath()), null);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

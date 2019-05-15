@@ -291,6 +291,10 @@ public class QueryTab extends TabAbstract {
                                     JOptionPane.showMessageDialog(getFrame(), "删除成功", "提示",
                                                                   JOptionPane.INFORMATION_MESSAGE);
 
+                                    // 删除成功后，删除元数据
+                                    String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
+                                    HbaseClientConf.remove(propertiesKey);
+
                                     stopTask();
 
                                 }
