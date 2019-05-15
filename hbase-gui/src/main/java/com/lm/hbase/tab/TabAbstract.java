@@ -6,6 +6,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.Icon;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import com.lm.hbase.swing.HbaseGui;
@@ -18,6 +19,11 @@ public abstract class TabAbstract extends TabCommonUtil implements TabInterface 
 
     public TabAbstract(HbaseGui window){
         this.window = window;
+    }
+
+    public void exceptionAlert(Exception e) {
+        stopTask();
+        JOptionPane.showMessageDialog(window.parentJframe, e.getMessage(), "异常", JOptionPane.ERROR_MESSAGE);
     }
 
     public synchronized void startTask() {

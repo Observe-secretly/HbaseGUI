@@ -18,9 +18,10 @@ public class TabCommonUtil {
      * 初始化表
      * 
      * @param list
+     * @throws Exception
      * @wbp.parser.entryPoint
      */
-    public void initTableList(JList<String> list) {
+    public void initTableList(JList<String> list) throws Exception {
         String[] tableNames = HbaseUtil.getListTableNames();
         if (tableNames != null) {
             list.setListData(tableNames);

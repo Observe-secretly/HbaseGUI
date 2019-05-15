@@ -3,6 +3,7 @@ package com.lm.hbase.tab;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.SystemColor;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -14,11 +15,17 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.Env;
@@ -27,12 +34,34 @@ import com.lm.hbase.util.StringUtil;
 
 public class CreateTab extends TabAbstract {
 
-    private JTextField textField_tab3_tableName;
-    private JButton    tab3_create_table_button;
-    private JTextArea  tab3_textArea;
+    private JButton       refreshNameSpaceBut;
+    private JList<String> nameSpaceList;
+
+    private JTextField    tableNameField;
+    private JButton       createTabBut;
+    private JButton       addColumnFamilyBut;
+    private JTextArea     showTextArea;
+
+    private static String namespace     = "";
+    private static String table_name    = "";
+    private static String column_family = "";
 
     public CreateTab(HbaseGui window){
         super(window);
+    }
+
+    public void refreshCreateTableText() {
+        StringBuilder text = new StringBuilder();
+        if (!StringUtil.isEmpty(namespace)) {
+            text.append(com.lm.hbase.swing.SwingConstants.NAMESPACE_DES + namespace + "\n");
+        }
+        if (!StringUtil.isEmpty(table_name)) {
+            text.append(com.lm.hbase.swing.SwingConstants.TABLE_NAME_DES + table_name + "\n");
+        }
+        if (!StringUtil.isEmpty(column_family)) {
+            text.append(com.lm.hbase.swing.SwingConstants.COLUMN_FAMILY_DES + column_family + "\n");
+        }
+        showTextArea.setText(text.toString());
     }
 
     @Override
@@ -42,170 +71,224 @@ public class CreateTab extends TabAbstract {
 
     @Override
     public JPanel initializePanel() {
-        JPanel table = new JPanel();
-        table.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        table.setLayout(new BorderLayout(0, 0));
+        // 底层面板
+        JPanel mainPanel = new JPanel();
+        // 中央面板
+        JPanel tableContentPanel = new JPanel();
+        // 左侧面板
+        JPanel namespacePanel = new JPanel();
+        namespacePanel.setToolTipText("asdfads");
 
-        JPanel tableNorthPanel = new JPanel();
-        tableNorthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        table.add(tableNorthPanel, BorderLayout.NORTH);
-        tableNorthPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        // 初始化所有panel
+        {
+            mainPanel.setLayout(new BorderLayout());
 
-        JLabel label_2 = new JLabel(new ImageIcon(Env.IMG_DIR + "table.png"));
-        tableNorthPanel.add(label_2);
+            tableContentPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            tableContentPanel.setLayout(new BorderLayout());
 
-        textField_tab3_tableName = new JTextField();
-        tableNorthPanel.add(textField_tab3_tableName);
-        textField_tab3_tableName.setColumns(10);
+            namespacePanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            namespacePanel.setLayout(new BorderLayout(1, 1));
+        }
 
-        JButton button_2 = new JButton("添加列族", new ImageIcon(Env.IMG_DIR + "add.png"));
-        tableNorthPanel.add(button_2);
+        // panel布局
+        {
+            mainPanel.add(tableContentPanel, BorderLayout.CENTER);
+            mainPanel.add(namespacePanel, BorderLayout.WEST);
+        }
 
-        JPanel tableCenterPanel = new JPanel();
-        tableCenterPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        table.add(tableCenterPanel, BorderLayout.CENTER);
-        tableCenterPanel.setLayout(new BoxLayout(tableCenterPanel, BoxLayout.Y_AXIS));
+        // 左侧面板内部布局
+        {
+            refreshNameSpaceBut = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
 
-        tab3_textArea = new JTextArea();
-        tab3_textArea.setColumns(20);
-        tab3_textArea.setRows(10);
-        tableCenterPanel.add(tab3_textArea);
+            nameSpaceList = new JList<>();
+            nameSpaceList.setFixedCellHeight(20);
+            nameSpaceList.setFixedCellWidth(200);
+            nameSpaceList.setBackground(SystemColor.window);
+            nameSpaceList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            try {
+                nameSpaceList.setListData(HbaseUtil.listNameSpace());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JScrollPane nsListScroll = new JScrollPane(nameSpaceList);
+            nsListScroll.setLayout(new ScrollPaneLayout());
 
-        button_2.addMouseListener(new MouseAdapter() {
+            namespacePanel.add(refreshNameSpaceBut, BorderLayout.NORTH);
+            namespacePanel.add(nsListScroll, BorderLayout.CENTER);
 
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                JDialog dialog = new JDialog(getFrame(), "添加列族", true);
-                dialog.setSize(200, 70);
+            nameSpaceList.addListSelectionListener(new ListSelectionListener() {
 
-                int windowWidth = dialog.getWidth(); // 获得窗口宽
-                int windowHeight = dialog.getHeight(); // 获得窗口高
-                Toolkit kit = Toolkit.getDefaultToolkit(); // 定义工具包
-                Dimension screenSize = kit.getScreenSize(); // 获取屏幕的尺寸
-                int screenWidth = screenSize.width; // 获取屏幕的宽
-                int screenHeight = screenSize.height; // 获取屏幕的高
-                dialog.setLocation(screenWidth / 2 - windowWidth, screenHeight / 2 - windowHeight * 2);
-
-                JPanel dialogPanel = new JPanel(new BorderLayout());
-                dialogPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-                dialog.getContentPane().add(dialogPanel);
-
-                JLabel jLabel_dialog = new JLabel("列族名：");
-                dialogPanel.add(jLabel_dialog, BorderLayout.WEST);
-
-                JTextField jTextField_dialog = new JTextField();
-                dialogPanel.add(jTextField_dialog, BorderLayout.CENTER);
-
-                jTextField_dialog.addKeyListener(new KeyAdapter() {
-
-                    @Override
-                    public void keyReleased(KeyEvent e) {
-                        if (e.getKeyCode() == 10) {
-                            tab3_textArea.setText(tab3_textArea.getText() + "\n{"
-                                                  + com.lm.hbase.swing.SwingConstants.COLUMN_FAMILY_DES
-                                                  + jTextField_dialog.getText() + "}");
-                            jTextField_dialog.setText("");
-                            dialog.setVisible(false);
-                        }
+                @Override
+                public void valueChanged(ListSelectionEvent e) {
+                    if (!e.getValueIsAdjusting()) {
+                        CreateTab.namespace = nameSpaceList.getSelectedValue();
+                        refreshCreateTableText();
                     }
-
-                });
-
-                dialog.setVisible(true);
-
-            }
-        });
-
-        textField_tab3_tableName.addKeyListener(new KeyAdapter() {
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                int index = tab3_textArea.getText().indexOf("]");
-                if (index > 0) {
-                    tab3_textArea.setText("[" + com.lm.hbase.swing.SwingConstants.TABLE_NAME_DES
-                                          + textField_tab3_tableName.getText() + "]"
-                                          + tab3_textArea.getText().substring(index + 1));
-                } else {
-                    tab3_textArea.setText("[" + com.lm.hbase.swing.SwingConstants.TABLE_NAME_DES
-                                          + textField_tab3_tableName.getText() + "]" + tab3_textArea.getText());
                 }
-            }
+            });
+        }
 
-        });
+        // 中央面板布局布局
+        {
+            JPanel tableNorthPanel = new JPanel();
 
-        JPanel tableSouthPanel = new JPanel();
-        tableSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        table.add(tableSouthPanel, BorderLayout.SOUTH);
+            tableNorthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            tableContentPanel.add(tableNorthPanel, BorderLayout.NORTH);
+            tableNorthPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-        tab3_create_table_button = new JButton("创建", new ImageIcon(Env.IMG_DIR + "new.png"));
-        tableSouthPanel.add(tab3_create_table_button);
-        tab3_create_table_button.addMouseListener(new CreateTable());
+            JLabel label_2 = new JLabel(new ImageIcon(Env.IMG_DIR + "table.png"));
+            tableNorthPanel.add(label_2);
 
-        return table;
+            tableNameField = new JTextField();
+            tableNorthPanel.add(tableNameField);
+            tableNameField.setColumns(10);
+
+            addColumnFamilyBut = new JButton("添加列族", new ImageIcon(Env.IMG_DIR + "add.png"));
+            tableNorthPanel.add(addColumnFamilyBut);
+
+            JPanel tableCenterPanel = new JPanel();
+            tableCenterPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            tableContentPanel.add(tableCenterPanel, BorderLayout.CENTER);
+            tableCenterPanel.setLayout(new BoxLayout(tableCenterPanel, BoxLayout.Y_AXIS));
+
+            showTextArea = new JTextArea();
+            showTextArea.setColumns(20);
+            showTextArea.setRows(10);
+            tableCenterPanel.add(showTextArea);
+
+            addColumnFamilyBut.addMouseListener(new MouseAdapter() {
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    JDialog dialog = new JDialog(getFrame(), "添加列族", true);
+                    dialog.setSize(200, 70);
+
+                    int windowWidth = dialog.getWidth(); // 获得窗口宽
+                    int windowHeight = dialog.getHeight(); // 获得窗口高
+                    Toolkit kit = Toolkit.getDefaultToolkit(); // 定义工具包
+                    Dimension screenSize = kit.getScreenSize(); // 获取屏幕的尺寸
+                    int screenWidth = screenSize.width; // 获取屏幕的宽
+                    int screenHeight = screenSize.height; // 获取屏幕的高
+                    dialog.setLocation(screenWidth / 2 - windowWidth, screenHeight / 2 - windowHeight * 2);
+
+                    JPanel dialogPanel = new JPanel(new BorderLayout());
+                    dialogPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+                    dialog.getContentPane().add(dialogPanel);
+
+                    JLabel jLabel_dialog = new JLabel("列族名：");
+                    dialogPanel.add(jLabel_dialog, BorderLayout.WEST);
+
+                    JTextField jTextField_dialog = new JTextField();
+                    dialogPanel.add(jTextField_dialog, BorderLayout.CENTER);
+
+                    jTextField_dialog.addKeyListener(new KeyAdapter() {
+
+                        @Override
+                        public void keyReleased(KeyEvent e) {
+                            if (e.getKeyCode() == 10) {
+                                CreateTab.column_family = jTextField_dialog.getText().trim();
+                                refreshCreateTableText();
+
+                                jTextField_dialog.setText("");
+                                dialog.setVisible(false);
+                            }
+                        }
+
+                    });
+
+                    dialog.setVisible(true);
+
+                }
+            });
+
+            tableNameField.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    CreateTab.table_name = tableNameField.getText().trim();
+                    refreshCreateTableText();
+                }
+
+            });
+
+            JPanel tableSouthPanel = new JPanel();
+            tableSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            tableContentPanel.add(tableSouthPanel, BorderLayout.SOUTH);
+
+            createTabBut = new JButton("创建", new ImageIcon(Env.IMG_DIR + "new.png"));
+            tableSouthPanel.add(createTabBut);
+            createTabBut.addMouseListener(new CreateTable());
+        }
+
+        return mainPanel;
     }
 
     class CreateTable extends MouseAdapter {
 
         @Override
         public void mousePressed(MouseEvent e) {
-            tab3_create_table_button.setEnabled(false);
+            createTabBut.setEnabled(false);
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
 
-            String createStatement = tab3_textArea.getText().trim().replaceAll("\r|\n", "");
-            createStatement = createStatement.replaceAll(com.lm.hbase.swing.SwingConstants.TABLE_NAME_DES,
-                                                         "").replaceAll(com.lm.hbase.swing.SwingConstants.COLUMN_FAMILY_DES,
-                                                                        "");
-            int index = createStatement.indexOf("]");
-            if (index == -1) {
+            if (StringUtil.isEmpty(CreateTab.namespace)) {
+                JOptionPane.showMessageDialog(getFrame(), "请选择命名空间", "警告", JOptionPane.WARNING_MESSAGE);
+                createTabBut.setEnabled(true);
+                return;
+            }
+
+            if (StringUtil.isEmpty(CreateTab.table_name)) {
                 JOptionPane.showMessageDialog(getFrame(), "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
-                tab3_create_table_button.setEnabled(true);
-                return;
-            }
-            String tableName = createStatement.substring(1, index);
-            if (StringUtil.isEmpty(tableName)) {
-                JOptionPane.showMessageDialog(getFrame(), "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
-                tab3_create_table_button.setEnabled(true);
+                createTabBut.setEnabled(true);
                 return;
             }
 
-            String temp = createStatement.substring(index + 1);
-            if (StringUtil.isEmpty(temp)) {
+            if (StringUtil.isEmpty(CreateTab.column_family)) {
                 JOptionPane.showMessageDialog(getFrame(), "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
-                tab3_create_table_button.setEnabled(true);
-                return;
-            }
-            String[] familys = temp.replaceAll("\\{", "").split("}");
-            if (familys == null || familys.length == 0) {
-                JOptionPane.showMessageDialog(getFrame(), "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
-                tab3_create_table_button.setEnabled(true);
+                createTabBut.setEnabled(true);
                 return;
             }
 
-            try {
-                HbaseUtil.createTable(tableName, familys);
-                JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception e2) {
-                JOptionPane.showMessageDialog(getFrame(), e2.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-            }
+            startTask();
 
-            tab3_create_table_button.setEnabled(true);
+            getSingleThreadPool().execute(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    try {
+                        HbaseUtil.createTable(CreateTab.namespace + ":" + CreateTab.table_name,
+                                              CreateTab.column_family);
+                        JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
+                    } catch (Exception e2) {
+                        JOptionPane.showMessageDialog(getFrame(), e2.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                    }
+
+                    stopTask();
+
+                }
+
+            });
+
         }
 
     }
 
     @Override
     public void enableAll() {
-        // TODO Auto-generated method stub
+        createTabBut.setEnabled(true);
+        refreshNameSpaceBut.setEnabled(true);
+        addColumnFamilyBut.setEnabled(true);
 
     }
 
     @Override
     public void disableAll() {
-        // TODO Auto-generated method stub
-
+        createTabBut.setEnabled(false);
+        refreshNameSpaceBut.setEnabled(false);
+        addColumnFamilyBut.setEnabled(false);
     }
 
 }

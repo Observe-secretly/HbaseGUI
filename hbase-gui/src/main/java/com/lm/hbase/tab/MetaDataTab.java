@@ -1,7 +1,6 @@
 package com.lm.hbase.tab;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.SystemColor;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -15,7 +14,6 @@ import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -74,11 +72,6 @@ public class MetaDataTab extends TabAbstract {
         jlistScroll.setLayout(new ScrollPaneLayout());
         tableListPanel.add(jlistScroll);
 
-        JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.setToolTipText("");
-        popupMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
-        addPopup(list, popupMenu);
-
         refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
@@ -130,7 +123,12 @@ public class MetaDataTab extends TabAbstract {
                         @Override
                         public void run() {
                             startTask();
-                            initTableList(list);
+                            try {
+                                initTableList(list);
+                            } catch (Exception e) {
+                                exceptionAlert(e);
+                                return;
+                            }
                             stopTask();
                         }
 
@@ -238,7 +236,11 @@ public class MetaDataTab extends TabAbstract {
         }
 
         // 初始化表
-        initTableList(list);
+        try {
+            initTableList(list);
+        } catch (Exception e) {
+            exceptionAlert(e);
+        }
 
         return panel;
     }
@@ -260,7 +262,12 @@ public class MetaDataTab extends TabAbstract {
                 if (!StringUtil.isEmpty(cacheMetaData) && !onlyLoadHbase) {
                     HandleCore.reloadMetaTableFormat(contentTable, JSON.parseObject(cacheMetaData, Map.class));
                 } else {
-                    HandleCore.reloadMetaTableFormat(tableName, contentTable);
+                    try {
+                        HandleCore.reloadMetaTableFormat(tableName, contentTable);
+                    } catch (Exception e) {
+                        exceptionAlert(e);
+                        return;
+                    }
                 }
                 stopTask();
             }

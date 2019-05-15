@@ -287,7 +287,12 @@ public class QueryTab extends TabAbstract {
                                 public void run() {
                                     startTask();
 
-                                    HbaseUtil.dropTable(tableName);
+                                    try {
+                                        HbaseUtil.dropTable(tableName);
+                                    } catch (Exception e) {
+                                        exceptionAlert(e);
+                                        return;
+                                    }
                                     JOptionPane.showMessageDialog(getFrame(), "删除成功", "提示",
                                                                   JOptionPane.INFORMATION_MESSAGE);
 
@@ -300,7 +305,12 @@ public class QueryTab extends TabAbstract {
                                 }
                             });
 
-                            initTableList(list);
+                            try {
+                                initTableList(list);
+                            } catch (Exception e1) {
+                                exceptionAlert(e1);
+                                return;
+                            }
 
                         }
                     }
@@ -323,7 +333,12 @@ public class QueryTab extends TabAbstract {
                         @Override
                         public void run() {
                             startTask();
-                            initTableList(list);
+                            try {
+                                initTableList(list);
+                            } catch (Exception e) {
+                                exceptionAlert(e);
+                                return;
+                            }
                             stopTask();
                         }
 
@@ -346,9 +361,15 @@ public class QueryTab extends TabAbstract {
                                 public void run() {
                                     startTask();
 
-                                    long count = HbaseUtil.rowCount(tableName);
-                                    JOptionPane.showMessageDialog(getFrame(), count, tableName + "数据总数",
-                                                                  JOptionPane.INFORMATION_MESSAGE);
+                                    try {
+                                        long count = HbaseUtil.rowCount(tableName);
+                                        JOptionPane.showMessageDialog(getFrame(), count, tableName + "数据总数",
+                                                                      JOptionPane.INFORMATION_MESSAGE);
+
+                                    } catch (Exception e) {
+                                        exceptionAlert(e);
+                                        return;
+                                    }
 
                                     stopTask();
 
@@ -374,12 +395,17 @@ public class QueryTab extends TabAbstract {
                                 @Override
                                 public void run() {
                                     startTask();
+                                    try {
+                                        HbaseUtil.truncateTable(tableName, true);
+                                        JOptionPane.showMessageDialog(getFrame(), "已清空", "提示",
+                                                                      JOptionPane.INFORMATION_MESSAGE);
+                                        initTableList(list);
+                                        cleanTable();
 
-                                    HbaseUtil.truncateTable(tableName, true);
-                                    JOptionPane.showMessageDialog(getFrame(), "已清空", "提示",
-                                                                  JOptionPane.INFORMATION_MESSAGE);
-                                    initTableList(list);
-                                    cleanTable();
+                                    } catch (Exception e) {
+                                        exceptionAlert(e);
+                                        return;
+                                    }
 
                                     stopTask();
 
@@ -435,7 +461,11 @@ public class QueryTab extends TabAbstract {
         // end
 
         // 初始化表
-        initTableList(list);
+        try {
+            initTableList(list);
+        } catch (Exception e) {
+            exceptionAlert(e);
+        }
 
         return select;
     }
@@ -489,26 +519,32 @@ public class QueryTab extends TabAbstract {
 
             @Override
             public void run() {
-                String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-                String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
 
-                List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
-                // 如果存在元数据则替换类型
-                if (!StringUtil.isEmpty(cacheMetaData)) {
-                    Map<String, String> metaData = JSON.parseObject(cacheMetaData, Map.class);
-                    for (HbaseQualifier item : qualifierList) {
-                        if (!StringUtil.isEmpty(metaData.get(item.getDisplayName()))) {
-                            item.setType(metaData.get(item.getDisplayName()));
+                try {
+                    String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
+                    String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
+
+                    List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
+                    // 如果存在元数据则替换类型
+                    if (!StringUtil.isEmpty(cacheMetaData)) {
+                        Map<String, String> metaData = JSON.parseObject(cacheMetaData, Map.class);
+                        for (HbaseQualifier item : qualifierList) {
+                            if (!StringUtil.isEmpty(metaData.get(item.getDisplayName()))) {
+                                item.setType(metaData.get(item.getDisplayName()));
+                            }
                         }
                     }
-                }
-                // 清空fieldsComboBox
-                fieldsComboBox.removeAllItems();
-                // 渲染条件
-                for (HbaseQualifier hbaseQualifier : qualifierList) {
-                    fieldsComboBox.addItem(hbaseQualifier);
-                }
+                    // 清空fieldsComboBox
+                    fieldsComboBox.removeAllItems();
+                    // 渲染条件
+                    for (HbaseQualifier hbaseQualifier : qualifierList) {
+                        fieldsComboBox.addItem(hbaseQualifier);
+                    }
 
+                } catch (Exception e) {
+                    exceptionAlert(e);
+                    return;
+                }
                 stopTask();
 
             }
@@ -616,12 +652,16 @@ public class QueryTab extends TabAbstract {
                                                                        Chooser.DEFAULTFORMAT));
                         pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(),
                                                                        Chooser.DEFAULTFORMAT));
-
-                        pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, endRowKeyByte,
-                                                                     getFilter(), version, pageModel, true,
-                                                                     getMetaData());
-                        HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
-                        HandleCore.setPageInfomation(pageModel, bottom_message_label);
+                        try {
+                            pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, endRowKeyByte,
+                                                                         getFilter(), version, pageModel, true,
+                                                                         getMetaData());
+                            HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
+                            HandleCore.setPageInfomation(pageModel, bottom_message_label);
+                        } catch (Exception e) {
+                            exceptionAlert(e);
+                            return;
+                        }
 
                     } else {
                         JOptionPane.showMessageDialog(getFrame(), "请在右侧选择表", "提示", JOptionPane.INFORMATION_MESSAGE);
@@ -700,12 +740,17 @@ public class QueryTab extends TabAbstract {
                     pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(),
                                                                    Chooser.DEFAULTFORMAT));
 
-                    pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), startRowKeyByte,
-                                                                 endRowKeyByte, getFilter(), version, pageModel, false,
-                                                                 getMetaData());
+                    try {
+                        pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), startRowKeyByte,
+                                                                     endRowKeyByte, getFilter(), version, pageModel,
+                                                                     false, getMetaData());
+                        HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
+                        HandleCore.setPageInfomation(pageModel, bottom_message_label);
+                    } catch (Exception e) {
+                        exceptionAlert(e);
+                        return;
+                    }
 
-                    HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
-                    HandleCore.setPageInfomation(pageModel, bottom_message_label);
                     stopTask();
                 }
             });
@@ -737,7 +782,12 @@ public class QueryTab extends TabAbstract {
                             rowkeys[i] = contentTable.getValueAt(selectRowIndexs[i], 1).toString();
                         }
 
-                        HbaseUtil.deleteRow(tableName, rowkeys);
+                        try {
+                            HbaseUtil.deleteRow(tableName, rowkeys);
+                        } catch (Exception e) {
+                            exceptionAlert(e);
+                            return;
+                        }
                         DefaultTableModel model = (DefaultTableModel) contentTable.getModel();
                         while (true) {
                             if (contentTable.getSelectedRowCount() > 0) {

@@ -383,10 +383,7 @@ public class LoginGui extends JDialog {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2000);
                     loadDriver(version, reload);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 } finally {
                     endTask();
                 }

@@ -153,7 +153,7 @@ public class HandleCore {
 
     }
 
-    public static void reloadMetaTableFormat(String tableName, JTable table) {
+    public static void reloadMetaTableFormat(String tableName, JTable table) throws Exception {
 
         HBasePageModel dataModel = new HBasePageModel(1, tableName);
         dataModel = HbaseUtil.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE, dataModel, true,
