@@ -36,6 +36,7 @@ public class CreateTab extends TabAbstract {
 
     private JButton       refreshNameSpaceBut;
     private JList<String> nameSpaceList;
+    private JButton       addNameSpaceBut;
 
     private JTextField    tableNameField;
     private JButton       createTabBut;
@@ -113,9 +114,6 @@ public class CreateTab extends TabAbstract {
             JScrollPane nsListScroll = new JScrollPane(nameSpaceList);
             nsListScroll.setLayout(new ScrollPaneLayout());
 
-            namespacePanel.add(refreshNameSpaceBut, BorderLayout.NORTH);
-            namespacePanel.add(nsListScroll, BorderLayout.CENTER);
-
             nameSpaceList.addListSelectionListener(new ListSelectionListener() {
 
                 @Override
@@ -126,6 +124,14 @@ public class CreateTab extends TabAbstract {
                     }
                 }
             });
+
+            addNameSpaceBut = new JButton(new ImageIcon(Env.IMG_DIR + "add.png"));
+            addNameSpaceBut.addMouseListener(new AddNameSpaceAdapter());
+
+            namespacePanel.add(refreshNameSpaceBut, BorderLayout.NORTH);
+            namespacePanel.add(nsListScroll, BorderLayout.CENTER);
+            namespacePanel.add(addNameSpaceBut, BorderLayout.SOUTH);
+
         }
 
         // 中央面板布局布局
@@ -156,50 +162,7 @@ public class CreateTab extends TabAbstract {
             showTextArea.setRows(10);
             tableCenterPanel.add(showTextArea);
 
-            addColumnFamilyBut.addMouseListener(new MouseAdapter() {
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    JDialog dialog = new JDialog(getFrame(), "添加列族", true);
-                    dialog.setSize(200, 70);
-
-                    int windowWidth = dialog.getWidth(); // 获得窗口宽
-                    int windowHeight = dialog.getHeight(); // 获得窗口高
-                    Toolkit kit = Toolkit.getDefaultToolkit(); // 定义工具包
-                    Dimension screenSize = kit.getScreenSize(); // 获取屏幕的尺寸
-                    int screenWidth = screenSize.width; // 获取屏幕的宽
-                    int screenHeight = screenSize.height; // 获取屏幕的高
-                    dialog.setLocation(screenWidth / 2 - windowWidth, screenHeight / 2 - windowHeight * 2);
-
-                    JPanel dialogPanel = new JPanel(new BorderLayout());
-                    dialogPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-                    dialog.getContentPane().add(dialogPanel);
-
-                    JLabel jLabel_dialog = new JLabel("列族名：");
-                    dialogPanel.add(jLabel_dialog, BorderLayout.WEST);
-
-                    JTextField jTextField_dialog = new JTextField();
-                    dialogPanel.add(jTextField_dialog, BorderLayout.CENTER);
-
-                    jTextField_dialog.addKeyListener(new KeyAdapter() {
-
-                        @Override
-                        public void keyReleased(KeyEvent e) {
-                            if (e.getKeyCode() == 10) {
-                                CreateTab.column_family = jTextField_dialog.getText().trim();
-                                refreshCreateTableText();
-
-                                jTextField_dialog.setText("");
-                                dialog.setVisible(false);
-                            }
-                        }
-
-                    });
-
-                    dialog.setVisible(true);
-
-                }
-            });
+            addColumnFamilyBut.addMouseListener(new AddColumnFamilyAdapter());
 
             tableNameField.addKeyListener(new KeyAdapter() {
 
@@ -281,6 +244,7 @@ public class CreateTab extends TabAbstract {
         createTabBut.setEnabled(true);
         refreshNameSpaceBut.setEnabled(true);
         addColumnFamilyBut.setEnabled(true);
+        addNameSpaceBut.setEnabled(true);
 
     }
 
@@ -289,6 +253,129 @@ public class CreateTab extends TabAbstract {
         createTabBut.setEnabled(false);
         refreshNameSpaceBut.setEnabled(false);
         addColumnFamilyBut.setEnabled(false);
+        addNameSpaceBut.setEnabled(false);
+    }
+
+    /**
+     * 添加命名空间
+     * 
+     * @author limin May 17, 2019 1:55:20 AM
+     */
+    class AddNameSpaceAdapter extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            JDialog dialog = new JDialog(getFrame(), "添加命名空间", true);
+            dialog.setSize(200, 70);
+
+            int windowWidth = dialog.getWidth(); // 获得窗口宽
+            int windowHeight = dialog.getHeight(); // 获得窗口高
+            Toolkit kit = Toolkit.getDefaultToolkit(); // 定义工具包
+            Dimension screenSize = kit.getScreenSize(); // 获取屏幕的尺寸
+            int screenWidth = screenSize.width; // 获取屏幕的宽
+            int screenHeight = screenSize.height; // 获取屏幕的高
+            dialog.setLocation(screenWidth / 2 - windowWidth, screenHeight / 2 - windowHeight * 2);
+
+            JPanel dialogPanel = new JPanel(new BorderLayout());
+            dialogPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            dialog.getContentPane().add(dialogPanel);
+
+            JLabel jLabel_dialog = new JLabel("命名空间：");
+            dialogPanel.add(jLabel_dialog, BorderLayout.WEST);
+
+            JTextField jTextField_dialog = new JTextField();
+            dialogPanel.add(jTextField_dialog, BorderLayout.CENTER);
+
+            jTextField_dialog.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    if (e.getKeyCode() == 10) {
+                        String input = jTextField_dialog.getText();
+                        if (!StringUtil.isEmpty(input.trim())) {
+                            getSingleThreadPool().execute(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    startTask();
+                                    try {
+                                        dialog.setVisible(false);
+                                        HbaseUtil.createNameSpace(input.trim());
+                                        // 刷新命命空间list
+                                        nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                                        JOptionPane.showMessageDialog(dialogPanel, "添加命名空间成功", "成功",
+                                                                      JOptionPane.INFORMATION_MESSAGE);
+                                    } catch (Exception e1) {
+                                        exceptionAlert(e1);
+                                        return;
+                                    }
+                                    stopTask();
+                                }
+                            });
+
+                        } else {
+                            JOptionPane.showMessageDialog(dialogPanel, "请输入命名空间名称", "异常", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+
+            });
+
+            dialog.setVisible(true);
+
+        }
+
+    }
+
+    /**
+     * 添加列族
+     * 
+     * @author limin May 17, 2019 1:50:13 AM
+     */
+    class AddColumnFamilyAdapter extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            JDialog dialog = new JDialog(getFrame(), "添加列族", true);
+            dialog.setSize(200, 70);
+
+            int windowWidth = dialog.getWidth(); // 获得窗口宽
+            int windowHeight = dialog.getHeight(); // 获得窗口高
+            Toolkit kit = Toolkit.getDefaultToolkit(); // 定义工具包
+            Dimension screenSize = kit.getScreenSize(); // 获取屏幕的尺寸
+            int screenWidth = screenSize.width; // 获取屏幕的宽
+            int screenHeight = screenSize.height; // 获取屏幕的高
+            dialog.setLocation(screenWidth / 2 - windowWidth, screenHeight / 2 - windowHeight * 2);
+
+            JPanel dialogPanel = new JPanel(new BorderLayout());
+            dialogPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            dialog.getContentPane().add(dialogPanel);
+
+            JLabel jLabel_dialog = new JLabel("列族名：");
+            dialogPanel.add(jLabel_dialog, BorderLayout.WEST);
+
+            JTextField jTextField_dialog = new JTextField();
+            dialogPanel.add(jTextField_dialog, BorderLayout.CENTER);
+
+            jTextField_dialog.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    if (e.getKeyCode() == 10) {
+                        CreateTab.column_family = jTextField_dialog.getText().trim();
+                        refreshCreateTableText();
+
+                        jTextField_dialog.setText("");
+                        dialog.setVisible(false);
+                    }
+                }
+
+            });
+
+            dialog.setVisible(true);
+
+        }
+
     }
 
 }
