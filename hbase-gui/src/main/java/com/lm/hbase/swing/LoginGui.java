@@ -15,7 +15,6 @@ import java.net.HttpURLConnection;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -32,6 +31,7 @@ import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.Env;
+import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.conf.RemoteDriverProp;
 import com.lm.hbase.driver.DownloadDriver;
@@ -56,13 +56,13 @@ public class LoginGui extends JDialog {
     private JButton                 testButton                = new JButton("Test");
     private JButton                 cancelButton              = new JButton("Close");
     private JButton                 okButton                  = new JButton("Connect");
-    private JButton                 reloadDriverVersionButton = new JButton(new ImageIcon(Env.IMG_DIR + "Update.png"));
+    private JButton                 reloadDriverVersionButton = new JButton(ImageIconConstons.Update_ICON);
 
     private JComboBox<String>       driverVersionComboBox;
 
     public JLabel                   progressInfoLabel         = new JLabel();
     public JProgressBar             processBar                = new JProgressBar();
-    public JLabel                   stopLabel                 = new JLabel(new ImageIcon(Env.IMG_DIR + "stop.png"));;
+    public JLabel                   stopLabel                 = new JLabel(ImageIconConstons.STOP_ICON);;
 
     public static void openDialog() {
         try {
@@ -93,6 +93,7 @@ public class LoginGui extends JDialog {
         setBounds(100, 100, 500, 310);
         this.setMinimumSize(new Dimension(500, 310));
         this.setResizable(false);// 禁止拉边框拉长拉短
+        this.setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,

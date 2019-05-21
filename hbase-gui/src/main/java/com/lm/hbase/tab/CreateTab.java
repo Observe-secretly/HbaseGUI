@@ -11,7 +11,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -30,7 +29,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.lm.hbase.adapter.HbaseUtil;
-import com.lm.hbase.common.Env;
+import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.StringUtil;
 
@@ -101,7 +100,8 @@ public class CreateTab extends TabAbstract {
 
         // 左侧面板内部布局
         {
-            refreshNameSpaceBut = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
+            refreshNameSpaceBut = new JButton("刷新", ImageIconConstons.Update_ICON);
+            refreshNameSpaceBut.addMouseListener(new RefreshNameSpaceAdapter());
 
             nameSpaceList = new JList<>();
             nameSpaceList.setFixedCellHeight(20);
@@ -136,7 +136,7 @@ public class CreateTab extends TabAbstract {
                 }
             });
 
-            addNameSpaceBut = new JButton(new ImageIcon(Env.IMG_DIR + "add.png"));
+            addNameSpaceBut = new JButton(ImageIconConstons.ADD_ICON);
             addNameSpaceBut.addMouseListener(new AddNameSpaceAdapter());
 
             namespacePanel.add(refreshNameSpaceBut, BorderLayout.NORTH);
@@ -153,14 +153,14 @@ public class CreateTab extends TabAbstract {
             tableContentPanel.add(tableNorthPanel, BorderLayout.NORTH);
             tableNorthPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
-            JLabel label_2 = new JLabel(new ImageIcon(Env.IMG_DIR + "table.png"));
+            JLabel label_2 = new JLabel(ImageIconConstons.TABLE_ICON);
             tableNorthPanel.add(label_2);
 
             tableNameField = new JTextField();
             tableNorthPanel.add(tableNameField);
             tableNameField.setColumns(10);
 
-            addColumnFamilyBut = new JButton("添加列族", new ImageIcon(Env.IMG_DIR + "add.png"));
+            addColumnFamilyBut = new JButton("添加列族", ImageIconConstons.ADD_ICON);
             tableNorthPanel.add(addColumnFamilyBut);
 
             JPanel tableCenterPanel = new JPanel();
@@ -189,7 +189,7 @@ public class CreateTab extends TabAbstract {
             tableSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
             tableContentPanel.add(tableSouthPanel, BorderLayout.SOUTH);
 
-            createTabBut = new JButton("创建", new ImageIcon(Env.IMG_DIR + "new.png"));
+            createTabBut = new JButton("创建", ImageIconConstons.NEW_ICON);
             tableSouthPanel.add(createTabBut);
             createTabBut.addMouseListener(new CreateTable());
         }
@@ -423,6 +423,30 @@ public class CreateTab extends TabAbstract {
             }
         }
 
+    }
+
+    class RefreshNameSpaceAdapter extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            getSingleThreadPool().execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    startTask();
+                    try {
+                        nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                    } catch (Exception e1) {
+                        exceptionAlert(e1);
+                        return;
+                    }
+                    stopTask();
+
+                }
+
+            });
+
+        }
     }
 
 }

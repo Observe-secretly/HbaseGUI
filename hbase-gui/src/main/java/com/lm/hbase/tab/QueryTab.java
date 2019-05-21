@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -40,7 +39,7 @@ import com.lm.hbase.adapter.FilterFactory;
 import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.HbaseQualifier;
-import com.lm.hbase.common.Env;
+import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
@@ -55,8 +54,7 @@ public class QueryTab extends TabAbstract {
 
     private JList<String>             list                   = null;
     private JButton                   refreshTableButton;
-    private JButton                   searchButton           = new JButton("查询",
-                                                                           new ImageIcon(Env.IMG_DIR + "Search.png"));
+    private JButton                   searchButton           = new JButton("查询", ImageIconConstons.SEARCH_ICON);
     private JButton                   deleteButton;
     private DefaultValueTextField     textField_start_rowkey;
     private DefaultValueTextField     textField_end_rowkey;
@@ -128,7 +126,7 @@ public class QueryTab extends TabAbstract {
 
         popupMenu.add(countItem);
 
-        refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
+        refreshTableButton = new JButton("刷新", ImageIconConstons.Update_ICON);
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();
@@ -148,7 +146,8 @@ public class QueryTab extends TabAbstract {
         filtersPanel.add(filterWestPanel, BorderLayout.WEST);
         filterWestPanel.setLayout(new FlowLayout());
 
-        deleteButton = new JButton("删除", new ImageIcon(Env.IMG_DIR + "Garbage.png"));
+        deleteButton = new JButton("删除", ImageIconConstons.GARBAGE_ICON);
+        deleteButton.setEnabled(false);
         filterWestPanel.add(deleteButton);
         deleteButton.addMouseListener(new DeleteEvent());
         // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 end
@@ -179,7 +178,7 @@ public class QueryTab extends TabAbstract {
         textField_version.setColumns(5);
         textField_version.setText(Integer.MAX_VALUE + "");
 
-        JLabel label_1 = new JLabel(new ImageIcon(Env.IMG_DIR + "Page.png"));
+        JLabel label_1 = new JLabel(ImageIconConstons.PAGE_ICON);
         filterNorthPanel.add(label_1);
 
         textField_pageSize = new JTextField();
@@ -187,7 +186,7 @@ public class QueryTab extends TabAbstract {
         filterNorthPanel.add(textField_pageSize);
         textField_pageSize.setColumns(3);
 
-        JLabel timeScopeLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "Calendar.png"));
+        JLabel timeScopeLabel = new JLabel(ImageIconConstons.CALENDAR_ICON);
         filterNorthPanel.add(timeScopeLabel);
 
         textField_min_stamp = new JTextField();
@@ -257,7 +256,7 @@ public class QueryTab extends TabAbstract {
         bottom_message_label.setHorizontalAlignment(SwingConstants.CENTER);
         searchSouthPanel.add(bottom_message_label, BorderLayout.CENTER);
 
-        nextpage_button = new JButton("加载下一页", new ImageIcon(Env.IMG_DIR + "next.png"));
+        nextpage_button = new JButton("加载下一页", ImageIconConstons.NEXT_ICON);
         nextpage_button.addMouseListener(new NextPage());
         searchSouthPanel.add(nextpage_button, BorderLayout.EAST);
         // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 end

@@ -8,7 +8,6 @@ import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -23,7 +22,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import com.alibaba.fastjson.JSON;
-import com.lm.hbase.common.Env;
+import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
@@ -70,7 +69,7 @@ public class MetaDataTab extends TabAbstract {
         jlistScroll.setLayout(new ScrollPaneLayout());
         tableListPanel.add(jlistScroll);
 
-        refreshTableButton = new JButton("刷新", new ImageIcon(Env.IMG_DIR + "Search.png"));
+        refreshTableButton = new JButton("刷新", ImageIconConstons.Update_ICON);
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel southPanel = new JPanel();
@@ -86,10 +85,10 @@ public class MetaDataTab extends TabAbstract {
         mataSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         southPanel.add(mataSouthPanel, BorderLayout.SOUTH);
 
-        addMataDataBut = new JButton(new ImageIcon(Env.IMG_DIR + "add.png"));
-        removeMataDataBut = new JButton(new ImageIcon(Env.IMG_DIR + "Garbage.png"));
-        refreshMataDataBut = new JButton(new ImageIcon(Env.IMG_DIR + "Update.png"));
-        saveButton = new JButton("保存元数据", new ImageIcon(Env.IMG_DIR + "save.png"));
+        addMataDataBut = new JButton(ImageIconConstons.ADD_ICON);
+        removeMataDataBut = new JButton(ImageIconConstons.GARBAGE_ICON);
+        refreshMataDataBut = new JButton(ImageIconConstons.Update_ICON);
+        saveButton = new JButton("保存元数据", ImageIconConstons.SAVE_ICON);
 
         addMataDataBut.setEnabled(false);
         removeMataDataBut.setEnabled(false);

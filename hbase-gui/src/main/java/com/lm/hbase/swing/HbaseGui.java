@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,7 +21,7 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import com.lm.hbase.adapter.HbaseUtil;
-import com.lm.hbase.common.Env;
+import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.tab.CreateTab;
 import com.lm.hbase.tab.MetaDataTab;
 import com.lm.hbase.tab.QueryTab;
@@ -52,6 +51,7 @@ public class HbaseGui {
      * @wbp.parser.entryPoint
      */
     public static void main(String[] args) throws Throwable {
+        FrameDock.setDockIconImage();
 
         EventQueue.invokeLater(new Runnable() {
 
@@ -92,9 +92,10 @@ public class HbaseGui {
         parentJframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         parentJframe.getContentPane().setLayout(new BorderLayout(0, 0));
         parentJframe.setMinimumSize(new Dimension(1450, 400));
+        parentJframe.setIconImage(ImageIconConstons.DOCK_ICON.getImage());
         // parentJframe.setResizable(false);// 禁止拉边框拉长拉短
 
-        JLabel logoLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "hbase_logo.png"));
+        JLabel logoLabel = new JLabel(ImageIconConstons.HBASE_LOGO_ICON);
         parentJframe.getContentPane().add(logoLabel, BorderLayout.NORTH);
 
         JPanel panel = new JPanel();
@@ -105,7 +106,7 @@ public class HbaseGui {
         processBar.setVisible(false);
 
         // 创建一个终止按钮
-        stopLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "stop.png"));
+        stopLabel = new JLabel(ImageIconConstons.STOP_ICON);
         stopLabel.setEnabled(false);
         stopLabel.setVisible(false);
         stopLabel.addMouseListener(new StopEvent());
