@@ -1,7 +1,6 @@
 package com.lm.hbase.tab;
 
 import java.awt.BorderLayout;
-import java.awt.SystemColor;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
@@ -64,7 +63,6 @@ public class MetaDataTab extends TabAbstract {
 
         list = new JList<>();
         list.setFixedCellHeight(20);
-        list.setBackground(SystemColor.window);
         // 设置为单选模式
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 

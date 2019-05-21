@@ -3,7 +3,6 @@ package com.lm.hbase.tab;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.SystemColor;
 import java.awt.Toolkit;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -104,7 +103,6 @@ public class CreateTab extends TabAbstract {
             nameSpaceList = new JList<>();
             nameSpaceList.setFixedCellHeight(20);
             nameSpaceList.setFixedCellWidth(200);
-            nameSpaceList.setBackground(SystemColor.window);
             nameSpaceList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             try {
                 nameSpaceList.setListData(HbaseUtil.listNameSpace());

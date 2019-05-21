@@ -4,6 +4,19 @@
   <artifactId>hbase-core</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   
+  <repositories>  
+    <repository>  
+      <id>BeaTunes</id>  
+      <name>BeaTunes Mirror</name>  
+      <url>https://www.beatunes.com/repo/maven2/</url>  
+      <releases>  
+        <enabled>true</enabled>  
+      </releases>  
+      <snapshots>  
+        <enabled>false</enabled>  
+      </snapshots>  
+    </repository>  
+  </repositories>  
   
    <build>
         <finalName>Hbase-GUI</finalName>
@@ -263,6 +276,13 @@
 	    <artifactId>maven-invoker</artifactId>
 	    <version>3.0.1</version>
 	</dependency>
+	
+	<dependency>
+	    <groupId>com.bulenkov</groupId>
+	    <artifactId>darcula</artifactId>
+	    <version>0.9.2</version>
+	</dependency>
+		
 	  
 	<dependency>
 	    <groupId>com.lm</groupId>

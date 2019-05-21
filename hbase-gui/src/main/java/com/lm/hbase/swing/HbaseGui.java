@@ -18,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTabbedPane;
+import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import com.lm.hbase.adapter.HbaseUtil;
@@ -31,7 +32,7 @@ public class HbaseGui {
 
     public JFrame                   parentJframe;
 
-    public ScheduledExecutorService threadPool = Executors.newSingleThreadScheduledExecutor();
+    public ScheduledExecutorService threadPool        = Executors.newSingleThreadScheduledExecutor();
 
     public JProgressBar             processBar;
 
@@ -40,7 +41,9 @@ public class HbaseGui {
     /**
      * 所有的tabs
      */
-    private List<TabInterface>      tabs       = new ArrayList<>();
+    private List<TabInterface>      tabs              = new ArrayList<>();
+
+    public static final String      DARCULA_LAF_CLASS = "com.bulenkov.darcula.DarculaLaf";           // $NON-NLS-1$
 
     /**
      * Launch the application.
@@ -55,7 +58,8 @@ public class HbaseGui {
             public void run() {
 
                 try {
-                    // WebLookAndFeel.install();
+                    // UIManager.installLookAndFeel(DARCULA_LAF, DARCULA_LAF_CLASS);
+                    UIManager.setLookAndFeel(DARCULA_LAF_CLASS);
 
                     com.lm.hbase.swing.SwingConstants.hbaseGui = new HbaseGui();
                 } catch (Exception e) {
