@@ -28,13 +28,17 @@ public abstract class TabAbstract extends TabCommonUtil implements TabInterface 
 
     public synchronized void startTask() {
         disableAll();
+        window.processBar.setVisible(true);
         window.processBar.setIndeterminate(true);
+        window.stopLabel.setVisible(true);
         window.stopLabel.setEnabled(true);
     }
 
     public synchronized void stopTask() {
         enableAll();
+        window.processBar.setVisible(false);
         window.processBar.setIndeterminate(false);
+        window.stopLabel.setVisible(false);
         window.stopLabel.setEnabled(false);
         this.window.threadPool.shutdownNow();
         this.window.threadPool = Executors.newSingleThreadScheduledExecutor();

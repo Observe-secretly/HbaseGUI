@@ -94,19 +94,25 @@ public class HbaseGui {
         parentJframe.setMinimumSize(new Dimension(1450, 400));
         // parentJframe.setResizable(false);// 禁止拉边框拉长拉短
 
+        JLabel logoLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "hbase_logo.png"));
+        parentJframe.getContentPane().add(logoLabel, BorderLayout.NORTH);
+
         JPanel panel = new JPanel();
         parentJframe.getContentPane().add(panel, BorderLayout.SOUTH);
 
         // 初始化进度条
         processBar = new JProgressBar(JProgressBar.CENTER);
+        processBar.setVisible(false);
 
         // 创建一个终止按钮
         stopLabel = new JLabel(new ImageIcon(Env.IMG_DIR + "stop.png"));
         stopLabel.setEnabled(false);
+        stopLabel.setVisible(false);
         stopLabel.addMouseListener(new StopEvent());
 
         panel.add(stopLabel);
         panel.add(processBar);
+        panel.add(new JLabel(" "));// 占位
 
         JTabbedPane tabbedPanel = new JTabbedPane(JTabbedPane.TOP);
         tabbedPanel.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));

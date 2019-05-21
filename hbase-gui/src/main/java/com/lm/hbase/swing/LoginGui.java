@@ -53,9 +53,9 @@ public class LoginGui extends JDialog {
     private JTextField              znodeParentField;
     private JTextField              mavenHomeField;
 
-    private JButton                 testButton                = new JButton("Test Connection");
-    private JButton                 cancelButton              = new JButton("close");
-    private JButton                 okButton                  = new JButton("connect");
+    private JButton                 testButton                = new JButton("Test");
+    private JButton                 cancelButton              = new JButton("Close");
+    private JButton                 okButton                  = new JButton("Connect");
     private JButton                 reloadDriverVersionButton = new JButton(new ImageIcon(Env.IMG_DIR + "Update.png"));
 
     private JComboBox<String>       driverVersionComboBox;
@@ -279,7 +279,7 @@ public class LoginGui extends JDialog {
                     }
                 });
                 cancelButton.setActionCommand("Cancel");
-                buttonPane.add(cancelButton, "4, 2, left, top");
+                buttonPane.add(cancelButton, "4, 2, right, top");
             }
             {
                 okButton.addMouseListener(new MouseAdapter() {
@@ -304,8 +304,6 @@ public class LoginGui extends JDialog {
                             }
 
                             startTask();
-                            stopLabel.setEnabled(true);
-                            processBar.setIndeterminate(true);
 
                             threadPool.execute(new Runnable() {
 
@@ -339,7 +337,7 @@ public class LoginGui extends JDialog {
                     }
                 });
                 okButton.setActionCommand("OK");
-                buttonPane.add(okButton, "6, 2, left, top");
+                buttonPane.add(okButton, "6, 2, right, top");
                 getRootPane().setDefaultButton(okButton);
             }
             {
@@ -348,8 +346,10 @@ public class LoginGui extends JDialog {
 
                 stopLabel.addMouseListener(new StopEvent());
                 stopLabel.setEnabled(false);
+                stopLabel.setVisible(false);
 
                 processBar.setIndeterminate(false);
+                processBar.setVisible(false);
 
                 processPanel.add(stopLabel, 0);
                 processPanel.add(processBar, 1);
@@ -397,7 +397,7 @@ public class LoginGui extends JDialog {
         String outputDir = Env.DRIVER_DIR + version;
         File outputFileDir = new File(outputDir);
         if (!outputFileDir.exists()) {
-            // TODO 0、下载适配程序 1、加载驱动；2、添加设置maven目录的功能；3、现实加载进度；4、异步
+            // 0、下载适配程序 1、加载驱动；2、添加设置maven目录的功能；3、现实加载进度；4、异步
             // 加载hbase client驱动
             try {
                 String mavenHome = mavenHomeField == null ? null : mavenHomeField.getText();
@@ -545,6 +545,8 @@ public class LoginGui extends JDialog {
         okButton.setEnabled(true);
         processBar.setIndeterminate(false);
         stopLabel.setEnabled(false);
+        processBar.setVisible(false);
+        stopLabel.setVisible(false);
     }
 
     private void startTask() {
@@ -553,7 +555,9 @@ public class LoginGui extends JDialog {
         cancelButton.setEnabled(false);
         okButton.setEnabled(false);
         processBar.setIndeterminate(true);
+        processBar.setVisible(true);
         stopLabel.setEnabled(true);
+        stopLabel.setVisible(true);
     }
 
 }
