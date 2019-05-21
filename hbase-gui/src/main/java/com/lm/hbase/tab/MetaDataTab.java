@@ -243,6 +243,12 @@ public class MetaDataTab extends TabAbstract {
         return panel;
     }
 
+    /**
+     * 从配置文件或直接查询Hbase表并加载元数据
+     * 
+     * @param tableName
+     * @param onlyLoadHbase 是否强制从hbase中加载元数据
+     */
     @SuppressWarnings("unchecked")
     private void loadMataData(String tableName, boolean onlyLoadHbase) {
         startTask();

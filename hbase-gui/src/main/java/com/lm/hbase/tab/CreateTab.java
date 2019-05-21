@@ -1,6 +1,7 @@
 package com.lm.hbase.tab;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
@@ -15,8 +16,10 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -111,6 +114,16 @@ public class CreateTab extends TabAbstract {
             }
             JScrollPane nsListScroll = new JScrollPane(nameSpaceList);
             nsListScroll.setLayout(new ScrollPaneLayout());
+
+            JPopupMenu popupMenu = new JPopupMenu();
+            popupMenu.setToolTipText("");
+            popupMenu.setAlignmentX(Component.CENTER_ALIGNMENT);
+            addPopup(nameSpaceList, popupMenu);
+
+            JMenuItem removeNamespace = new JMenuItem("删除命名空间");
+            removeNamespace.addMouseListener(new DelNamespaceAdapter());
+
+            popupMenu.add(removeNamespace);
 
             nameSpaceList.addListSelectionListener(new ListSelectionListener() {
 
@@ -372,6 +385,42 @@ public class CreateTab extends TabAbstract {
 
             dialog.setVisible(true);
 
+        }
+
+    }
+
+    /**
+     * 删除命名空间监听
+     * 
+     * @author limin May 21, 2019 4:19:31 PM
+     */
+    class DelNamespaceAdapter extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            String namespace = nameSpaceList.getSelectedValue();
+            if (JOptionPane.showConfirmDialog(getFrame(), "确定命名空间" + namespace + "吗?") == 0) {
+                getSingleThreadPool().execute(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        startTask();
+                        try {
+                            HbaseUtil.deleteNameSpace(namespace);
+                            // 刷新命名空间
+                            nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                            CreateTab.namespace = "";
+                            refreshCreateTableText();
+                        } catch (Exception e) {
+                            exceptionAlert(e);
+                            return;
+                        }
+                        stopTask();
+
+                    }
+
+                });
+            }
         }
 
     }
