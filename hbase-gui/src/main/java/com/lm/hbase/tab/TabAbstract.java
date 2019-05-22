@@ -15,7 +15,7 @@ public abstract class TabAbstract extends TabCommonUtil implements TabInterface 
 
     public static final String PROPERTIES_SUFFIX = ".MATA";
 
-    private HbaseGui           window;
+    protected HbaseGui         window;
 
     public TabAbstract(HbaseGui window){
         this.window = window;

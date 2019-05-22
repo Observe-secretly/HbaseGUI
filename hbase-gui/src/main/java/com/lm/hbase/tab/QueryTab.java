@@ -141,66 +141,64 @@ public class QueryTab extends TabAbstract {
         filtersPanel.setLayout(new BorderLayout(0, 0));
         // filtersPanel 位于table上侧 end
 
-        // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 start
-        JPanel filterWestPanel = new JPanel();
-        filtersPanel.add(filterWestPanel, BorderLayout.WEST);
-        filterWestPanel.setLayout(new FlowLayout());
-
+        // filtersPanel的左侧 包含一个删除按钮 start
         deleteButton = new JButton("删除", ImageIconConstons.GARBAGE_ICON);
         deleteButton.setEnabled(false);
-        filterWestPanel.add(deleteButton);
         deleteButton.addMouseListener(new DeleteEvent());
-        // filterWestPanel 位于filtersPanel的左侧。包含一个删除按钮 end
+        filtersPanel.add(deleteButton, BorderLayout.WEST);
+        // filtersPanel的左侧。包含一个删除按钮 end
 
         // filterNorthPanel 位于filtersPanel的中间，包含rowkey条件以及常用的查询条件查询 start
         JPanel filterNorthPanel = new JPanel();
         filtersPanel.add(filterNorthPanel, BorderLayout.CENTER);
-        filterNorthPanel.setLayout(new FlowLayout());
+        filterNorthPanel.setLayout(new BorderLayout());
+
+        JPanel filterNorthPanel_center = new JPanel();
+        filterNorthPanel.add(filterNorthPanel_center, BorderLayout.CENTER);
 
         textField_start_rowkey = new DefaultValueTextField("start rowkey");
-        filterNorthPanel.add(textField_start_rowkey);
+        filterNorthPanel_center.add(textField_start_rowkey);
         textField_start_rowkey.setColumns(10);
 
         textField_end_rowkey = new DefaultValueTextField("end rowkey");
-        filterNorthPanel.add(textField_end_rowkey);
+        filterNorthPanel_center.add(textField_end_rowkey);
         textField_end_rowkey.setColumns(10);
 
         textField_rowKey_prefix = new DefaultValueTextField("Rowkey前缀");
-        filterNorthPanel.add(textField_rowKey_prefix);
+        filterNorthPanel_center.add(textField_rowKey_prefix);
         textField_rowKey_prefix.setColumns(10);
 
         JLabel versionLabel = new JLabel("版本号:");
-        filterNorthPanel.add(versionLabel);
+        filterNorthPanel_center.add(versionLabel);
 
         textField_version = new JTextField();
-        textField_version.setToolTipText("默认查询最新版本");
-        filterNorthPanel.add(textField_version);
-        textField_version.setColumns(5);
-        textField_version.setText(Integer.MAX_VALUE + "");
+        filterNorthPanel_center.add(textField_version);
+        textField_version.setColumns(2);
+        textField_version.setText("1");
 
         JLabel label_1 = new JLabel(ImageIconConstons.PAGE_ICON);
-        filterNorthPanel.add(label_1);
+        filterNorthPanel_center.add(label_1);
 
         textField_pageSize = new JTextField();
         textField_pageSize.setText("10");
-        filterNorthPanel.add(textField_pageSize);
+        filterNorthPanel_center.add(textField_pageSize);
         textField_pageSize.setColumns(3);
 
         JLabel timeScopeLabel = new JLabel(ImageIconConstons.CALENDAR_ICON);
-        filterNorthPanel.add(timeScopeLabel);
+        filterNorthPanel_center.add(timeScopeLabel);
 
         textField_min_stamp = new JTextField();
         Chooser.getInstance().register(textField_min_stamp);
-        filterNorthPanel.add(textField_min_stamp);
+        filterNorthPanel_center.add(textField_min_stamp);
         textField_min_stamp.setColumns(10);
 
         textField_max_stamp = new JTextField();
         Chooser.getInstance().register(textField_max_stamp);
-        filterNorthPanel.add(textField_max_stamp);
+        filterNorthPanel_center.add(textField_max_stamp);
         textField_max_stamp.setColumns(10);
 
         searchButton.addMouseListener(new SelectEvent());
-        filterNorthPanel.add(searchButton);
+        filterNorthPanel.add(searchButton, BorderLayout.EAST);
         // filterNorthPanel 位于filtersPanel的中间，包含rowkey条件以及常用的查询条件查询 end
 
         // filterSouthPanel 位于filtersPanel的最下面 包含了条件查询filter start
@@ -443,9 +441,28 @@ public class QueryTab extends TabAbstract {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     if (!e.getValueIsAdjusting()) {
-                        loadMataData(list.getSelectedValue());
-                        // 清空table
-                        cleanTable();
+
+                        getSingleThreadPool().execute(new Runnable() {
+
+                            @Override
+                            public void run() {
+                                startTask();
+                                try {
+                                    loadMataData(list.getSelectedValue());
+                                    // 清空table
+                                    cleanTable();
+                                    // 设置分页大小为10
+                                    textField_pageSize.setText("10");
+                                    // 运行初次查询
+                                    query();
+                                } catch (Exception e) {
+                                    exceptionAlert(e);
+                                    return;
+                                }
+                                stopTask();
+                            }
+                        });
+
                     }
 
                 }
@@ -510,42 +527,27 @@ public class QueryTab extends TabAbstract {
         refreshTableButton.setEnabled(true);
     }
 
-    private void loadMataData(String tableName) {
-        startTask();
-        getSingleThreadPool().execute(new Runnable() {
+    private void loadMataData(String tableName) throws Exception {
 
-            @Override
-            public void run() {
+        String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
+        String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
 
-                try {
-                    String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-                    String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
-
-                    List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
-                    // 如果存在元数据则替换类型
-                    if (!StringUtil.isEmpty(cacheMetaData)) {
-                        Map<String, String> metaData = JSON.parseObject(cacheMetaData, Map.class);
-                        for (HbaseQualifier item : qualifierList) {
-                            if (!StringUtil.isEmpty(metaData.get(item.getDisplayName()))) {
-                                item.setType(metaData.get(item.getDisplayName()));
-                            }
-                        }
-                    }
-                    // 清空fieldsComboBox
-                    fieldsComboBox.removeAllItems();
-                    // 渲染条件
-                    for (HbaseQualifier hbaseQualifier : qualifierList) {
-                        fieldsComboBox.addItem(hbaseQualifier);
-                    }
-
-                } catch (Exception e) {
-                    exceptionAlert(e);
-                    return;
+        List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
+        // 如果存在元数据则替换类型
+        if (!StringUtil.isEmpty(cacheMetaData)) {
+            Map<String, String> metaData = JSON.parseObject(cacheMetaData, Map.class);
+            for (HbaseQualifier item : qualifierList) {
+                if (!StringUtil.isEmpty(metaData.get(item.getDisplayName()))) {
+                    item.setType(metaData.get(item.getDisplayName()));
                 }
-                stopTask();
-
             }
-        });
+        }
+        // 清空fieldsComboBox
+        fieldsComboBox.removeAllItems();
+        // 渲染条件
+        for (HbaseQualifier hbaseQualifier : qualifierList) {
+            fieldsComboBox.addItem(hbaseQualifier);
+        }
 
     }
 
@@ -590,6 +592,58 @@ public class QueryTab extends TabAbstract {
     }
 
     /**
+     * 查询并渲染table
+     * 
+     * @throws Exception
+     */
+    private void query() throws Exception {
+
+        HandleCore.setPageInfomation(null, bottom_message_label);
+        String tableName = list.getSelectedValue();
+        // 获取分页大小
+        Integer page = 10;
+        try {
+            page = Integer.parseInt(textField_pageSize.getText());
+        } catch (Exception e2) {
+            textField_pageSize.setText(page.toString());
+        }
+        // 获取版本
+        Integer version = Integer.MAX_VALUE;
+        try {
+            version = Integer.parseInt(textField_version.getText());
+        } catch (Exception e2) {
+            textField_pageSize.setText(version.toString());
+        }
+
+        byte[] startRowKeyByte = null;
+        byte[] endRowKeyByte = null;
+
+        String startRowKey = textField_start_rowkey.getText();
+        String endRowKey = textField_end_rowkey.getText();
+
+        if (!StringUtil.isEmpty(startRowKey)) {
+            startRowKeyByte = MyBytesUtil.toBytes(startRowKey);
+        }
+        if (!StringUtil.isEmpty(endRowKey)) {
+            endRowKeyByte = MyBytesUtil.toBytes(endRowKey);
+        }
+
+        if (tableName != null) {
+            pageModel = new HBasePageModel(page, tableName);
+            pageModel.setMinStamp(DateUtil.convertMinStamp(textField_min_stamp.getText(), Chooser.DEFAULTFORMAT));
+            pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(), Chooser.DEFAULTFORMAT));
+            pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, endRowKeyByte, getFilter(),
+                                                         version, pageModel, true, getMetaData());
+            HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
+            HandleCore.setPageInfomation(pageModel, bottom_message_label);
+
+        } else {
+            JOptionPane.showMessageDialog(getFrame(), "请在右侧选择表", "提示", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+    }
+
+    /**
      * 查询
      * 
      * @author limin 2018年8月13日 下午4:24:15
@@ -606,62 +660,17 @@ public class QueryTab extends TabAbstract {
             if (searchButton.isEnabled()) {
                 return;
             }
-            startTask();
 
             getSingleThreadPool().execute(new Runnable() {
 
                 @Override
                 public void run() {
-
-                    HandleCore.setPageInfomation(null, bottom_message_label);
-                    String tableName = list.getSelectedValue();
-                    // 获取分页大小
-                    Integer page = 10;
+                    startTask();
                     try {
-                        page = Integer.parseInt(textField_pageSize.getText());
-                    } catch (Exception e2) {
-                        textField_pageSize.setText(page.toString());
-                    }
-                    // 获取版本
-                    Integer version = Integer.MAX_VALUE;
-                    try {
-                        version = Integer.parseInt(textField_version.getText());
-                    } catch (Exception e2) {
-                        textField_pageSize.setText(version.toString());
-                    }
-
-                    byte[] startRowKeyByte = null;
-                    byte[] endRowKeyByte = null;
-
-                    String startRowKey = textField_start_rowkey.getText();
-                    String endRowKey = textField_end_rowkey.getText();
-
-                    if (!StringUtil.isEmpty(startRowKey)) {
-                        startRowKeyByte = MyBytesUtil.toBytes(startRowKey);
-                    }
-                    if (!StringUtil.isEmpty(endRowKey)) {
-                        endRowKeyByte = MyBytesUtil.toBytes(endRowKey);
-                    }
-
-                    if (tableName != null) {
-                        pageModel = new HBasePageModel(page, tableName);
-                        pageModel.setMinStamp(DateUtil.convertMinStamp(textField_min_stamp.getText(),
-                                                                       Chooser.DEFAULTFORMAT));
-                        pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(),
-                                                                       Chooser.DEFAULTFORMAT));
-                        try {
-                            pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, endRowKeyByte,
-                                                                         getFilter(), version, pageModel, true,
-                                                                         getMetaData());
-                            HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
-                            HandleCore.setPageInfomation(pageModel, bottom_message_label);
-                        } catch (Exception e) {
-                            exceptionAlert(e);
-                            return;
-                        }
-
-                    } else {
-                        JOptionPane.showMessageDialog(getFrame(), "请在右侧选择表", "提示", JOptionPane.INFORMATION_MESSAGE);
+                        query();
+                    } catch (Exception e) {
+                        exceptionAlert(e);
+                        return;
                     }
                     stopTask();
                 }

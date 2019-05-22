@@ -91,7 +91,7 @@ public class LoginGui extends JDialog {
                     String mavenHome){
         setTitle("配置Hbase");
         setBounds(100, 100, 500, 310);
-        this.setMinimumSize(new Dimension(500, 310));
+        this.setMinimumSize(new Dimension(500, 330));
         this.setResizable(false);// 禁止拉边框拉长拉短
         this.setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
@@ -343,7 +343,7 @@ public class LoginGui extends JDialog {
             }
             {
                 JPanel processPanel = new JPanel();
-                processPanel.setLayout(new FlowLayout(3));
+                processPanel.setLayout(new FlowLayout(4));
 
                 stopLabel.addMouseListener(new StopEvent());
                 stopLabel.setEnabled(false);
@@ -355,6 +355,7 @@ public class LoginGui extends JDialog {
                 processPanel.add(stopLabel, 0);
                 processPanel.add(processBar, 1);
                 processPanel.add(progressInfoLabel, 2);
+                processPanel.add(new JLabel(" "), 3);// 占位
 
                 buttonPane.add(processPanel, "1,4,6,1, fill, fill");
             }
@@ -394,6 +395,9 @@ public class LoginGui extends JDialog {
     }
 
     public void loadDriver(String version, boolean reload) {
+        if (StringUtil.isEmpty(version)) {
+            return;
+        }
 
         String outputDir = Env.DRIVER_DIR + version;
         File outputFileDir = new File(outputDir);
@@ -478,8 +482,13 @@ public class LoginGui extends JDialog {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 String version = e.getItem().toString();
                 asyncLoadDriver(version, false);
-                // TODO 需要重启应用
-                // TODO 如果 DESELECTED 的Item是NULL则不重启
+            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                String version = e.getItem().toString();
+                String confVersion = HbaseClientConf.getStringValue("hbase.version");
+                if (!StringUtil.isEmpty(version) && !version.equalsIgnoreCase(confVersion)) {
+                    JOptionPane.showMessageDialog(contentPanel, "修改Hbase版本后，需要重启应用才能生效", "警告",
+                                                  JOptionPane.WARNING_MESSAGE);
+                }
 
             }
 

@@ -7,6 +7,7 @@ import com.lm.hbase.util.OSinfo;
 
 public class FrameDock {
 
+    @SuppressWarnings("restriction")
     public static void setDockIconImage() {
         Image image = ImageIconConstons.DOCK_ICON.getImage();
         if (OSinfo.isMacOS() || OSinfo.isMacOSX()) {

@@ -85,6 +85,7 @@
 				  </binFileExtensions>
 				  <platforms>
 				    <platform>unix</platform>
+				    <platform>windows</platform>
 				  </platforms>
 				  <programs>
 				    <program>
