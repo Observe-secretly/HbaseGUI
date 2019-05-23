@@ -164,7 +164,7 @@ public class CreateTab extends TabAbstract {
 
             tableNorthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
             tableContentPanel.add(tableNorthPanel, BorderLayout.NORTH);
-            tableNorthPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+            tableNorthPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
             addTableNameBut = new JButton("表名", ImageIconConstons.TABLE_ICON);
             addTableNameText = new DefaultValueTextField("表名");

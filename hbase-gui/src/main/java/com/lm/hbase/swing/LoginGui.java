@@ -343,7 +343,7 @@ public class LoginGui extends JDialog {
             }
             {
                 JPanel processPanel = new JPanel();
-                processPanel.setLayout(new FlowLayout(4));
+                processPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
                 stopLabel.addMouseListener(new StopEvent());
                 stopLabel.setEnabled(false);
@@ -352,10 +352,10 @@ public class LoginGui extends JDialog {
                 processBar.setIndeterminate(false);
                 processBar.setVisible(false);
 
-                processPanel.add(stopLabel, 0);
-                processPanel.add(processBar, 1);
-                processPanel.add(progressInfoLabel, 2);
-                processPanel.add(new JLabel(" "), 3);// 占位
+                processPanel.add(stopLabel);
+                processPanel.add(processBar);
+                processPanel.add(progressInfoLabel);
+                processPanel.add(new JLabel(" "));// 占位
 
                 buttonPane.add(processPanel, "1,4,6,1, fill, fill");
             }
