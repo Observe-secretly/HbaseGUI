@@ -56,7 +56,7 @@ public class LoginGui extends JDialog {
     private JButton                 testButton                = new JButton("Test");
     private JButton                 cancelButton              = new JButton("Close");
     private JButton                 okButton                  = new JButton("Connect");
-    private JButton                 reloadDriverVersionButton = new JButton(ImageIconConstons.Update_ICON);
+    private JButton                 reloadDriverVersionButton = new JButton(ImageIconConstons.UPDATE_ICON);
 
     private JComboBox<String>       driverVersionComboBox;
 

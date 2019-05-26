@@ -126,7 +126,7 @@ public class QueryTab extends TabAbstract {
 
         popupMenu.add(countItem);
 
-        refreshTableButton = new JButton("刷新", ImageIconConstons.Update_ICON);
+        refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();

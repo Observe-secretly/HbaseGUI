@@ -2,6 +2,7 @@ package com.lm.hbase.tab;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -10,12 +11,14 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -24,9 +27,12 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.lm.hbase.adapter.ColumnFamilyParam;
+import com.lm.hbase.adapter.ColumnFamilyParam.ColumnFamilyFieldEnum;
 import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.swing.HbaseGui;
+import com.lm.hbase.util.MyBytesUtil;
 import com.lm.hbase.util.StringUtil;
 
 public class CreateTab extends TabAbstract {
@@ -34,7 +40,7 @@ public class CreateTab extends TabAbstract {
     private JButton               refreshNameSpaceBut;
     private JList<String>         nameSpaceList;
 
-    private JButton               addTableNameBut;
+    private JLabel                addTableNameLabel;
     private DefaultValueTextField addTableNameText;
 
     private JButton               addNameSpaceBut;
@@ -42,21 +48,34 @@ public class CreateTab extends TabAbstract {
 
     private JButton               createTabBut;
 
-    private JButton               addColumnFamilyBut;
-    private DefaultValueTextField addColumnFamilyText;
+    private JLabel                addColumnFamilyLabel;
+    private DefaultValueTextField columnFamilyText;
+    private DefaultValueTextField maxVersionText;
+    private DefaultValueTextField timeLiveText;
+
+    private JLabel                addRowkeyScopeLabel;
+    private DefaultValueTextField startRowkeyText;
+    private DefaultValueTextField endRowkeyText;
+    private DefaultValueTextField numRegionsText;
 
     private JTextArea             showTextArea;
-
-    private static String         namespace     = "";
-    private static String         table_name    = "";
-    private static String         column_family = "";
 
     public CreateTab(HbaseGui window){
         super(window);
     }
 
     public void refreshCreateTableText() {
-        StringBuilder text = new StringBuilder();
+        String namespace = nameSpaceList.getSelectedValue();
+        String table_name = addTableNameText.getText();
+        String column_family = columnFamilyText.getText();
+        String maxVersion = maxVersionText.getText();
+        String timeLive = timeLiveText.getText();
+        String startRowkey = startRowkeyText.getText();
+        String endRowkey = endRowkeyText.getText();
+        String numRegions = numRegionsText.getText();
+
+        StringBuilder text = new StringBuilder("------------------配置信息----------------------\n");
+
         if (!StringUtil.isEmpty(namespace)) {
             text.append(com.lm.hbase.swing.SwingConstants.NAMESPACE_DES + namespace + "\n");
         }
@@ -65,6 +84,24 @@ public class CreateTab extends TabAbstract {
         }
         if (!StringUtil.isEmpty(column_family)) {
             text.append(com.lm.hbase.swing.SwingConstants.COLUMN_FAMILY_DES + column_family + "\n");
+        }
+        if (!StringUtil.isEmpty(maxVersion)) {
+            text.append(com.lm.hbase.swing.SwingConstants.MAX_VERSION_DES + maxVersion + "\n");
+        }
+        if (!StringUtil.isEmpty(timeLive)) {
+            text.append(com.lm.hbase.swing.SwingConstants.TIME_TO_LIVE_DES + timeLive + "ms \n");
+        }
+        if (!StringUtil.isEmpty(startRowkey) || !StringUtil.isEmpty(endRowkey) || !StringUtil.isEmpty(numRegions)) {
+            text.append("\n------------------分区信息----------------------\n");
+        }
+        if (!StringUtil.isEmpty(startRowkey)) {
+            text.append(com.lm.hbase.swing.SwingConstants.START_ROWKEY_DES + startRowkey + "\n");
+        }
+        if (!StringUtil.isEmpty(endRowkey)) {
+            text.append(com.lm.hbase.swing.SwingConstants.END_ROWKEY_DES + endRowkey + "\n");
+        }
+        if (!StringUtil.isEmpty(numRegions)) {
+            text.append(com.lm.hbase.swing.SwingConstants.NUM_REGIONS_DES + numRegions + "\n");
         }
         showTextArea.setText(text.toString());
     }
@@ -103,7 +140,7 @@ public class CreateTab extends TabAbstract {
 
         // 左侧面板内部布局
         {
-            refreshNameSpaceBut = new JButton("刷新", ImageIconConstons.Update_ICON);
+            refreshNameSpaceBut = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
             refreshNameSpaceBut.addMouseListener(new RefreshNameSpaceAdapter());
 
             nameSpaceList = new JList<>();
@@ -133,7 +170,6 @@ public class CreateTab extends TabAbstract {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     if (!e.getValueIsAdjusting()) {
-                        CreateTab.namespace = nameSpaceList.getSelectedValue();
                         refreshCreateTableText();
                     }
                 }
@@ -166,21 +202,57 @@ public class CreateTab extends TabAbstract {
             tableContentPanel.add(tableNorthPanel, BorderLayout.NORTH);
             tableNorthPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-            addTableNameBut = new JButton("表名", ImageIconConstons.TABLE_ICON);
+            addTableNameLabel = new JLabel(ImageIconConstons.TABLE_ICON);
             addTableNameText = new DefaultValueTextField("表名");
             addTableNameText.setColumns(8);
-            addTableNameText.setVisible(false);
+            addTableNameText.addKeyListener(new EditSettingsAdapter());
 
-            tableNorthPanel.add(addTableNameBut);
+            tableNorthPanel.add(addTableNameLabel);
             tableNorthPanel.add(addTableNameText);
 
-            addColumnFamilyText = new DefaultValueTextField("列族名");
-            addColumnFamilyText.setColumns(8);
-            addColumnFamilyText.setVisible(false);
-            tableNorthPanel.add(addColumnFamilyText);
+            JSeparator js1 = new JSeparator(JSeparator.VERTICAL);
+            js1.setPreferredSize(new Dimension(js1.getPreferredSize().width, 20));
+            tableNorthPanel.add(js1);
 
-            addColumnFamilyBut = new JButton("添加列族", ImageIconConstons.ADD_ICON);
-            tableNorthPanel.add(addColumnFamilyBut);
+            addColumnFamilyLabel = new JLabel(ImageIconConstons.SETTINGS_ICON);
+            tableNorthPanel.add(addColumnFamilyLabel);
+
+            columnFamilyText = new DefaultValueTextField("列族名");
+            columnFamilyText.setColumns(8);
+            columnFamilyText.addKeyListener(new EditSettingsAdapter());
+            tableNorthPanel.add(columnFamilyText);
+
+            maxVersionText = new DefaultValueTextField("最大版本");
+            maxVersionText.setColumns(8);
+            maxVersionText.addKeyListener(new EditSettingsAdapter());
+            tableNorthPanel.add(maxVersionText);
+
+            timeLiveText = new DefaultValueTextField("数据过期时间ms");
+            timeLiveText.setColumns(10);
+            timeLiveText.addKeyListener(new EditSettingsAdapter());
+            tableNorthPanel.add(timeLiveText);
+
+            JSeparator js2 = new JSeparator(JSeparator.VERTICAL);
+            js2.setPreferredSize(new Dimension(js2.getPreferredSize().width, 20));
+            tableNorthPanel.add(js2);
+
+            addRowkeyScopeLabel = new JLabel(ImageIconConstons.SHARING_ICON);
+            startRowkeyText = new DefaultValueTextField("start rowKey");
+            startRowkeyText.addKeyListener(new EditSettingsAdapter());
+            startRowkeyText.setColumns(8);
+
+            endRowkeyText = new DefaultValueTextField("end rowKey");
+            endRowkeyText.addKeyListener(new EditSettingsAdapter());
+            endRowkeyText.setColumns(8);
+
+            numRegionsText = new DefaultValueTextField("num regions");
+            numRegionsText.addKeyListener(new EditSettingsAdapter());
+            numRegionsText.setColumns(8);
+
+            tableNorthPanel.add(addRowkeyScopeLabel);
+            tableNorthPanel.add(startRowkeyText);
+            tableNorthPanel.add(endRowkeyText);
+            tableNorthPanel.add(numRegionsText);
 
             JPanel tableCenterPanel = new JPanel();
             tableCenterPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -191,48 +263,6 @@ public class CreateTab extends TabAbstract {
             showTextArea.setColumns(20);
             showTextArea.setRows(10);
             tableCenterPanel.add(showTextArea);
-
-            addColumnFamilyBut.addMouseListener(new AddColumnFamilyAdapter());
-
-            addTableNameBut.addMouseListener(new AddTableNameAdapter());
-
-            addTableNameText.addKeyListener(new KeyAdapter() {
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-
-                    if (e.getKeyCode() == 10) {
-                        CreateTab.table_name = addTableNameText.getText().trim();
-                        refreshCreateTableText();
-
-                        addTableNameBut.setVisible(true);
-                        addTableNameText.setVisible(false);
-                    } else if (e.getKeyCode() == 27) {
-                        addTableNameBut.setVisible(true);
-                        addTableNameText.setVisible(false);
-                    }
-
-                }
-
-            });
-
-            addColumnFamilyText.addKeyListener(new KeyAdapter() {
-
-                @Override
-                public void keyReleased(KeyEvent e) {
-                    if (e.getKeyCode() == 10) {
-                        CreateTab.column_family = addColumnFamilyText.getText().trim();
-                        refreshCreateTableText();
-
-                        addColumnFamilyBut.setVisible(true);
-                        addColumnFamilyText.setVisible(false);
-                    } else if (e.getKeyCode() == 27) {
-                        addColumnFamilyBut.setVisible(true);
-                        addColumnFamilyText.setVisible(false);
-                    }
-                }
-
-            });
 
             JPanel tableSouthPanel = new JPanel();
             tableSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -255,23 +285,40 @@ public class CreateTab extends TabAbstract {
 
         @Override
         public void mouseReleased(MouseEvent e) {
+            String namespace = nameSpaceList.getSelectedValue();
+            String table_name = addTableNameText.getText();
+            String column_family = columnFamilyText.getText();
+            String startRowkey = startRowkeyText.getText();
+            String endRowkey = endRowkeyText.getText();
+            String numRegions = numRegionsText.getText();
+            String maxVersion = maxVersionText.getText();
+            String timeLive = timeLiveText.getText();
 
-            if (StringUtil.isEmpty(CreateTab.namespace)) {
+            if (StringUtil.isEmpty(namespace)) {
                 JOptionPane.showMessageDialog(getFrame(), "请选择命名空间", "警告", JOptionPane.WARNING_MESSAGE);
                 createTabBut.setEnabled(true);
                 return;
             }
 
-            if (StringUtil.isEmpty(CreateTab.table_name)) {
+            if (StringUtil.isEmpty(table_name)) {
                 JOptionPane.showMessageDialog(getFrame(), "请输入表名", "警告", JOptionPane.WARNING_MESSAGE);
                 createTabBut.setEnabled(true);
                 return;
             }
 
-            if (StringUtil.isEmpty(CreateTab.column_family)) {
+            if (StringUtil.isEmpty(column_family)) {
                 JOptionPane.showMessageDialog(getFrame(), "请输入至少一个列族", "警告", JOptionPane.WARNING_MESSAGE);
                 createTabBut.setEnabled(true);
                 return;
+            }
+
+            if (!StringUtil.isEmpty(startRowkey) || !StringUtil.isEmpty(endRowkey) || !StringUtil.isEmpty(numRegions)) {
+                if (StringUtil.isEmpty(startRowkey) || StringUtil.isEmpty(endRowkey)
+                    || StringUtil.isEmpty(numRegions)) {
+                    JOptionPane.showMessageDialog(getFrame(), "分区信息不完整", "警告", JOptionPane.WARNING_MESSAGE);
+                    createTabBut.setEnabled(true);
+                    return;
+                }
             }
 
             startTask();
@@ -282,8 +329,22 @@ public class CreateTab extends TabAbstract {
                 public void run() {
 
                     try {
-                        HbaseUtil.createTable(CreateTab.namespace + ":" + CreateTab.table_name,
-                                              CreateTab.column_family);
+                        if (!StringUtil.isEmpty(startRowkey) && !StringUtil.isEmpty(endRowkey)
+                            && !StringUtil.isEmpty(numRegions)) {
+                            ColumnFamilyParam columnFamilyParam = new ColumnFamilyParam();
+                            columnFamilyParam.put(ColumnFamilyFieldEnum.COLUMN_FAMILY_NAME, column_family);
+                            if (StringUtil.isEmpty(maxVersion)) {
+                                columnFamilyParam.put(ColumnFamilyFieldEnum.MAX_VERSION, maxVersion);
+                            }
+                            if (StringUtil.isEmpty(timeLive)) {
+                                columnFamilyParam.put(ColumnFamilyFieldEnum.TIME_TO_LIVE, timeLive);
+                            }
+                            HbaseUtil.createTable(namespace + ":" + table_name, null, MyBytesUtil.toBytes(startRowkey),
+                                                  MyBytesUtil.toBytes(endRowkey), Integer.parseInt(numRegions),
+                                                  columnFamilyParam);
+                        } else {
+                            HbaseUtil.createTable(namespace + ":" + table_name, column_family);
+                        }
                         JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception e2) {
                         JOptionPane.showMessageDialog(getFrame(), e2.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
@@ -303,7 +364,7 @@ public class CreateTab extends TabAbstract {
     public void enableAll() {
         createTabBut.setEnabled(true);
         refreshNameSpaceBut.setEnabled(true);
-        addColumnFamilyBut.setEnabled(true);
+        addColumnFamilyLabel.setEnabled(true);
         addNameSpaceBut.setEnabled(true);
 
     }
@@ -312,7 +373,7 @@ public class CreateTab extends TabAbstract {
     public void disableAll() {
         createTabBut.setEnabled(false);
         refreshNameSpaceBut.setEnabled(false);
-        addColumnFamilyBut.setEnabled(false);
+        addColumnFamilyLabel.setEnabled(false);
         addNameSpaceBut.setEnabled(false);
     }
 
@@ -374,32 +435,6 @@ public class CreateTab extends TabAbstract {
 
     }
 
-    class AddTableNameAdapter extends MouseAdapter {
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            addTableNameBut.setVisible(false);
-            addTableNameText.setVisible(true);
-            addTableNameText.grabFocus();// 获取输入焦点。
-        }
-    }
-
-    /**
-     * 添加列族
-     * 
-     * @author limin May 17, 2019 1:50:13 AM
-     */
-    class AddColumnFamilyAdapter extends MouseAdapter {
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            addColumnFamilyBut.setVisible(false);
-            addColumnFamilyText.setVisible(true);
-            addColumnFamilyText.grabFocus();// 获取输入焦点。
-        }
-
-    }
-
     /**
      * 删除命名空间监听
      * 
@@ -420,7 +455,7 @@ public class CreateTab extends TabAbstract {
                             HbaseUtil.deleteNameSpace(namespace);
                             // 刷新命名空间
                             nameSpaceList.setListData(HbaseUtil.listNameSpace());
-                            CreateTab.namespace = "";
+                            nameSpaceList.setSelectedIndex(-1);
                             refreshCreateTableText();
                         } catch (Exception e) {
                             exceptionAlert(e);
@@ -457,6 +492,14 @@ public class CreateTab extends TabAbstract {
 
             });
 
+        }
+    }
+
+    class EditSettingsAdapter extends KeyAdapter {
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+            refreshCreateTableText();
         }
     }
 

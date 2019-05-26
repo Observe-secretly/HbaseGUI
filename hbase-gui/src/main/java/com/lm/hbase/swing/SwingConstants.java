@@ -12,4 +12,14 @@ public class SwingConstants {
 
     public static final String COLUMN_FAMILY_DES = "ColumnFamily==>";
 
+    public static final String START_ROWKEY_DES  = "Start Rowkey==>";
+
+    public static final String END_ROWKEY_DES    = "End Rowkey==>";
+
+    public static final String NUM_REGIONS_DES   = "numRegions==>";
+
+    public static final String MAX_VERSION_DES   = "maxVersion==>";
+
+    public static final String TIME_TO_LIVE_DES  = "timeToLive==>";
+
 }

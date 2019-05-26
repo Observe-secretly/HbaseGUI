@@ -69,7 +69,7 @@ public class MetaDataTab extends TabAbstract {
         jlistScroll.setLayout(new ScrollPaneLayout());
         tableListPanel.add(jlistScroll);
 
-        refreshTableButton = new JButton("刷新", ImageIconConstons.Update_ICON);
+        refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
         tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
         JPanel southPanel = new JPanel();
@@ -87,7 +87,7 @@ public class MetaDataTab extends TabAbstract {
 
         addMataDataBut = new JButton(ImageIconConstons.ADD_ICON);
         removeMataDataBut = new JButton(ImageIconConstons.GARBAGE_ICON);
-        refreshMataDataBut = new JButton(ImageIconConstons.Update_ICON);
+        refreshMataDataBut = new JButton(ImageIconConstons.UPDATE_ICON);
         saveButton = new JButton("保存元数据", ImageIconConstons.SAVE_ICON);
 
         addMataDataBut.setEnabled(false);

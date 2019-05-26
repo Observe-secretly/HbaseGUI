@@ -28,6 +28,10 @@ public class ImageIconConstons {
 
     public static final ImageIcon TABLE_ICON      = new ImageIcon(Env.IMG_DIR + "table.png");
 
-    public static final ImageIcon Update_ICON     = new ImageIcon(Env.IMG_DIR + "Update.png");
+    public static final ImageIcon UPDATE_ICON     = new ImageIcon(Env.IMG_DIR + "Update.png");
+
+    public static final ImageIcon SHARING_ICON    = new ImageIcon(Env.IMG_DIR + "Sharing.png");
+
+    public static final ImageIcon SETTINGS_ICON   = new ImageIcon(Env.IMG_DIR + "Settings.png");
 
 }
