@@ -34,4 +34,6 @@ public class ImageIconConstons {
 
     public static final ImageIcon SETTINGS_ICON   = new ImageIcon(Env.IMG_DIR + "Settings.png");
 
+    public static final ImageIcon OPTION_ICON     = new ImageIcon(Env.IMG_DIR + "Option.png");
+
 }

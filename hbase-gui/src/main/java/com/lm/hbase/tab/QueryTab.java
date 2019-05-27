@@ -2,6 +2,7 @@ package com.lm.hbase.tab;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -24,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -156,6 +158,9 @@ public class QueryTab extends TabAbstract {
         JPanel filterNorthPanel_center = new JPanel();
         filterNorthPanel.add(filterNorthPanel_center, BorderLayout.CENTER);
 
+        JLabel filterLabel = new JLabel(ImageIconConstons.OPTION_ICON);
+        filterNorthPanel_center.add(filterLabel);
+
         textField_start_rowkey = new DefaultValueTextField("start rowkey");
         filterNorthPanel_center.add(textField_start_rowkey);
         textField_start_rowkey.setColumns(10);
@@ -167,6 +172,10 @@ public class QueryTab extends TabAbstract {
         textField_rowKey_prefix = new DefaultValueTextField("Rowkey前缀");
         filterNorthPanel_center.add(textField_rowKey_prefix);
         textField_rowKey_prefix.setColumns(10);
+
+        JSeparator js1 = new JSeparator(JSeparator.VERTICAL);
+        js1.setPreferredSize(new Dimension(js1.getPreferredSize().width, 20));
+        filterNorthPanel_center.add(js1);
 
         JLabel versionLabel = new JLabel("版本号:");
         filterNorthPanel_center.add(versionLabel);
@@ -183,6 +192,10 @@ public class QueryTab extends TabAbstract {
         textField_pageSize.setText("10");
         filterNorthPanel_center.add(textField_pageSize);
         textField_pageSize.setColumns(3);
+
+        JSeparator js2 = new JSeparator(JSeparator.VERTICAL);
+        js2.setPreferredSize(new Dimension(js2.getPreferredSize().width, 20));
+        filterNorthPanel_center.add(js2);
 
         JLabel timeScopeLabel = new JLabel(ImageIconConstons.CALENDAR_ICON);
         filterNorthPanel_center.add(timeScopeLabel);
