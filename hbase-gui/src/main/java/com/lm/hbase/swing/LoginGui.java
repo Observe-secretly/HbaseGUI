@@ -412,6 +412,9 @@ public class LoginGui extends JDialog {
             public void run() {
                 try {
                     loadDriver(version, reload);
+                    // 解禁按钮
+                    testButton.setEnabled(true);
+                    okButton.setEnabled(true);
                 } finally {
                     endTask();
                 }
@@ -750,10 +753,9 @@ public class LoginGui extends JDialog {
 
                 }
 
-                // 解禁按钮
-                testButton.setEnabled(true);
-                okButton.setEnabled(true);
-
+                // 禁用按钮
+                testButton.setEnabled(false);
+                okButton.setEnabled(false);
             }
         }
 
