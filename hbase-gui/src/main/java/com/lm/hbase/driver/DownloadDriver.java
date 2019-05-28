@@ -23,26 +23,60 @@ import com.lm.hbase.util.network.HttpURLConnectionFactory;
  */
 public class DownloadDriver {
 
+    private final static String ALIYUN_TAG = "aliyun-";
+
+    /**
+     * 通过版本号前缀判断是否阿里云版本
+     * 
+     * @param version
+     * @return
+     */
+    private static boolean isAliyun(String version) {
+        // 是否是阿里云版本。通过前缀判断
+        boolean isAliyun = version.startsWith(ALIYUN_TAG);
+        return isAliyun;
+    }
+
     private static String getPomUrl(String version) {
-        StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
-        url.append("/" + version + "/");
-        url.append("hbase-client-");
-        url.append(version);
-        url.append(".pom");
-        return url.toString();
+        if (isAliyun(version)) {
+            String aliyunVersion = version.replace(ALIYUN_TAG, "");
+            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/com/aliyun/hbase/alihbase-client");
+            url.append("/" + aliyunVersion + "/");
+            url.append("alihbase-client-");
+            url.append(aliyunVersion);
+            url.append(".pom");
+            return url.toString();
+        } else {
+            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
+            url.append("/" + version + "/");
+            url.append("hbase-client-");
+            url.append(version);
+            url.append(".pom");
+            return url.toString();
+        }
     }
 
     private static String getJarUrl(String version) {
-        StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
-        url.append("/" + version + "/");
-        url.append("hbase-client-");
-        url.append(version);
-        url.append(".jar");
-        return url.toString();
+        if (isAliyun(version)) {
+            String aliyunVersion = version.replace(ALIYUN_TAG, "");
+            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/com/aliyun/hbase/alihbase-client");
+            url.append("/" + aliyunVersion + "/");
+            url.append("alihbase-client-");
+            url.append(aliyunVersion);
+            url.append(".jar");
+            return url.toString();
+        } else {
+            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
+            url.append("/" + version + "/");
+            url.append("hbase-client-");
+            url.append(version);
+            url.append(".jar");
+            return url.toString();
+        }
+
     }
 
     public static boolean load(String version, String mavenHome, JLabel progressInfoLabel) throws Throwable {
-
         String outputDir = Env.DRIVER_DIR + version;
         // XXX 如果驱动存在则不处理。后续完善可以添加校验功能
         File outputFileDir = new File(outputDir);
