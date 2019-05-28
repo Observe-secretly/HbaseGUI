@@ -1,10 +1,14 @@
 package com.lm.hbase.swing;
 
+import com.lm.hbase.conf.ConfItem;
+
 public class SwingConstants {
 
     public static HbaseGui     hbaseGui          = null;
 
     public static LoginGui     loginGui          = null;
+
+    public static ConfItem     selectedConf      = null;
 
     public static final String NAMESPACE_DES     = "NameSpace==>";
 

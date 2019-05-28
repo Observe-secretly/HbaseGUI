@@ -11,28 +11,39 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.border.EtchedBorder;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneLayout;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
 import com.lm.hbase.adapter.HbaseUtil;
+import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.common.ImageIconConstons;
-import com.lm.hbase.conf.HbaseClientConf;
+import com.lm.hbase.conf.ConfItem;
+import com.lm.hbase.conf.HbaseGuiConf;
 import com.lm.hbase.conf.RemoteDriverProp;
 import com.lm.hbase.driver.DownloadDriver;
 import com.lm.hbase.driver.DriverClassLoader;
@@ -46,6 +57,14 @@ public class LoginGui extends JDialog {
 
     public ScheduledExecutorService threadPool                = Executors.newSingleThreadScheduledExecutor();
 
+    private JPanel                  confsPanel                = new JPanel();
+    private JList<ConfItem>         confsList                 = new JList<>();
+    private JButton                 addConfBut                = new JButton(ImageIconConstons.ADD_ICON);
+    private JButton                 removeConfBut             = new JButton(ImageIconConstons.GARBAGE_ICON);
+
+    /*
+     * 存放除配置列表外的所有控件
+     */
     private JPanel                  contentPanel              = new JPanel();
     private JTextField              zkPortField;
     private JTextField              zkQuorumField;
@@ -60,22 +79,14 @@ public class LoginGui extends JDialog {
 
     private JComboBox<String>       driverVersionComboBox;
 
-    public JLabel                   progressInfoLabel         = new JLabel();
+    public JLabel                   progressInfoLabel         = new JLabel("Driver not loaded, please select configure or add and refine configuration");
     public JProgressBar             processBar                = new JProgressBar();
-    public JLabel                   stopLabel                 = new JLabel(ImageIconConstons.STOP_ICON);;
+    public JLabel                   stopLabel                 = new JLabel(ImageIconConstons.STOP_ICON);
 
     public static void openDialog() {
         try {
-            // 读取配置文件
-            String zkPort = HbaseClientConf.getStringValue("hbase.zk.port");
-            String zkQuorum = HbaseClientConf.getStringValue("hbase.zk.quorum");
-            String hbaseMaster = HbaseClientConf.getStringValue("hbase.master");
-            String znodeParent = HbaseClientConf.getStringValue("znode.parent");
-            String hbaseVersion = HbaseClientConf.getStringValue("hbase.version");
-            String mavenHome = HbaseClientConf.getStringValue("maven.home");
 
-            com.lm.hbase.swing.SwingConstants.loginGui = new LoginGui(zkPort, zkQuorum, hbaseMaster, znodeParent,
-                                                                      hbaseVersion, mavenHome);
+            com.lm.hbase.swing.SwingConstants.loginGui = new LoginGui();
             com.lm.hbase.swing.SwingConstants.loginGui.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             com.lm.hbase.swing.SwingConstants.loginGui.setVisible(true);
 
@@ -87,14 +98,38 @@ public class LoginGui extends JDialog {
     /**
      * Create the dialog.
      */
-    public LoginGui(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent, String hbaseVersion,
-                    String mavenHome){
+    public LoginGui(){
         setTitle("配置Hbase");
         setBounds(100, 100, 500, 310);
-        this.setMinimumSize(new Dimension(500, 330));
+        this.setMinimumSize(new Dimension(700, 330));
         this.setResizable(false);// 禁止拉边框拉长拉短
         this.setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
+        getContentPane().add(confsPanel, BorderLayout.WEST);
+        {
+            confsPanel.setLayout(new BorderLayout());
+            // 设置为单选模式
+            confsList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            List<ConfItem> confs = getConfItems();
+            confsList.setListData(getConfItems().toArray(new ConfItem[confs.size()]));
+            confsList.addListSelectionListener(new ConfListListener());
+
+            JScrollPane jlistScroll = new JScrollPane(confsList);
+            jlistScroll.setLayout(new ScrollPaneLayout());
+            confsPanel.add(jlistScroll, BorderLayout.CENTER);
+
+            // 设置添加/删除配置文件按钮
+            JPanel modifyConfPanel = new JPanel();
+            confsPanel.add(modifyConfPanel, BorderLayout.SOUTH);
+
+            addConfBut.addMouseListener(new AddConfAdapter());
+            removeConfBut.addMouseListener(new DeleteConfAdapter());
+
+            modifyConfPanel.add(addConfBut);
+            modifyConfPanel.add(removeConfBut);
+
+        }
+
         getContentPane().add(contentPanel, BorderLayout.CENTER);
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
                                                                  FormSpecs.DEFAULT_COLSPEC,
@@ -122,6 +157,7 @@ public class LoginGui extends JDialog {
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
+                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
                                                               FormSpecs.RELATED_GAP_ROWSPEC,
                                                               FormSpecs.DEFAULT_ROWSPEC }));
         {
@@ -133,7 +169,6 @@ public class LoginGui extends JDialog {
             zkPortField = new JTextField();
             contentPanel.add(zkPortField, "10, 4, 5, 1, fill, default");
             zkPortField.setColumns(10);
-            zkPortField.setText(zkPort);
         }
         {
             JLabel lblNewLabel_1 = new JLabel("ZK.QUORUM");
@@ -144,7 +179,6 @@ public class LoginGui extends JDialog {
             zkQuorumField = new JTextField();
             contentPanel.add(zkQuorumField, "10, 8, 5, 1, fill, default");
             zkQuorumField.setColumns(10);
-            zkQuorumField.setText(zkQuorum);
         }
         {
             JLabel lblNewLabel_2 = new JLabel("HBASE.MASTER");
@@ -155,7 +189,6 @@ public class LoginGui extends JDialog {
             hbaseMasterField = new JTextField();
             contentPanel.add(hbaseMasterField, "10, 12, 5, 1, fill, default");
             hbaseMasterField.setColumns(10);
-            hbaseMasterField.setText(hbaseMaster);
         }
         {
             JLabel lblNewLabel_3 = new JLabel("ZNODE.PARENT");
@@ -166,7 +199,6 @@ public class LoginGui extends JDialog {
             znodeParentField = new JTextField();
             contentPanel.add(znodeParentField, "10, 14, 5, 1, fill, default");
             znodeParentField.setColumns(10);
-            znodeParentField.setText(znodeParent);
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Maven Home");
@@ -176,7 +208,6 @@ public class LoginGui extends JDialog {
             mavenHomeField = new JTextField();
             contentPanel.add(mavenHomeField, "10, 16, 5, 1, fill, default");
             mavenHomeField.setColumns(10);
-            mavenHomeField.setText(mavenHome);
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Hbase Version");
@@ -186,14 +217,8 @@ public class LoginGui extends JDialog {
         {
             driverVersionComboBox = new JComboBox<>();
             driverVersionComboBox.addItem("");
-            int confVersionIndex = 0;
             for (String item : RemoteDriverProp.getKeys()) {
-                confVersionIndex++;
                 driverVersionComboBox.addItem(item);
-                if (item.equalsIgnoreCase(hbaseVersion)) {
-                    driverVersionComboBox.setSelectedIndex(confVersionIndex);
-                    asyncLoadDriver(hbaseVersion, false);
-                }
             }
             driverVersionComboBox.addItemListener(new VersionListener());
 
@@ -205,8 +230,7 @@ public class LoginGui extends JDialog {
 
         {
             JPanel buttonPane = new JPanel();
-            buttonPane.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-            getContentPane().add(buttonPane, BorderLayout.SOUTH);
+            contentPanel.add(buttonPane, "12, 20, 5, 1, right, default");
             buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("130px"),
                                                                    ColumnSpec.decode("150px"),
                                                                    FormSpecs.RELATED_GAP_COLSPEC,
@@ -218,6 +242,7 @@ public class LoginGui extends JDialog {
                                                                 FormSpecs.RELATED_GAP_ROWSPEC,
                                                                 FormSpecs.DEFAULT_ROWSPEC, }));
             {
+                testButton.setEnabled(false);
                 testButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -269,7 +294,7 @@ public class LoginGui extends JDialog {
 
                     }
                 });
-                buttonPane.add(testButton, "1, 2, left, top");
+                buttonPane.add(testButton, "1, 2, right, default");
             }
             {
                 cancelButton.addMouseListener(new MouseAdapter() {
@@ -283,6 +308,7 @@ public class LoginGui extends JDialog {
                 buttonPane.add(cancelButton, "4, 2, right, top");
             }
             {
+                okButton.setEnabled(false);
                 okButton.addMouseListener(new MouseAdapter() {
 
                     @Override
@@ -406,8 +432,8 @@ public class LoginGui extends JDialog {
             // 加载hbase client驱动
             try {
                 String mavenHome = mavenHomeField == null ? null : mavenHomeField.getText();
-                if (StringUtil.isEmpty(mavenHome)) {
-                    mavenHome = HbaseClientConf.getStringValue("maven.home");
+                if (StringUtil.isEmpty(mavenHome) && SwingConstants.selectedConf != null) {
+                    mavenHome = SwingConstants.selectedConf.getStringValue("maven.home");
                 }
                 if (StringUtil.isEmpty(mavenHome)) {
                     JOptionPane.showMessageDialog(this, "请设置MavenHome", "错误", JOptionPane.ERROR_MESSAGE);
@@ -483,11 +509,13 @@ public class LoginGui extends JDialog {
                 String version = e.getItem().toString();
                 asyncLoadDriver(version, false);
             } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                String version = e.getItem().toString();
-                String confVersion = HbaseClientConf.getStringValue("hbase.version");
-                if (!StringUtil.isEmpty(version) && !version.equalsIgnoreCase(confVersion)) {
-                    JOptionPane.showMessageDialog(contentPanel, "修改Hbase版本后，需要重启应用才能生效", "警告",
-                                                  JOptionPane.WARNING_MESSAGE);
+                if (SwingConstants.selectedConf != null) {
+                    String version = e.getItem().toString();
+                    String confVersion = SwingConstants.selectedConf.getStringValue("hbase.version");
+                    if (!StringUtil.isEmpty(version) && !version.equalsIgnoreCase(confVersion)) {
+                        JOptionPane.showMessageDialog(contentPanel, "修改Hbase版本后，需要重启应用才能生效", "警告",
+                                                      JOptionPane.WARNING_MESSAGE);
+                    }
                 }
 
             }
@@ -570,4 +598,164 @@ public class LoginGui extends JDialog {
         stopLabel.setVisible(true);
     }
 
+    /**
+     * 获取Hbase配置列表
+     * 
+     * @return
+     */
+    private List<ConfItem> getConfItems() {
+        List<ConfItem> confList = new ArrayList<>();
+        File confDir = new File(Env.CONF_DIR);
+        if (!confDir.exists()) {
+            confDir.mkdir();
+        }
+        for (File item : confDir.listFiles()) {
+            if (item.isFile() && item.getName().startsWith(CommonConstons.HBASE_CONF_FILE_PREFIX)) {
+                // 尝试从HbaseGuiConf中获取配置文件显示名称
+                String displayName = HbaseGuiConf.getStringValue(item.getName());
+                if (StringUtil.isEmpty(displayName)) {
+                    displayName = item.getName();
+                }
+                confList.add(new ConfItem(displayName, item.getName()));
+
+            }
+        }
+
+        return confList;
+    }
+
+    private void cleanConf() {
+        zkPortField.setText("");
+        zkQuorumField.setText("");
+        hbaseMasterField.setText("");
+        znodeParentField.setText("");
+        mavenHomeField.setText("");
+    }
+
+    /**
+     * 添加配置
+     * 
+     * @author limin May 29, 2019 12:52:24 AM
+     */
+    class AddConfAdapter extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            cleanConf();
+            // 生成一个配置文件
+            File confDir = new File(Env.CONF_DIR);
+            if (!confDir.exists()) {
+                confDir.mkdir();
+            }
+            for (int i = 1; i < Integer.MAX_VALUE; i++) {
+                // New Favorite
+                File confFile = new File(Env.CONF_DIR + CommonConstons.HBASE_CONF_FILE_PREFIX + i + ".conf");
+                if (!confFile.exists()) {
+                    try {
+                        // 刷新Jlist
+                        DefaultListModel model = new DefaultListModel();
+                        for (ConfItem confs : getConfItems()) {
+                            model.addElement(confs);
+                        }
+                        // 创建配置文件
+                        confFile.createNewFile();
+                        model.addElement(new ConfItem(confFile.getName(), confFile.getName()));
+                        confsList.setModel(model);
+                        confsList.updateUI();
+
+                        confsList.setSelectedIndex(model.getSize() - 1);
+
+                        return;
+
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                        return;
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * 删除配置文件
+     * 
+     * @author limin May 29, 2019 12:56:50 AM
+     */
+    class DeleteConfAdapter extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            // 删除配置
+            ConfItem conf = confsList.getSelectedValue();
+            File confFile = new File(conf.getConfFilePath());
+            confFile.delete();
+
+            // 清空全局配置
+            SwingConstants.selectedConf = null;
+
+            // 清空UI中的配置信息
+            cleanConf();
+
+            // 重新加载配置列表
+            List<ConfItem> confs = getConfItems();
+            confsList.setListData(getConfItems().toArray(new ConfItem[confs.size()]));
+
+            // 禁用按钮
+            testButton.setEnabled(false);
+            okButton.setEnabled(false);
+
+        }
+    }
+
+    /**
+     * 切换配置时的监听
+     * 
+     * @author limin May 29, 2019 12:20:22 AM
+     */
+    class ConfListListener implements ListSelectionListener {
+
+        @Override
+        public void valueChanged(ListSelectionEvent e) {
+            if (!e.getValueIsAdjusting()) {
+                // 清空UI中的配置信息
+                cleanConf();
+                // 重新设置全局配置
+                SwingConstants.selectedConf = confsList.getSelectedValue();
+                if (SwingConstants.selectedConf == null) {
+                    return;
+                }
+
+                // 从选定的配置文件加载配置，渲染到UI上。并加载
+                String zkPort = SwingConstants.selectedConf.getStringValue("hbase.zk.port");
+                String zkQuorum = SwingConstants.selectedConf.getStringValue("hbase.zk.quorum");
+                String hbaseMaster = SwingConstants.selectedConf.getStringValue("hbase.master");
+                String znodeParent = SwingConstants.selectedConf.getStringValue("znode.parent");
+                String hbaseVersion = SwingConstants.selectedConf.getStringValue("hbase.version");
+                String mavenHome = SwingConstants.selectedConf.getStringValue("maven.home");
+
+                zkPortField.setText(zkPort);
+                zkQuorumField.setText(zkQuorum);
+                hbaseMasterField.setText(hbaseMaster);
+                znodeParentField.setText(znodeParent);
+                mavenHomeField.setText(mavenHome);
+
+                for (int i = 0; i < driverVersionComboBox.getModel().getSize(); i++) {
+                    if (driverVersionComboBox.getModel().getElementAt(i).equalsIgnoreCase(hbaseVersion)) {
+                        driverVersionComboBox.setSelectedIndex(i);
+                        asyncLoadDriver(hbaseVersion, false);
+                    }
+
+                }
+
+                // 解禁按钮
+                testButton.setEnabled(true);
+                okButton.setEnabled(true);
+
+            }
+        }
+
+    }
 }

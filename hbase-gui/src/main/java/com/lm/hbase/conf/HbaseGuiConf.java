@@ -10,12 +10,12 @@ import java.util.Properties;
 
 import com.lm.hbase.common.Env;
 
-public class HbaseClientConf {
+public class HbaseGuiConf {
 
     private static Properties confProps = null;
 
     private static String getConfFilePath() {
-        return Env.CONF_DIR + "hbase-client.conf";
+        return Env.CONF_DIR + "hbaseGui-conf.conf";
     }
 
     /**
@@ -75,26 +75,6 @@ public class HbaseClientConf {
 
     public Boolean getBooleanValue(String key) {
         return Boolean.parseBoolean(getStringValue(key));
-    }
-
-    public static void setConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent, String version,
-                               String mavenHome) {
-        if (confProps == null) {
-            loadProperties();
-        }
-        confProps.put("hbase.zk.port", zkPort);
-        confProps.put("hbase.zk.quorum", zkQuorum);
-        confProps.put("hbase.master", hbaseMaster);
-        confProps.put("znode.parent", znodeParent);
-        confProps.put("hbase.version", version);
-        confProps.put("maven.home", mavenHome);
-        try {
-            confProps.store(new FileOutputStream(getConfFilePath()), null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void remove(String key) {

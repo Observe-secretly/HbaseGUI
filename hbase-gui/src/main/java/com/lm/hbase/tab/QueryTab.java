@@ -42,7 +42,6 @@ import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.HbaseQualifier;
 import com.lm.hbase.common.ImageIconConstons;
-import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.Chooser;
@@ -306,7 +305,7 @@ public class QueryTab extends TabAbstract {
 
                                     // 删除成功后，删除元数据
                                     String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-                                    HbaseClientConf.remove(propertiesKey);
+                                    com.lm.hbase.swing.SwingConstants.selectedConf.remove(propertiesKey);
 
                                     stopTask();
 
@@ -543,7 +542,7 @@ public class QueryTab extends TabAbstract {
     private void loadMataData(String tableName) throws Exception {
 
         String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-        String cacheMetaData = HbaseClientConf.getStringValue(propertiesKey);
+        String cacheMetaData = com.lm.hbase.swing.SwingConstants.selectedConf.getStringValue(propertiesKey);
 
         List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
         // 如果存在元数据则替换类型
@@ -831,7 +830,7 @@ public class QueryTab extends TabAbstract {
     private Map<String, String> getMetaData() {
         // 尝试获取字段类型映射
         String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-        String mappingStr = HbaseClientConf.getStringValue(propertiesKey);
+        String mappingStr = com.lm.hbase.swing.SwingConstants.selectedConf.getStringValue(propertiesKey);
         Map<String, String> typeMapping = null;
         if (!StringUtil.isEmpty(mappingStr)) {
             typeMapping = JSON.parseObject(mappingStr, Map.class);

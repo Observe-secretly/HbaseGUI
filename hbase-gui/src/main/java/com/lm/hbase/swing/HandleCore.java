@@ -17,7 +17,6 @@ import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.Row;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.QualifierValue;
-import com.lm.hbase.conf.HbaseClientConf;
 import com.lm.hbase.util.MyBytesUtil;
 
 public class HandleCore {
@@ -40,8 +39,7 @@ public class HandleCore {
     public static String testConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent,
                                   String version, String mavenHome) throws Exception {
         HbaseUtil.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
-        HbaseClientConf.setConf(zkPort, zkQuorum, hbaseMaster, znodeParent, version, mavenHome);
-
+        SwingConstants.selectedConf.setConf(zkPort, zkQuorum, hbaseMaster, znodeParent, version, mavenHome);
         // 尝试获取集群状态
         String clusterStatus = HbaseUtil.getClusterStatus();
         return clusterStatus;
