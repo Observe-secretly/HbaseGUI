@@ -31,6 +31,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -38,6 +39,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
+import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.common.ImageIconConstons;
@@ -99,13 +101,18 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        setBounds(100, 100, 600, 385);
-        this.setMinimumSize(new Dimension(600, 385));
+        setBounds(100, 100, 650, 385);
+        this.setMinimumSize(new Dimension(650, 385));
         this.setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(confsPanel, BorderLayout.WEST);
         {
+
             confsPanel.setLayout(new BorderLayout());
+
+            confsList.setBorder(new TitledBorder("配置列表"));
+
+            confsList.setFixedCellWidth(150);
             // 设置为单选模式
             confsList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             List<ConfItem> confs = getConfItems();
@@ -114,6 +121,7 @@ public class LoginGui extends JDialog {
 
             JScrollPane jlistScroll = new JScrollPane(confsList);
             jlistScroll.setLayout(new ScrollPaneLayout());
+
             confsPanel.add(jlistScroll, BorderLayout.CENTER);
 
             // 设置添加/删除配置文件按钮
@@ -266,6 +274,8 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
+                        System.err.println(HbaseUtil.getVersion());
+
                         if (!checkConnectParam(zkPortField.getText(), zkQuorumField.getText(),
                                                hbaseMasterField.getText(), znodeParentField.getText(),
                                                driverVersionComboBox.getSelectedItem().toString(),
