@@ -36,10 +36,11 @@ public class HandleCore {
      * @return
      * @throws Exception
      */
-    public static String testConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent,
-                                  String version, String mavenHome) throws Exception {
+    public static String testConf(String displayName, String zkPort, String zkQuorum, String hbaseMaster,
+                                  String znodeParent, String version, String mavenHome) throws Exception {
         HbaseUtil.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
-        SwingConstants.selectedConf.setConf(zkPort, zkQuorum, hbaseMaster, znodeParent, version, mavenHome);
+        SwingConstants.selectedConf.setConf(displayName, zkPort, zkQuorum, hbaseMaster, znodeParent, version,
+                                            mavenHome);
         // 尝试获取集群状态
         String clusterStatus = HbaseUtil.getClusterStatus();
         return clusterStatus;

@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 
 import com.lm.hbase.common.Env;
+import com.lm.hbase.util.StringUtil;
 
 /**
  * conf jlist内配置原型
@@ -16,8 +17,6 @@ import com.lm.hbase.common.Env;
  * @author limin May 28, 2019 10:16:50 PM
  */
 public class ConfItem {
-
-    private String displayName;
 
     private String confFileName;
 
@@ -27,11 +26,19 @@ public class ConfItem {
     }
 
     public String getDisplayName() {
-        return displayName;
+        String confDisplayname = getStringValue("display.name");
+        if (StringUtil.isEmpty(confDisplayname)) {
+            return confFileName;
+        }
+        return confDisplayname;
+
     }
 
-    public ConfItem(String displayName, String confFileName){
-        this.displayName = displayName;
+    public String getConfFileName() {
+        return confFileName;
+    }
+
+    public ConfItem(String confFileName){
         this.confFileName = confFileName;
         loadProperties();
 
@@ -102,11 +109,12 @@ public class ConfItem {
         return Boolean.parseBoolean(getStringValue(key));
     }
 
-    public void setConf(String zkPort, String zkQuorum, String hbaseMaster, String znodeParent, String version,
-                        String mavenHome) {
+    public void setConf(String displayName, String zkPort, String zkQuorum, String hbaseMaster, String znodeParent,
+                        String version, String mavenHome) {
         if (confProps == null) {
             loadProperties();
         }
+        confProps.put("display.name", displayName);
         confProps.put("hbase.zk.port", zkPort);
         confProps.put("hbase.zk.quorum", zkQuorum);
         confProps.put("hbase.master", hbaseMaster);

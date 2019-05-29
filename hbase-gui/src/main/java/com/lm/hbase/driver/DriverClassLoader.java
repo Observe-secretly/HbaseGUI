@@ -15,6 +15,24 @@ public final class DriverClassLoader {
 
     private static URLClassLoader classloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 
+    private static boolean        isLoad      = false;
+
+    /**
+     * 加载jar classpath。
+     */
+    public static void loadClasspath(String version) {
+        // 如果已经加载驱动则卸载
+        if (isLoad) {
+            System.gc();
+        }
+        isLoad = true;
+        List<File> files = getJarFiles(version);
+        for (File f : files) {
+            loadClasspath(f);
+        }
+
+    }
+
     /**
      * 初始化addUrl 方法.
      * 
@@ -28,17 +46,6 @@ public final class DriverClassLoader {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * 加载jar classpath。
-     */
-    public static void loadClasspath(String version) {
-        List<File> files = getJarFiles(version);
-        for (File f : files) {
-            loadClasspath(f);
-        }
-
     }
 
     private static void loadClasspath(File jarFile) {

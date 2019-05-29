@@ -38,12 +38,10 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.conf.ConfItem;
-import com.lm.hbase.conf.HbaseGuiConf;
 import com.lm.hbase.conf.RemoteDriverProp;
 import com.lm.hbase.driver.DownloadDriver;
 import com.lm.hbase.driver.DriverClassLoader;
@@ -66,6 +64,7 @@ public class LoginGui extends JDialog {
      * 存放除配置列表外的所有控件
      */
     private JPanel                  contentPanel              = new JPanel();
+    private JTextField              confNameField;
     private JTextField              zkPortField;
     private JTextField              zkQuorumField;
     private JTextField              hbaseMasterField;
@@ -100,9 +99,8 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        setBounds(100, 100, 500, 310);
-        this.setMinimumSize(new Dimension(700, 330));
-        this.setResizable(false);// 禁止拉边框拉长拉短
+        setBounds(100, 100, 600, 385);
+        this.setMinimumSize(new Dimension(600, 385));
         this.setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(confsPanel, BorderLayout.WEST);
@@ -130,7 +128,7 @@ public class LoginGui extends JDialog {
 
         }
 
-        getContentPane().add(contentPanel, BorderLayout.CENTER);
+        getContentPane().add(contentPanel, BorderLayout.EAST);
         contentPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
                                                                  FormSpecs.DEFAULT_COLSPEC,
                                                                  FormSpecs.RELATED_GAP_COLSPEC,
@@ -161,14 +159,25 @@ public class LoginGui extends JDialog {
                                                               FormSpecs.RELATED_GAP_ROWSPEC,
                                                               FormSpecs.DEFAULT_ROWSPEC }));
         {
+            JLabel lblNewLabel = new JLabel("配置名称");
+            contentPanel.add(lblNewLabel, "6, 2, right, default");
+        }
+        {
+            confNameField = new JTextField(25);
+            JPanel componentPanel = new JPanel();
+            componentPanel.add(confNameField);
+            contentPanel.add(componentPanel, "10, 2, 5, 1, fill, default");
+        }
+        {
             JLabel lblNewLabel = new JLabel("ZK.PORT");
             lblNewLabel.setToolTipText("hbase.zookeeper.property.clientPort");
             contentPanel.add(lblNewLabel, "6, 4, right, default");
         }
         {
-            zkPortField = new JTextField();
-            contentPanel.add(zkPortField, "10, 4, 5, 1, fill, default");
-            zkPortField.setColumns(10);
+            zkPortField = new JTextField(25);
+            JPanel componentPanel = new JPanel();
+            componentPanel.add(zkPortField);
+            contentPanel.add(componentPanel, "10, 4, 5, 1, fill, default");
         }
         {
             JLabel lblNewLabel_1 = new JLabel("ZK.QUORUM");
@@ -176,9 +185,10 @@ public class LoginGui extends JDialog {
             contentPanel.add(lblNewLabel_1, "6, 8, right, default");
         }
         {
-            zkQuorumField = new JTextField();
-            contentPanel.add(zkQuorumField, "10, 8, 5, 1, fill, default");
-            zkQuorumField.setColumns(10);
+            zkQuorumField = new JTextField(25);
+            JPanel componentPanel = new JPanel();
+            componentPanel.add(zkQuorumField);
+            contentPanel.add(componentPanel, "10, 8, 5, 1, fill, default");
         }
         {
             JLabel lblNewLabel_2 = new JLabel("HBASE.MASTER");
@@ -186,9 +196,10 @@ public class LoginGui extends JDialog {
             contentPanel.add(lblNewLabel_2, "6, 12, right, default");
         }
         {
-            hbaseMasterField = new JTextField();
-            contentPanel.add(hbaseMasterField, "10, 12, 5, 1, fill, default");
-            hbaseMasterField.setColumns(10);
+            hbaseMasterField = new JTextField(25);
+            JPanel componentPanel = new JPanel();
+            componentPanel.add(hbaseMasterField);
+            contentPanel.add(componentPanel, "10, 12, 5, 1, fill, default");
         }
         {
             JLabel lblNewLabel_3 = new JLabel("ZNODE.PARENT");
@@ -196,18 +207,20 @@ public class LoginGui extends JDialog {
             contentPanel.add(lblNewLabel_3, "6, 14, right, default");
         }
         {
-            znodeParentField = new JTextField();
-            contentPanel.add(znodeParentField, "10, 14, 5, 1, fill, default");
-            znodeParentField.setColumns(10);
+            znodeParentField = new JTextField(25);
+            JPanel componentPanel = new JPanel();
+            componentPanel.add(znodeParentField);
+            contentPanel.add(componentPanel, "10, 14, 5, 1, fill, default");
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Maven Home");
             contentPanel.add(lblNewLabel_4, "6, 16, right, default");
         }
         {
-            mavenHomeField = new JTextField();
-            contentPanel.add(mavenHomeField, "10, 16, 5, 1, fill, default");
-            mavenHomeField.setColumns(10);
+            mavenHomeField = new JTextField(25);
+            JPanel componentPanel = new JPanel();
+            componentPanel.add(mavenHomeField);
+            contentPanel.add(componentPanel, "10, 16, 5, 1, fill, default");
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Hbase Version");
@@ -229,14 +242,15 @@ public class LoginGui extends JDialog {
         }
 
         {
+
             JPanel buttonPane = new JPanel();
-            contentPanel.add(buttonPane, "12, 20, 5, 1, right, default");
-            buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("130px"),
-                                                                   ColumnSpec.decode("150px"),
+            contentPanel.add(buttonPane, "6, 20, 13, 1,left, fill");
+            buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("100px"),
+                                                                   FormSpecs.DEFAULT_COLSPEC,
+                                                                   ColumnSpec.decode("100px"),
+                                                                   FormSpecs.DEFAULT_COLSPEC,
                                                                    FormSpecs.RELATED_GAP_COLSPEC,
-                                                                   ColumnSpec.decode("80px"),
-                                                                   FormSpecs.RELATED_GAP_COLSPEC,
-                                                                   ColumnSpec.decode("130px"), },
+                                                                   ColumnSpec.decode("200px"), },
                                                 new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
                                                                 FormSpecs.DEFAULT_ROWSPEC,
                                                                 FormSpecs.RELATED_GAP_ROWSPEC,
@@ -267,7 +281,8 @@ public class LoginGui extends JDialog {
                             @Override
                             public void run() {
                                 try {
-                                    String clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                    String clusterStatus = HandleCore.testConf(confNameField.getText(),
+                                                                               zkPortField.getText(),
                                                                                zkQuorumField.getText(),
                                                                                hbaseMasterField.getText(),
                                                                                znodeParentField.getText(),
@@ -276,6 +291,7 @@ public class LoginGui extends JDialog {
                                     if (clusterStatus != null) {
                                         JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus,
                                                                       "提示", JOptionPane.INFORMATION_MESSAGE);
+
                                     } else {
                                         JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误",
                                                                       JOptionPane.ERROR_MESSAGE);
@@ -337,7 +353,8 @@ public class LoginGui extends JDialog {
                                 @Override
                                 public void run() {
                                     try {
-                                        String clusterStatus = HandleCore.testConf(zkPortField.getText(),
+                                        String clusterStatus = HandleCore.testConf(confNameField.getText(),
+                                                                                   zkPortField.getText(),
                                                                                    zkQuorumField.getText(),
                                                                                    hbaseMasterField.getText(),
                                                                                    znodeParentField.getText(),
@@ -390,15 +407,8 @@ public class LoginGui extends JDialog {
         this.addWindowListener(new WindowAdapter() {
 
             public void windowClosed(WindowEvent e) {
-                try {
-                    HbaseUtil.close();
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                }
                 super.windowClosed(e);
-
                 System.exit(0);
-
             }
 
         });
@@ -415,6 +425,8 @@ public class LoginGui extends JDialog {
                     // 解禁按钮
                     testButton.setEnabled(true);
                     okButton.setEnabled(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 } finally {
                     endTask();
                 }
@@ -614,13 +626,7 @@ public class LoginGui extends JDialog {
         }
         for (File item : confDir.listFiles()) {
             if (item.isFile() && item.getName().startsWith(CommonConstons.HBASE_CONF_FILE_PREFIX)) {
-                // 尝试从HbaseGuiConf中获取配置文件显示名称
-                String displayName = HbaseGuiConf.getStringValue(item.getName());
-                if (StringUtil.isEmpty(displayName)) {
-                    displayName = item.getName();
-                }
-                confList.add(new ConfItem(displayName, item.getName()));
-
+                confList.add(new ConfItem(item.getName()));
             }
         }
 
@@ -628,6 +634,7 @@ public class LoginGui extends JDialog {
     }
 
     private void cleanConf() {
+        confNameField.setText("");
         zkPortField.setText("");
         zkQuorumField.setText("");
         hbaseMasterField.setText("");
@@ -662,7 +669,7 @@ public class LoginGui extends JDialog {
                         }
                         // 创建配置文件
                         confFile.createNewFile();
-                        model.addElement(new ConfItem(confFile.getName(), confFile.getName()));
+                        model.addElement(new ConfItem(confFile.getName()));
                         confsList.setModel(model);
                         confsList.updateUI();
 
@@ -739,6 +746,7 @@ public class LoginGui extends JDialog {
                 String hbaseVersion = SwingConstants.selectedConf.getStringValue("hbase.version");
                 String mavenHome = SwingConstants.selectedConf.getStringValue("maven.home");
 
+                confNameField.setText(SwingConstants.selectedConf.getDisplayName());
                 zkPortField.setText(zkPort);
                 zkQuorumField.setText(zkQuorum);
                 hbaseMasterField.setText(hbaseMaster);
