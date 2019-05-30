@@ -1,9 +1,36 @@
-# HbaseGUI
-使用Java Swing开发的GUI展示Hbase数据
+更多文档请看[WIKI](https://github.com/914245697/HbaseGUI/wiki)
 
-# 开发目标
-提供给Java开发人员，便捷展示Hbase数据的GUI界面。功能不求复杂，只求实用。功能持续添加中。
+# 简介
+HbaseGUI可视化工具，通过Hbase-client直接操作Hbase。提供可视化查询、元数据管理和支持预分区建表三大功能
 
-# 启动
-导出可运行Jar包运行。入口：
-`com.lm.hbase.swing.HbaseGui.main`
+# 特点
+* 响应式设计
+* Hbase数据/操作可视化
+* 提供包括Rowkey、版本号、Scan时间和各类Filter在内的高级查询
+* 提供元数据管理
+* 提供命名空间管理
+* 创建表时支持通过设置起始Rowkey和分区数的方式进行预分区
+* Hbase版本支持社区版（作者使用Ambari Hbase做的测试）和阿里云版
+* 支持v1.*~v2.*版本Hbase（2.*版本支持将会在19年6月1日后提供，作者想过完节再来写）
+* 支持版本热切换功能。即：不重启GUI程序的情况下，动态切换不同版本的Hbase数据库
+* 原生支持黑暗主题（致谢Jmeter）
+
+# 架构图
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/invok-flow.png)
+* 工程分为三部分组成：`HBaseGUI`Swing主程序，`Hbase-adapter-interface`适配器接口层和`Hbase-adapter`适配器
+* `HBaseGUI`Swing主程序完成GUI层全部功能实现
+* `Hbase-adapter-interface`适配器接口层被上下层依赖，`HBaseGUI`通过依赖它获取访问Hbase标准接口
+* `HBaseGUI`通过集成[JCL](https://github.com/kamranzafar/JCL/)实现HbaseClient&适配器多版本热切换功能
+* `Hbase-adapter`适配器实现了`Hbase-adapter-interface`全部接口，除公共实体外，其中包括`FilterFactoryInterface`和`HbaseAdapterInterface`关键接口
+
+# 软件图文介绍
+
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/login.png)
+
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/cluster.png)
+
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/queryTab.png)
+
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/metaTab.png)
+
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/createTab.png)
