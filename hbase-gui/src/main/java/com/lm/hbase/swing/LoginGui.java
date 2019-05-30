@@ -329,7 +329,11 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        System.exit(0);
+                        if (SwingConstants.parentFrameIsInit) {
+                            com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);
+                        } else {
+                            System.exit(0);
+                        }
                     }
                 });
                 cancelButton.setActionCommand("Cancel");
@@ -419,8 +423,12 @@ public class LoginGui extends JDialog {
         this.addWindowListener(new WindowAdapter() {
 
             public void windowClosed(WindowEvent e) {
-                super.windowClosed(e);
-                System.exit(0);
+                if (SwingConstants.parentFrameIsInit) {
+                    com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);
+                } else {
+                    super.windowClosed(e);
+                    System.exit(0);
+                }
             }
 
         });

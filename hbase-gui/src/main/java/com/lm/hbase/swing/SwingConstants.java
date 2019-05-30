@@ -11,6 +11,8 @@ import com.lm.hbase.conf.ConfItem;
 
 public class SwingConstants {
 
+    public static boolean                     parentFrameIsInit = false;
+
     public static HbaseGui                    hbaseGui          = null;
 
     public static LoginGui                    loginGui          = null;

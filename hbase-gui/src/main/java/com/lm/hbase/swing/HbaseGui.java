@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -35,6 +36,8 @@ public class HbaseGui {
     public JProgressBar             processBar;
 
     public JLabel                   stopLabel;
+
+    public JButton                  switchBut;
 
     /**
      * 所有的tabs
@@ -76,7 +79,6 @@ public class HbaseGui {
     public HbaseGui(){
         // 弹出登陆框
         LoginGui.openDialog();
-        // initialize();
     }
 
     /**
@@ -85,6 +87,10 @@ public class HbaseGui {
      * @wbp.parser.entryPoint
      */
     public void initialize() {
+        SwingConstants.parentFrameIsInit = true;
+        if (parentJframe != null) {
+            parentJframe.dispose();
+        }
         parentJframe = new JFrame();
         parentJframe.setTitle("Hbase Gui");
         parentJframe.setBounds(10, 10, 1450, 800);
@@ -97,8 +103,9 @@ public class HbaseGui {
         JLabel logoLabel = new JLabel(ImageIconConstons.HBASE_LOGO_ICON);
         parentJframe.getContentPane().add(logoLabel, BorderLayout.NORTH);
 
-        JPanel panel = new JPanel();
-        parentJframe.getContentPane().add(panel, BorderLayout.SOUTH);
+        JPanel footerPanel = new JPanel();
+        footerPanel.setLayout(new BorderLayout());
+        parentJframe.getContentPane().add(footerPanel, BorderLayout.SOUTH);
 
         // 初始化进度条
         processBar = new JProgressBar(JProgressBar.CENTER);
@@ -110,9 +117,16 @@ public class HbaseGui {
         stopLabel.setVisible(false);
         stopLabel.addMouseListener(new StopEvent());
 
-        panel.add(stopLabel);
-        panel.add(processBar);
-        panel.add(new JLabel(" "));// 占位
+        // 切换登录按钮
+        switchBut = new JButton(ImageIconConstons.SWITCH_ICON);
+        switchBut.addMouseListener(new SwitchEvent());
+
+        JPanel footerCenterPanel = new JPanel();
+
+        footerCenterPanel.add(stopLabel);
+        footerCenterPanel.add(processBar);
+        footerPanel.add(footerCenterPanel, BorderLayout.CENTER);
+        footerPanel.add(switchBut, BorderLayout.EAST);
 
         JTabbedPane tabbedPanel = new JTabbedPane(JTabbedPane.TOP);
         tabbedPanel.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -168,6 +182,15 @@ public class HbaseGui {
             for (TabInterface tab : tabs) {
                 tab.enableAll();
             }
+        }
+
+    }
+
+    class SwitchEvent extends MouseAdapter {
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            LoginGui.openDialog();
         }
 
     }

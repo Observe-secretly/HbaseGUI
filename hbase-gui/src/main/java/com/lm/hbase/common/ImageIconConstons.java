@@ -36,4 +36,6 @@ public class ImageIconConstons {
 
     public static final ImageIcon OPTION_ICON     = new ImageIcon(Env.IMG_DIR + "Option.png");
 
+    public static final ImageIcon SWITCH_ICON     = new ImageIcon(Env.IMG_DIR + "Switch.png");
+
 }
