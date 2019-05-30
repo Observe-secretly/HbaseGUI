@@ -10,7 +10,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
-import com.lm.hbase.adapter.HbaseUtil;
+import com.lm.hbase.swing.SwingConstants;
 
 public class TabCommonUtil {
 
@@ -22,7 +22,7 @@ public class TabCommonUtil {
      * @wbp.parser.entryPoint
      */
     public void initTableList(JList<String> list) throws Exception {
-        String[] tableNames = HbaseUtil.getListTableNames();
+        String[] tableNames = SwingConstants.hbaseAdapter.getListTableNames();
         if (tableNames != null) {
             list.setListData(tableNames);
         }

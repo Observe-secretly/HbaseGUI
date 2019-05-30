@@ -20,7 +20,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
-import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.tab.CreateTab;
 import com.lm.hbase.tab.MetaDataTab;
@@ -136,7 +135,7 @@ public class HbaseGui {
             @Override
             public void windowClosing(WindowEvent e) {
                 try {
-                    HbaseUtil.close();
+                    SwingConstants.hbaseAdapter.close();
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }

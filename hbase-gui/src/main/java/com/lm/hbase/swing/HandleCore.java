@@ -13,7 +13,6 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import com.lm.hbase.adapter.ColumnFamily;
-import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.Row;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.QualifierValue;
@@ -38,11 +37,11 @@ public class HandleCore {
      */
     public static String testConf(String displayName, String zkPort, String zkQuorum, String hbaseMaster,
                                   String znodeParent, String version, String mavenHome) throws Exception {
-        HbaseUtil.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
+        SwingConstants.hbaseAdapter.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
         SwingConstants.selectedConf.setConf(displayName, zkPort, zkQuorum, hbaseMaster, znodeParent, version,
                                             mavenHome);
         // 尝试获取集群状态
-        String clusterStatus = HbaseUtil.getClusterStatus();
+        String clusterStatus = SwingConstants.hbaseAdapter.getClusterStatus();
         return clusterStatus;
     }
 
@@ -155,8 +154,8 @@ public class HandleCore {
     public static void reloadMetaTableFormat(String tableName, JTable table) throws Exception {
 
         HBasePageModel dataModel = new HBasePageModel(1, tableName);
-        dataModel = HbaseUtil.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE, dataModel, true,
-                                                     null);
+        dataModel = SwingConstants.hbaseAdapter.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE,
+                                                                       dataModel, true, null);
 
         // 申明一个列头
         LinkedHashSet<String> columnNameSet = new LinkedHashSet<>();

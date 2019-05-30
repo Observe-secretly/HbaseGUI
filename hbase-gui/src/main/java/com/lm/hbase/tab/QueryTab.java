@@ -37,8 +37,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
 import com.alibaba.fastjson.JSON;
-import com.lm.hbase.adapter.FilterFactory;
-import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.HbaseQualifier;
 import com.lm.hbase.common.ImageIconConstons;
@@ -238,14 +236,14 @@ public class QueryTab extends TabAbstract {
         itemFilterWestPanel.add(fieldTypeComboBox);
 
         filterOperatorComboBox = new JComboBox<>();
-        for (String item : FilterFactory.getCompareOpSimpleList()) {
+        for (String item : com.lm.hbase.swing.SwingConstants.filterFactory.getCompareOpSimpleList()) {
             filterOperatorComboBox.addItem(item);
         }
 
         itemFilterWestPanel.add(filterOperatorComboBox);
 
         comparatorComboBox = new JComboBox<>();
-        for (Class f : FilterFactory.getAllComparatorClass()) {
+        for (Class f : com.lm.hbase.swing.SwingConstants.filterFactory.getAllComparatorClass()) {
             comparatorComboBox.addItem(f.getSimpleName());
         }
 
@@ -295,7 +293,7 @@ public class QueryTab extends TabAbstract {
                                     startTask();
 
                                     try {
-                                        HbaseUtil.dropTable(tableName);
+                                        com.lm.hbase.swing.SwingConstants.hbaseAdapter.dropTable(tableName);
                                     } catch (Exception e) {
                                         exceptionAlert(e);
                                         return;
@@ -369,7 +367,7 @@ public class QueryTab extends TabAbstract {
                                     startTask();
 
                                     try {
-                                        long count = HbaseUtil.rowCount(tableName);
+                                        long count = com.lm.hbase.swing.SwingConstants.hbaseAdapter.rowCount(tableName);
                                         JOptionPane.showMessageDialog(getFrame(), count, tableName + "数据总数",
                                                                       JOptionPane.INFORMATION_MESSAGE);
 
@@ -403,7 +401,7 @@ public class QueryTab extends TabAbstract {
                                 public void run() {
                                     startTask();
                                     try {
-                                        HbaseUtil.truncateTable(tableName, true);
+                                        com.lm.hbase.swing.SwingConstants.hbaseAdapter.truncateTable(tableName, true);
                                         JOptionPane.showMessageDialog(getFrame(), "已清空", "提示",
                                                                       JOptionPane.INFORMATION_MESSAGE);
                                         initTableList(list);
@@ -544,7 +542,7 @@ public class QueryTab extends TabAbstract {
         String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
         String cacheMetaData = com.lm.hbase.swing.SwingConstants.selectedConf.getStringValue(propertiesKey);
 
-        List<HbaseQualifier> qualifierList = HbaseUtil.getTableQualifiers(tableName);
+        List<HbaseQualifier> qualifierList = com.lm.hbase.swing.SwingConstants.hbaseAdapter.getTableQualifiers(tableName);
         // 如果存在元数据则替换类型
         if (!StringUtil.isEmpty(cacheMetaData)) {
             Map<String, String> metaData = JSON.parseObject(cacheMetaData, Map.class);
@@ -584,16 +582,19 @@ public class QueryTab extends TabAbstract {
             String comparatorClassName = comparatorComboBox.getItemAt(comparatorComboBox.getSelectedIndex());
             String fieldType = fieldTypeComboBox.getItemAt(fieldTypeComboBox.getSelectedIndex());
             String fieldValue = filterValueTextField.getText();
-            fs.add(FilterFactory.createSingleColumnValueFilter(colume.getFamily(), colume.getQualifier(),
-                                                               compareOpSimple, comparatorClassName, fieldType,
-                                                               fieldValue));
+            fs.add(com.lm.hbase.swing.SwingConstants.filterFactory.createSingleColumnValueFilter(colume.getFamily(),
+                                                                                                 colume.getQualifier(),
+                                                                                                 compareOpSimple,
+                                                                                                 comparatorClassName,
+                                                                                                 fieldType,
+                                                                                                 fieldValue));
         }
         // 获取rowkey查询前缀（如果有）
         String rowkeyPrefix = textField_rowKey_prefix.getText();
 
         // 获取startRowKey
         if (!StringUtil.isEmpty(rowkeyPrefix)) {
-            fs.add(FilterFactory.createRowkeyPrefixFilter(rowkeyPrefix.getBytes()));
+            fs.add(com.lm.hbase.swing.SwingConstants.filterFactory.createRowkeyPrefixFilter(rowkeyPrefix.getBytes()));
         }
 
         if (fs.size() != 0) {
@@ -644,8 +645,12 @@ public class QueryTab extends TabAbstract {
             pageModel = new HBasePageModel(page, tableName);
             pageModel.setMinStamp(DateUtil.convertMinStamp(textField_min_stamp.getText(), Chooser.DEFAULTFORMAT));
             pageModel.setMaxStamp(DateUtil.convertMaxStamp(textField_max_stamp.getText(), Chooser.DEFAULTFORMAT));
-            pageModel = HbaseUtil.scanResultByPageFilter(tableName, startRowKeyByte, endRowKeyByte, getFilter(),
-                                                         version, pageModel, true, getMetaData());
+            pageModel = com.lm.hbase.swing.SwingConstants.hbaseAdapter.scanResultByPageFilter(tableName,
+                                                                                              startRowKeyByte,
+                                                                                              endRowKeyByte,
+                                                                                              getFilter(), version,
+                                                                                              pageModel, true,
+                                                                                              getMetaData());
             HandleCore.reloadTableFormat(tableName, contentTable, pageModel);
             HandleCore.setPageInfomation(pageModel, bottom_message_label);
 
@@ -759,9 +764,14 @@ public class QueryTab extends TabAbstract {
                                                                    Chooser.DEFAULTFORMAT));
 
                     try {
-                        pageModel = HbaseUtil.scanResultByPageFilter(pageModel.getTableName(), startRowKeyByte,
-                                                                     endRowKeyByte, getFilter(), version, pageModel,
-                                                                     false, getMetaData());
+                        pageModel = com.lm.hbase.swing.SwingConstants.hbaseAdapter.scanResultByPageFilter(pageModel.getTableName(),
+                                                                                                          startRowKeyByte,
+                                                                                                          endRowKeyByte,
+                                                                                                          getFilter(),
+                                                                                                          version,
+                                                                                                          pageModel,
+                                                                                                          false,
+                                                                                                          getMetaData());
                         HandleCore.reloadTableFormat(pageModel.getTableName(), contentTable, pageModel);
                         HandleCore.setPageInfomation(pageModel, bottom_message_label);
                     } catch (Exception e) {
@@ -801,7 +811,7 @@ public class QueryTab extends TabAbstract {
                         }
 
                         try {
-                            HbaseUtil.deleteRow(tableName, rowkeys);
+                            com.lm.hbase.swing.SwingConstants.hbaseAdapter.deleteRow(tableName, rowkeys);
                         } catch (Exception e) {
                             exceptionAlert(e);
                             return;

@@ -35,18 +35,21 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.xeustechnologies.jcl.JarClassLoader;
+import org.xeustechnologies.jcl.JclObjectFactory;
+
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.FormSpecs;
 import com.jgoodies.forms.layout.RowSpec;
-import com.lm.hbase.adapter.HbaseUtil;
+import com.lm.hbase.adapter.FilterFactoryInterface;
+import com.lm.hbase.adapter.HbaseAdapterInterface;
 import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.common.Env;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.conf.ConfItem;
 import com.lm.hbase.conf.RemoteDriverProp;
 import com.lm.hbase.driver.DownloadDriver;
-import com.lm.hbase.driver.DriverClassLoader;
 import com.lm.hbase.util.DirectoryUtil;
 import com.lm.hbase.util.StringUtil;
 import com.lm.hbase.util.network.HttpURLConnectionFactory;
@@ -232,7 +235,6 @@ public class LoginGui extends JDialog {
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Hbase Version");
-            lblNewLabel_4.setToolTipText("切换版本需要重启应用");
             contentPanel.add(lblNewLabel_4, "6, 18, right, default");
         }
         {
@@ -274,7 +276,6 @@ public class LoginGui extends JDialog {
 
                     @Override
                     public void mouseReleased(MouseEvent e) {
-                        System.err.println(HbaseUtil.getVersion());
 
                         if (!checkConnectParam(zkPortField.getText(), zkQuorumField.getText(),
                                                hbaseMasterField.getText(), znodeParentField.getText(),
@@ -299,6 +300,7 @@ public class LoginGui extends JDialog {
                                                                                driverVersionComboBox.getSelectedItem().toString(),
                                                                                mavenHomeField.getText());
                                     if (clusterStatus != null) {
+                                        System.out.println(SwingConstants.hbaseAdapter.getVersion());
                                         JOptionPane.showMessageDialog(contentPanel, "连接成功,集群信息如下\n" + clusterStatus,
                                                                       "提示", JOptionPane.INFORMATION_MESSAGE);
 
@@ -450,10 +452,15 @@ public class LoginGui extends JDialog {
             return;
         }
 
+        JarClassLoader jcl = SwingConstants.driverMap.get(version);
+        if (!reload && jcl != null) {
+            loadCore(jcl);
+            return;
+        }
+
         String outputDir = Env.DRIVER_DIR + version;
         File outputFileDir = new File(outputDir);
         if (!outputFileDir.exists()) {
-            // 0、下载适配程序 1、加载驱动；2、添加设置maven目录的功能；3、现实加载进度；4、异步
             // 加载hbase client驱动
             try {
                 String mavenHome = mavenHomeField == null ? null : mavenHomeField.getText();
@@ -485,8 +492,21 @@ public class LoginGui extends JDialog {
         }
 
         progressInfoLabel.setText("Classloader load all jars  ....");
-        DriverClassLoader.loadClasspath(version);
+        // 从目录加载驱动以及适配器所有jar包
+        jcl = new JarClassLoader();
+        jcl.add(Env.DRIVER_DIR + version + "/");
+        SwingConstants.driverMap.put(version, jcl);
+        SwingConstants.version = version;
         progressInfoLabel.setText("The jar necessary for the  " + version + " version is loaded");
+        loadCore(jcl);
+    }
+
+    public void loadCore(JarClassLoader jcl) {
+        JclObjectFactory factory = JclObjectFactory.getInstance();
+
+        SwingConstants.hbaseAdapter = (HbaseAdapterInterface) factory.create(jcl, "com.lm.hbase.adapter.HbaseAdapter");
+        SwingConstants.filterFactory = (FilterFactoryInterface) factory.create(jcl,
+                                                                               "com.lm.hbase.adapter.FilterFactory");
     }
 
     public void loadHbaseAdapterJar(String version) throws Throwable {
@@ -533,16 +553,6 @@ public class LoginGui extends JDialog {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 String version = e.getItem().toString();
                 asyncLoadDriver(version, false);
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                if (SwingConstants.selectedConf != null) {
-                    String version = e.getItem().toString();
-                    String confVersion = SwingConstants.selectedConf.getStringValue("hbase.version");
-                    if (!StringUtil.isEmpty(version) && !version.equalsIgnoreCase(confVersion)) {
-                        JOptionPane.showMessageDialog(contentPanel, "修改Hbase版本后，需要重启应用才能生效", "警告",
-                                                      JOptionPane.WARNING_MESSAGE);
-                    }
-                }
-
             }
 
         }

@@ -29,9 +29,9 @@ import javax.swing.event.ListSelectionListener;
 
 import com.lm.hbase.adapter.ColumnFamilyParam;
 import com.lm.hbase.adapter.ColumnFamilyParam.ColumnFamilyFieldEnum;
-import com.lm.hbase.adapter.HbaseUtil;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.swing.HbaseGui;
+import com.lm.hbase.swing.SwingConstants;
 import com.lm.hbase.util.MyBytesUtil;
 import com.lm.hbase.util.StringUtil;
 
@@ -148,7 +148,7 @@ public class CreateTab extends TabAbstract {
             nameSpaceList.setFixedCellWidth(200);
             nameSpaceList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             try {
-                nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                nameSpaceList.setListData(SwingConstants.hbaseAdapter.listNameSpace());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -339,11 +339,12 @@ public class CreateTab extends TabAbstract {
                             if (StringUtil.isEmpty(timeLive)) {
                                 columnFamilyParam.put(ColumnFamilyFieldEnum.TIME_TO_LIVE, timeLive);
                             }
-                            HbaseUtil.createTable(namespace + ":" + table_name, null, MyBytesUtil.toBytes(startRowkey),
-                                                  MyBytesUtil.toBytes(endRowkey), Integer.parseInt(numRegions),
-                                                  columnFamilyParam);
+                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null,
+                                                                    MyBytesUtil.toBytes(startRowkey),
+                                                                    MyBytesUtil.toBytes(endRowkey),
+                                                                    Integer.parseInt(numRegions), columnFamilyParam);
                         } else {
-                            HbaseUtil.createTable(namespace + ":" + table_name, column_family);
+                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, column_family);
                         }
                         JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception e2) {
@@ -390,9 +391,9 @@ public class CreateTab extends TabAbstract {
                         public void run() {
                             startTask();
                             try {
-                                HbaseUtil.createNameSpace(input.trim());
+                                SwingConstants.hbaseAdapter.createNameSpace(input.trim());
                                 // 刷新命命空间list
-                                nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                                nameSpaceList.setListData(SwingConstants.hbaseAdapter.listNameSpace());
                                 JOptionPane.showMessageDialog(window.parentJframe, "添加命名空间成功", "成功",
                                                               JOptionPane.INFORMATION_MESSAGE);
                             } catch (Exception e1) {
@@ -452,9 +453,9 @@ public class CreateTab extends TabAbstract {
                     public void run() {
                         startTask();
                         try {
-                            HbaseUtil.deleteNameSpace(namespace);
+                            SwingConstants.hbaseAdapter.deleteNameSpace(namespace);
                             // 刷新命名空间
-                            nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                            nameSpaceList.setListData(SwingConstants.hbaseAdapter.listNameSpace());
                             nameSpaceList.setSelectedIndex(-1);
                             refreshCreateTableText();
                         } catch (Exception e) {
@@ -481,7 +482,7 @@ public class CreateTab extends TabAbstract {
                 public void run() {
                     startTask();
                     try {
-                        nameSpaceList.setListData(HbaseUtil.listNameSpace());
+                        nameSpaceList.setListData(SwingConstants.hbaseAdapter.listNameSpace());
                     } catch (Exception e1) {
                         exceptionAlert(e1);
                         return;
