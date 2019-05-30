@@ -32,6 +32,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -104,6 +105,7 @@ public class QueryTab extends TabAbstract {
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane jlistScroll = new JScrollPane(list);
+        jlistScroll.setBorder(new TitledBorder("TABLES"));
         jlistScroll.setLayout(new ScrollPaneLayout());
         tableListPanel.add(jlistScroll);
 

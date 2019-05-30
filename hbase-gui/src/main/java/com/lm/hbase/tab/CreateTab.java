@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -153,6 +154,7 @@ public class CreateTab extends TabAbstract {
                 e.printStackTrace();
             }
             JScrollPane nsListScroll = new JScrollPane(nameSpaceList);
+            nsListScroll.setBorder(new TitledBorder("NAMESPACE"));
             nsListScroll.setLayout(new ScrollPaneLayout());
 
             JPopupMenu popupMenu = new JPopupMenu();

@@ -17,6 +17,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -66,6 +67,7 @@ public class MetaDataTab extends TabAbstract {
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane jlistScroll = new JScrollPane(list);
+        jlistScroll.setBorder(new TitledBorder("TABLES"));
         jlistScroll.setLayout(new ScrollPaneLayout());
         tableListPanel.add(jlistScroll);
 
@@ -79,6 +81,7 @@ public class MetaDataTab extends TabAbstract {
 
         contentTable = new JTable();
         tableScroll = new JScrollPane(contentTable);
+        tableScroll.setBorder(new TitledBorder("元数据信息"));
         southPanel.add(tableScroll, BorderLayout.CENTER);
 
         JPanel mataSouthPanel = new JPanel();
