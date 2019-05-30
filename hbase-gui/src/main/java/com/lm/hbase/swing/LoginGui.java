@@ -89,8 +89,10 @@ public class LoginGui extends JDialog {
 
     public static void openDialog() {
         try {
+            if (com.lm.hbase.swing.SwingConstants.loginGui == null) {
+                com.lm.hbase.swing.SwingConstants.loginGui = new LoginGui();
+            }
 
-            com.lm.hbase.swing.SwingConstants.loginGui = new LoginGui();
             com.lm.hbase.swing.SwingConstants.loginGui.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
             com.lm.hbase.swing.SwingConstants.loginGui.setVisible(true);
 
