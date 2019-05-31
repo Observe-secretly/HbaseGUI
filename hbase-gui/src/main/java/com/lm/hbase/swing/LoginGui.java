@@ -622,6 +622,8 @@ public class LoginGui extends JDialog {
     }
 
     private void endTask() {
+        addConfBut.setEnabled(true);
+        removeConfBut.setEnabled(true);
         reloadDriverVersionButton.setEnabled(true);
         testButton.setEnabled(true);
         cancelButton.setEnabled(true);
@@ -633,6 +635,8 @@ public class LoginGui extends JDialog {
     }
 
     private void startTask() {
+        addConfBut.setEnabled(false);
+        removeConfBut.setEnabled(false);
         reloadDriverVersionButton.setEnabled(false);
         testButton.setEnabled(false);
         cancelButton.setEnabled(false);
