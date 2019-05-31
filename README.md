@@ -1,4 +1,4 @@
-更多文档请看[WIKI](https://github.com/914245697/HbaseGUI/wiki)
+更多文档请转到[Wiki](https://github.com/914245697/HbaseGUI/wiki)
 
 # 简介
 HbaseGUI可视化工具，通过Hbase-client直接操作Hbase。提供可视化查询、元数据管理和支持预分区建表三大功能
@@ -18,10 +18,27 @@ HbaseGUI可视化工具，通过Hbase-client直接操作Hbase。提供可视化�
 # 架构图
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/invok-flow.png)
 * 工程分为三部分组成：`HBaseGUI`Swing主程序，`Hbase-adapter-interface`适配器接口层和`Hbase-adapter`适配器
-* `HBaseGUI`Swing主程序完成GUI层全部功能实现
-* `Hbase-adapter-interface`适配器接口层被上下层依赖，`HBaseGUI`通过依赖它获取访问Hbase标准接口
-* `HBaseGUI`通过集成[JCL](https://github.com/kamranzafar/JCL/)实现HbaseClient&适配器多版本热切换功能
-* `Hbase-adapter`适配器实现了`Hbase-adapter-interface`全部接口，除公共实体外，其中包括`FilterFactoryInterface`和`HbaseAdapterInterface`关键接口
+*  `HBaseGUI`Swing主程序完成GUI层全部功能实现
+*  `Hbase-adapter-interface`适配器接口层被上下层依赖，`HBaseGUI`通过依赖它获取访问Hbase标准接口
+*  `HBaseGUI`通过集成[JCL](https://github.com/kamranzafar/JCL/)实现HbaseClient&适配器多版本热切换功能
+*  `Hbase-adapter`适配器实现了`Hbase-adapter-interface`全部接口，除公共实体外，其中包括`FilterFactoryInterface`和`HbaseAdapterInterface`关键接口
+
+# 适配器Git库地址
+* [Hbase-adapter-interface](https://github.com/914245697/HbaseGui-driver-adapter-entity)
+* [Hbase-adapter](https://github.com/914245697/HbaseGui-driver-adapter)
+
+# 目录结构
+```
+Hbase-GUI
+  |---> bin     OSX/Linux 执行bash bin/start.sh启动。Window双击start.bat启动
+  |---> conf    remote-driver.properties配置适配器地址。并且程序运行时根据名称去mvnrepository.com下载Hbase-client以及依赖
+  |---> driver  存放从网络获取的适配器和Hbase-client相关jar包
+  |---> img     软件内使用到的图标(16*16)
+  |---> jars    主程序
+```
+
+# 下载
+下载请转到[Release-history](https://github.com/914245697/HbaseGUI/wiki/Release-history)查看
 
 # 软件图文介绍
 
