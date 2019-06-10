@@ -497,6 +497,7 @@ public class LoginGui extends JDialog {
         } else {
             if (reload) {
                 DirectoryUtil.delFolder(outputDir);
+                SwingConstants.driverMap.put(version, null);
                 loadDriver(version, false);
             }
         }
