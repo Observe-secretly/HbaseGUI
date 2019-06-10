@@ -90,7 +90,7 @@ public class CreateTab extends TabAbstract {
             text.append(com.lm.hbase.swing.SwingConstants.MAX_VERSION_DES + maxVersion + "\n");
         }
         if (!StringUtil.isEmpty(timeLive)) {
-            text.append(com.lm.hbase.swing.SwingConstants.TIME_TO_LIVE_DES + timeLive + "ms \n");
+            text.append(com.lm.hbase.swing.SwingConstants.TIME_TO_LIVE_DES + timeLive + " SECONDS \n");
         }
         if (!StringUtil.isEmpty(startRowkey) || !StringUtil.isEmpty(endRowkey) || !StringUtil.isEmpty(numRegions)) {
             text.append("\n------------------分区信息----------------------\n");
@@ -331,22 +331,24 @@ public class CreateTab extends TabAbstract {
                 public void run() {
 
                     try {
+                        ColumnFamilyParam columnFamilyParam = new ColumnFamilyParam();
+                        columnFamilyParam.put(ColumnFamilyFieldEnum.COLUMN_FAMILY_NAME, column_family);
+                        if (!StringUtil.isEmpty(maxVersion)) {
+                            columnFamilyParam.put(ColumnFamilyFieldEnum.MAX_VERSION, maxVersion);
+                        }
+                        if (!StringUtil.isEmpty(timeLive)) {
+                            columnFamilyParam.put(ColumnFamilyFieldEnum.TIME_TO_LIVE, timeLive);
+                        }
+
                         if (!StringUtil.isEmpty(startRowkey) && !StringUtil.isEmpty(endRowkey)
                             && !StringUtil.isEmpty(numRegions)) {
-                            ColumnFamilyParam columnFamilyParam = new ColumnFamilyParam();
-                            columnFamilyParam.put(ColumnFamilyFieldEnum.COLUMN_FAMILY_NAME, column_family);
-                            if (StringUtil.isEmpty(maxVersion)) {
-                                columnFamilyParam.put(ColumnFamilyFieldEnum.MAX_VERSION, maxVersion);
-                            }
-                            if (StringUtil.isEmpty(timeLive)) {
-                                columnFamilyParam.put(ColumnFamilyFieldEnum.TIME_TO_LIVE, timeLive);
-                            }
                             SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null,
                                                                     MyBytesUtil.toBytes(startRowkey),
                                                                     MyBytesUtil.toBytes(endRowkey),
                                                                     Integer.parseInt(numRegions), columnFamilyParam);
                         } else {
-                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, column_family);
+                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null, null, null, 0,
+                                                                    columnFamilyParam);
                         }
                         JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception e2) {
