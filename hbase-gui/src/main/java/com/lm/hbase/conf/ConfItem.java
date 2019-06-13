@@ -47,7 +47,7 @@ public class ConfItem {
     private Properties confProps = null;
 
     public String getConfFilePath() {
-        return Env.CONF_DIR + confFileName;
+        return Env.HBASE_CONN_CONF_DIR + confFileName;
     }
 
     /**

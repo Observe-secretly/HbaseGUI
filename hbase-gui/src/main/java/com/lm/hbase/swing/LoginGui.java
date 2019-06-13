@@ -655,7 +655,7 @@ public class LoginGui extends JDialog {
      */
     private List<ConfItem> getConfItems() {
         List<ConfItem> confList = new ArrayList<>();
-        File confDir = new File(Env.CONF_DIR);
+        File confDir = new File(Env.HBASE_CONN_CONF_DIR);
         if (!confDir.exists()) {
             confDir.mkdir();
         }
@@ -688,13 +688,13 @@ public class LoginGui extends JDialog {
         public void mouseReleased(MouseEvent e) {
             cleanConf();
             // 生成一个配置文件
-            File confDir = new File(Env.CONF_DIR);
+            File confDir = new File(Env.HBASE_CONN_CONF_DIR);
             if (!confDir.exists()) {
                 confDir.mkdir();
             }
             for (int i = 1; i < Integer.MAX_VALUE; i++) {
                 // New Favorite
-                File confFile = new File(Env.CONF_DIR + CommonConstons.HBASE_CONF_FILE_PREFIX + i + ".conf");
+                File confFile = new File(Env.HBASE_CONN_CONF_DIR + CommonConstons.HBASE_CONF_FILE_PREFIX + i + ".conf");
                 if (!confFile.exists()) {
                     try {
                         // 刷新Jlist

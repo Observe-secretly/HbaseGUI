@@ -174,42 +174,6 @@
 				                </resources>
 				            </configuration>
 				        </execution>
-				        <execution>
-				            <id>copy-driver</id>
-				            <phase>package</phase>
-				            <goals>
-				                <goal>copy-resources</goal>
-				            </goals>
-				            <configuration>
-				                <encoding>UTF-8</encoding>
-				                <outputDirectory>
-	                                   ${project.build.directory}/Hbase-GUI/driver
-	                            </outputDirectory>
-				                <resources>
-				                    <resource>
-				                        <directory>driver</directory>
-				                    </resource>
-				                </resources>
-				            </configuration>
-				        </execution>
-				        <execution>
-				            <id>copy-driver-classes</id>
-				            <phase>package</phase>
-				            <goals>
-				                <goal>copy-resources</goal>
-				            </goals>
-				            <configuration>
-				                <encoding>UTF-8</encoding>
-				                <outputDirectory>
-	                                   ${project.build.directory}/classes/driver
-	                            </outputDirectory>
-				                <resources>
-				                    <resource>
-				                        <directory>driver</directory>
-				                    </resource>
-				                </resources>
-				            </configuration>
-				        </execution>
 				    </executions>
 				</plugin>
             </plugins>
