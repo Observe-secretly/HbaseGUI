@@ -51,6 +51,7 @@ import com.lm.hbase.conf.ConfItem;
 import com.lm.hbase.conf.RemoteDriverProp;
 import com.lm.hbase.driver.DownloadDriver;
 import com.lm.hbase.util.DirectoryUtil;
+import com.lm.hbase.util.OSinfo;
 import com.lm.hbase.util.StringUtil;
 import com.lm.hbase.util.network.HttpURLConnectionFactory;
 
@@ -106,8 +107,13 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        setBounds(100, 100, 650, 385);
-        this.setMinimumSize(new Dimension(650, 385));
+        int width = 660;
+        int height = 385;
+        if (OSinfo.isWindows()) {
+            height = 435;
+        }
+        setBounds(100, 100, width, height);
+        this.setMinimumSize(new Dimension(width, height));
         this.setLocationRelativeTo(null);
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(confsPanel, BorderLayout.WEST);
@@ -262,7 +268,7 @@ public class LoginGui extends JDialog {
                                                                    ColumnSpec.decode("100px"),
                                                                    FormSpecs.DEFAULT_COLSPEC,
                                                                    FormSpecs.RELATED_GAP_COLSPEC,
-                                                                   ColumnSpec.decode("200px"), },
+                                                                   ColumnSpec.decode("200px") },
                                                 new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
                                                                 FormSpecs.DEFAULT_ROWSPEC,
                                                                 FormSpecs.RELATED_GAP_ROWSPEC,
