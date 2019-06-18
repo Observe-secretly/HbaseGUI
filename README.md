@@ -32,9 +32,10 @@ HbaseGUI可视化工具，通过Hbase-client直接操作Hbase。提供可视化�
 Hbase-GUI
   |---> bin     OSX/Linux 执行bash bin/start.sh启动。Window双击start.bat启动
   |---> conf    remote-driver.properties配置适配器地址.hbase-conf-*.conf各环境hbase配置信息
-  |---> driver  存放从网络获取的适配器和Hbase-client相关jar包
   |---> img     软件内使用到的图标(16*16)
   |---> jars    主程序
+  
+  Hbaes相关的驱动、适配器等jar包以及元数据配置保存在System.getProperty("user.home")/.hbase-gui-conf文件夹下
 ```
 * 首次运行软件，选择相应的hbase版本时。软件会去mvnrepository.com下载Hbase-client以及依赖。根据请保证网络畅通
 * 内网环境可以选择在外网下提前下载，并拷贝到内网运行
