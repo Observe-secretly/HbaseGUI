@@ -4,6 +4,8 @@ package com.lm.hbase.swing;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
@@ -38,10 +40,6 @@ import javax.swing.event.ListSelectionListener;
 import org.xeustechnologies.jcl.JarClassLoader;
 import org.xeustechnologies.jcl.JclObjectFactory;
 
-import com.jgoodies.forms.layout.ColumnSpec;
-import com.jgoodies.forms.layout.FormLayout;
-import com.jgoodies.forms.layout.FormSpecs;
-import com.jgoodies.forms.layout.RowSpec;
 import com.lm.hbase.adapter.FilterFactoryInterface;
 import com.lm.hbase.adapter.HbaseAdapterInterface;
 import com.lm.hbase.common.CommonConstons;
@@ -51,7 +49,6 @@ import com.lm.hbase.conf.ConfItem;
 import com.lm.hbase.conf.RemoteDriverProp;
 import com.lm.hbase.driver.DownloadDriver;
 import com.lm.hbase.util.DirectoryUtil;
-import com.lm.hbase.util.OSinfo;
 import com.lm.hbase.util.StringUtil;
 import com.lm.hbase.util.network.HttpURLConnectionFactory;
 
@@ -84,7 +81,7 @@ public class LoginGui extends JDialog {
 
     private JComboBox<String>       driverVersionComboBox;
 
-    public JLabel                   progressInfoLabel         = new JLabel("Driver not loaded, please select configure or add and refine configuration");
+    public JLabel                   progressInfoLabel         = new JLabel("Please select configuration");
     public JProgressBar             processBar                = new JProgressBar();
     public JLabel                   stopLabel                 = new JLabel(ImageIconConstons.STOP_ICON);
 
@@ -107,11 +104,8 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        int width = 660;
-        int height = 385;
-        if (OSinfo.isWindows()) {
-            height = 435;
-        }
+        int width = 630;
+        int height = 360;
         setBounds(100, 100, width, height);
         this.setMinimumSize(new Dimension(width, height));
         this.setLocationRelativeTo(null);
@@ -148,102 +142,160 @@ public class LoginGui extends JDialog {
         }
 
         getContentPane().add(contentPanel, BorderLayout.EAST);
-        contentPanel.setLayout(new FormLayout(new ColumnSpec[] { FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 ColumnSpec.decode("default:grow"),
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC,
-                                                                 FormSpecs.RELATED_GAP_COLSPEC,
-                                                                 FormSpecs.DEFAULT_COLSPEC, },
-                                              new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC, FormSpecs.DEFAULT_ROWSPEC,
-                                                              FormSpecs.RELATED_GAP_ROWSPEC,
-                                                              FormSpecs.DEFAULT_ROWSPEC }));
+        contentPanel.setLayout(new FlowLayout());
+
+        JPanel formPanel = new JPanel();
+        contentPanel.add(formPanel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.VERTICAL;
+        formPanel.setLayout(new GridBagLayout());
+
         {
             JLabel lblNewLabel = new JLabel("配置名称");
-            contentPanel.add(lblNewLabel, "6, 2, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel, gbc);
         }
         {
             confNameField = new JTextField(25);
             JPanel componentPanel = new JPanel();
             componentPanel.add(confNameField);
-            contentPanel.add(componentPanel, "10, 2, 5, 1, fill, default");
+
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(componentPanel, gbc);
         }
         {
             JLabel lblNewLabel = new JLabel("ZK.PORT");
             lblNewLabel.setToolTipText("hbase.zookeeper.property.clientPort");
-            contentPanel.add(lblNewLabel, "6, 4, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 1;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel, gbc);
         }
         {
             zkPortField = new JTextField(25);
             JPanel componentPanel = new JPanel();
             componentPanel.add(zkPortField);
-            contentPanel.add(componentPanel, "10, 4, 5, 1, fill, default");
+            gbc.gridx = 1;
+            gbc.gridy = 1;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(componentPanel, gbc);
         }
         {
             JLabel lblNewLabel_1 = new JLabel("ZK.QUORUM");
             lblNewLabel_1.setToolTipText("hbase.zookeeper.quorum");
-            contentPanel.add(lblNewLabel_1, "6, 8, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 2;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel_1, gbc);
         }
         {
             zkQuorumField = new JTextField(25);
             JPanel componentPanel = new JPanel();
             componentPanel.add(zkQuorumField);
-            contentPanel.add(componentPanel, "10, 8, 5, 1, fill, default");
+            gbc.gridx = 1;
+            gbc.gridy = 2;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(componentPanel, gbc);
         }
         {
             JLabel lblNewLabel_2 = new JLabel("HBASE.MASTER");
             lblNewLabel_2.setToolTipText("hbase.master");
-            contentPanel.add(lblNewLabel_2, "6, 12, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 3;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel_2, gbc);
         }
         {
             hbaseMasterField = new JTextField(25);
             JPanel componentPanel = new JPanel();
             componentPanel.add(hbaseMasterField);
-            contentPanel.add(componentPanel, "10, 12, 5, 1, fill, default");
+            gbc.gridx = 1;
+            gbc.gridy = 3;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(componentPanel, gbc);
         }
         {
             JLabel lblNewLabel_3 = new JLabel("ZNODE.PARENT");
             lblNewLabel_3.setToolTipText("zookeeper.znode.parent");
-            contentPanel.add(lblNewLabel_3, "6, 14, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 4;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel_3, gbc);
         }
         {
             znodeParentField = new JTextField(25);
             JPanel componentPanel = new JPanel();
             componentPanel.add(znodeParentField);
-            contentPanel.add(componentPanel, "10, 14, 5, 1, fill, default");
+            gbc.gridx = 1;
+            gbc.gridy = 4;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(componentPanel, gbc);
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Maven Home");
-            contentPanel.add(lblNewLabel_4, "6, 16, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 5;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel_4, gbc);
         }
         {
             mavenHomeField = new JTextField(25);
             JPanel componentPanel = new JPanel();
             componentPanel.add(mavenHomeField);
-            contentPanel.add(componentPanel, "10, 16, 5, 1, fill, default");
+            gbc.gridx = 1;
+            gbc.gridy = 5;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(componentPanel, gbc);
         }
         {
             JLabel lblNewLabel_4 = new JLabel("Hbase Version");
-            contentPanel.add(lblNewLabel_4, "6, 18, right, default");
+            gbc.gridx = 0;
+            gbc.gridy = 6;
+            gbc.gridwidth = 1;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(lblNewLabel_4, gbc);
         }
         {
             driverVersionComboBox = new JComboBox<>();
@@ -253,26 +305,24 @@ public class LoginGui extends JDialog {
             }
             driverVersionComboBox.addItemListener(new VersionListener());
 
-            contentPanel.add(driverVersionComboBox, "10, 18, 1, 1, fill, default");
-
             reloadDriverVersionButton.addMouseListener(new ReloadVersion());
-            contentPanel.add(reloadDriverVersionButton, "10, 18, 5, 1, right, default");
+
+            JPanel versionPanel = new JPanel();
+            versionPanel.add(driverVersionComboBox);
+            versionPanel.add(reloadDriverVersionButton);
+
+            gbc.gridx = 1;
+            gbc.gridy = 6;
+            gbc.gridwidth = 3;
+            gbc.gridheight = 1;
+            gbc.weightx = 0;
+            gbc.weighty = 0;
+            formPanel.add(versionPanel, gbc);
+
         }
 
         {
 
-            JPanel buttonPane = new JPanel();
-            contentPanel.add(buttonPane, "6, 20, 13, 1,left, fill");
-            buttonPane.setLayout(new FormLayout(new ColumnSpec[] { ColumnSpec.decode("100px"),
-                                                                   FormSpecs.DEFAULT_COLSPEC,
-                                                                   ColumnSpec.decode("100px"),
-                                                                   FormSpecs.DEFAULT_COLSPEC,
-                                                                   FormSpecs.RELATED_GAP_COLSPEC,
-                                                                   ColumnSpec.decode("200px") },
-                                                new RowSpec[] { FormSpecs.RELATED_GAP_ROWSPEC,
-                                                                FormSpecs.DEFAULT_ROWSPEC,
-                                                                FormSpecs.RELATED_GAP_ROWSPEC,
-                                                                FormSpecs.DEFAULT_ROWSPEC, }));
             {
                 testButton.setEnabled(false);
                 testButton.addMouseListener(new MouseAdapter() {
@@ -330,7 +380,15 @@ public class LoginGui extends JDialog {
 
                     }
                 });
-                buttonPane.add(testButton, "1, 2, right, default");
+
+                gbc.gridx = 0;
+                gbc.gridy = 7;
+                gbc.gridwidth = 2;
+                gbc.gridheight = 1;
+                gbc.weightx = 0;
+                gbc.weighty = 0;
+                formPanel.add(testButton, gbc);
+
             }
             {
                 cancelButton.addMouseListener(new MouseAdapter() {
@@ -345,7 +403,14 @@ public class LoginGui extends JDialog {
                     }
                 });
                 cancelButton.setActionCommand("Cancel");
-                buttonPane.add(cancelButton, "4, 2, right, top");
+
+                gbc.gridx = 2;
+                gbc.gridy = 7;
+                gbc.gridwidth = 1;
+                gbc.gridheight = 1;
+                gbc.weightx = 0;
+                gbc.weighty = 0;
+                formPanel.add(cancelButton, gbc);
             }
             {
                 okButton.setEnabled(false);
@@ -405,7 +470,14 @@ public class LoginGui extends JDialog {
                     }
                 });
                 okButton.setActionCommand("OK");
-                buttonPane.add(okButton, "6, 2, right, top");
+
+                gbc.gridx = 3;
+                gbc.gridy = 7;
+                gbc.gridwidth = 1;
+                gbc.gridheight = 1;
+                gbc.weightx = 0;
+                gbc.weighty = 0;
+                formPanel.add(okButton, gbc);
                 getRootPane().setDefaultButton(okButton);
             }
             {
@@ -424,7 +496,13 @@ public class LoginGui extends JDialog {
                 processPanel.add(progressInfoLabel);
                 processPanel.add(new JLabel(" "));// 占位
 
-                buttonPane.add(processPanel, "1,4,6,1, fill, fill");
+                gbc.gridx = 0;
+                gbc.gridy = 8;
+                gbc.gridwidth = 4;
+                gbc.gridheight = 1;
+                gbc.weightx = 0;
+                gbc.weighty = 0;
+                formPanel.add(processPanel, gbc);
             }
         }
 
