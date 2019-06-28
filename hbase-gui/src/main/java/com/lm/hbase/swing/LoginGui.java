@@ -104,7 +104,7 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        int width = 630;
+        int width = 680;
         int height = 360;
         setBounds(100, 100, width, height);
         this.setMinimumSize(new Dimension(width, height));
@@ -147,7 +147,7 @@ public class LoginGui extends JDialog {
         JPanel formPanel = new JPanel();
         contentPanel.add(formPanel);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.VERTICAL;
+        gbc.fill = GridBagConstraints.BOTH;
         formPanel.setLayout(new GridBagLayout());
 
         {
@@ -161,7 +161,7 @@ public class LoginGui extends JDialog {
             formPanel.add(lblNewLabel, gbc);
         }
         {
-            confNameField = new JTextField(25);
+            confNameField = new JTextField(32);
             JPanel componentPanel = new JPanel();
             componentPanel.add(confNameField);
 
@@ -185,7 +185,7 @@ public class LoginGui extends JDialog {
             formPanel.add(lblNewLabel, gbc);
         }
         {
-            zkPortField = new JTextField(25);
+            zkPortField = new JTextField(32);
             JPanel componentPanel = new JPanel();
             componentPanel.add(zkPortField);
             gbc.gridx = 1;
@@ -208,7 +208,7 @@ public class LoginGui extends JDialog {
             formPanel.add(lblNewLabel_1, gbc);
         }
         {
-            zkQuorumField = new JTextField(25);
+            zkQuorumField = new JTextField(32);
             JPanel componentPanel = new JPanel();
             componentPanel.add(zkQuorumField);
             gbc.gridx = 1;
@@ -231,7 +231,7 @@ public class LoginGui extends JDialog {
             formPanel.add(lblNewLabel_2, gbc);
         }
         {
-            hbaseMasterField = new JTextField(25);
+            hbaseMasterField = new JTextField(32);
             JPanel componentPanel = new JPanel();
             componentPanel.add(hbaseMasterField);
             gbc.gridx = 1;
@@ -254,7 +254,7 @@ public class LoginGui extends JDialog {
             formPanel.add(lblNewLabel_3, gbc);
         }
         {
-            znodeParentField = new JTextField(25);
+            znodeParentField = new JTextField(32);
             JPanel componentPanel = new JPanel();
             componentPanel.add(znodeParentField);
             gbc.gridx = 1;
@@ -276,7 +276,7 @@ public class LoginGui extends JDialog {
             formPanel.add(lblNewLabel_4, gbc);
         }
         {
-            mavenHomeField = new JTextField(25);
+            mavenHomeField = new JTextField(32);
             JPanel componentPanel = new JPanel();
             componentPanel.add(mavenHomeField);
             gbc.gridx = 1;
@@ -299,6 +299,9 @@ public class LoginGui extends JDialog {
         }
         {
             driverVersionComboBox = new JComboBox<>();
+            Dimension dimension = driverVersionComboBox.getPreferredSize();
+            dimension.setSize(width * 0.5, dimension.getHeight());
+            driverVersionComboBox.setPreferredSize(dimension);
             driverVersionComboBox.addItem("");
             for (String item : RemoteDriverProp.getKeys()) {
                 driverVersionComboBox.addItem(item);
@@ -453,12 +456,14 @@ public class LoginGui extends JDialog {
                                             com.lm.hbase.swing.SwingConstants.loginGui.setVisible(false);// 隐藏登陆窗体
                                             com.lm.hbase.swing.SwingConstants.hbaseGui.initialize();// 唤出主窗体
                                         } else {
-                                            JOptionPane.showMessageDialog(contentPanel, "连接失败");
+                                            JOptionPane.showMessageDialog(contentPanel, "连接失败", "错误",
+                                                                          JOptionPane.ERROR_MESSAGE);
                                         }
 
                                     } catch (Exception e2) {
                                         JOptionPane.showMessageDialog(contentPanel,
-                                                                      "连接失败.\n" + e2.getLocalizedMessage());
+                                                                      "连接失败.\n" + e2.getLocalizedMessage(), "错误",
+                                                                      JOptionPane.ERROR_MESSAGE);
                                     } finally {
                                         endTask();
                                     }

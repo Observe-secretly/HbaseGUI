@@ -38,6 +38,9 @@ public class HandleCore {
     public static String testConf(String displayName, String zkPort, String zkQuorum, String hbaseMaster,
                                   String znodeParent, String version, String mavenHome) throws Exception {
         SwingConstants.hbaseAdapter.init(zkPort, zkQuorum, hbaseMaster, znodeParent);
+        if (SwingConstants.selectedConf == null) {
+            throw new Exception("请点击左侧的添加按钮，添加一个配置");
+        }
         SwingConstants.selectedConf.setConf(displayName, zkPort, zkQuorum, hbaseMaster, znodeParent, version,
                                             mavenHome);
         // 尝试获取集群状态
