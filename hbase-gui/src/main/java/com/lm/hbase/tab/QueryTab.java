@@ -296,16 +296,18 @@ public class QueryTab extends TabAbstract {
 
                                     try {
                                         com.lm.hbase.swing.SwingConstants.hbaseAdapter.dropTable(tableName);
+                                        JOptionPane.showMessageDialog(getFrame(), "删除成功", "提示",
+                                                                      JOptionPane.INFORMATION_MESSAGE);
+
+                                        // 删除成功后，删除元数据
+                                        String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
+                                        com.lm.hbase.swing.SwingConstants.selectedConf.remove(propertiesKey);
+                                        cleanTable();
+                                        initTableList(list);
                                     } catch (Exception e) {
                                         exceptionAlert(e);
                                         return;
                                     }
-                                    JOptionPane.showMessageDialog(getFrame(), "删除成功", "提示",
-                                                                  JOptionPane.INFORMATION_MESSAGE);
-
-                                    // 删除成功后，删除元数据
-                                    String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
-                                    com.lm.hbase.swing.SwingConstants.selectedConf.remove(propertiesKey);
 
                                     stopTask();
 
@@ -406,9 +408,8 @@ public class QueryTab extends TabAbstract {
                                         com.lm.hbase.swing.SwingConstants.hbaseAdapter.truncateTable(tableName, true);
                                         JOptionPane.showMessageDialog(getFrame(), "已清空", "提示",
                                                                       JOptionPane.INFORMATION_MESSAGE);
-                                        initTableList(list);
                                         cleanTable();
-
+                                        initTableList(list);
                                     } catch (Exception e) {
                                         exceptionAlert(e);
                                         return;
