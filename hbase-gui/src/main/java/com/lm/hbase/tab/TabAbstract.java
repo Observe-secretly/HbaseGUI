@@ -23,7 +23,7 @@ public abstract class TabAbstract extends TabCommonUtil implements TabInterface 
 
     public void exceptionAlert(Exception e) {
         stopTask();
-        JOptionPane.showMessageDialog(window.parentJframe, e.getMessage(), "异常", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(window.parentJframe, e, "异常", JOptionPane.ERROR_MESSAGE);
     }
 
     public synchronized void startTask() {
