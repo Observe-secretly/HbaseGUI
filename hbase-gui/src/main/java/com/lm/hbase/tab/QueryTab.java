@@ -573,24 +573,22 @@ public class QueryTab extends TabAbstract {
             colume = (HbaseQualifier) fieldsComboBox.getSelectedItem();
         }
 
-        // 未输入条件或值
-        if (colume == null || StringUtil.isEmpty(filterValueTextField.getText())) {
-            return null;
+        if (colume != null && !StringUtil.isEmpty(filterValueTextField.getText())) {
+            if (!StringUtil.isEmpty(filterValueTextField.getText())) {
+
+                String compareOpSimple = filterOperatorComboBox.getItemAt(filterOperatorComboBox.getSelectedIndex());
+                String comparatorClassName = comparatorComboBox.getItemAt(comparatorComboBox.getSelectedIndex());
+                String fieldType = fieldTypeComboBox.getItemAt(fieldTypeComboBox.getSelectedIndex());
+                String fieldValue = filterValueTextField.getText();
+                fs.add(com.lm.hbase.swing.SwingConstants.filterFactory.createSingleColumnValueFilter(colume.getFamily(),
+                                                                                                     colume.getQualifier(),
+                                                                                                     compareOpSimple,
+                                                                                                     comparatorClassName,
+                                                                                                     fieldType,
+                                                                                                     fieldValue));
+            }
         }
 
-        if (!StringUtil.isEmpty(filterValueTextField.getText())) {
-
-            String compareOpSimple = filterOperatorComboBox.getItemAt(filterOperatorComboBox.getSelectedIndex());
-            String comparatorClassName = comparatorComboBox.getItemAt(comparatorComboBox.getSelectedIndex());
-            String fieldType = fieldTypeComboBox.getItemAt(fieldTypeComboBox.getSelectedIndex());
-            String fieldValue = filterValueTextField.getText();
-            fs.add(com.lm.hbase.swing.SwingConstants.filterFactory.createSingleColumnValueFilter(colume.getFamily(),
-                                                                                                 colume.getQualifier(),
-                                                                                                 compareOpSimple,
-                                                                                                 comparatorClassName,
-                                                                                                 fieldType,
-                                                                                                 fieldValue));
-        }
         // 获取rowkey查询前缀（如果有）
         String rowkeyPrefix = textField_rowKey_prefix.getText();
 
