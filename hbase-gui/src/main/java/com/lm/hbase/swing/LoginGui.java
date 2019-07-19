@@ -95,7 +95,8 @@ public class LoginGui extends JDialog {
             com.lm.hbase.swing.SwingConstants.loginGui.setVisible(true);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            JOptionPane.showMessageDialog(com.lm.hbase.swing.SwingConstants.hbaseGui.parentJframe, e, "异常",
+                                          JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -104,7 +105,7 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        int width = 680;
+        int width = 730;
         int height = 360;
         setBounds(100, 100, width, height);
         this.setMinimumSize(new Dimension(width, height));
@@ -537,7 +538,8 @@ public class LoginGui extends JDialog {
                     testButton.setEnabled(true);
                     okButton.setEnabled(true);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(com.lm.hbase.swing.SwingConstants.hbaseGui.parentJframe, e, "异常",
+                                                  JOptionPane.ERROR_MESSAGE);
                 } finally {
                     endTask();
                 }
@@ -572,7 +574,8 @@ public class LoginGui extends JDialog {
                 }
                 DownloadDriver.load(version, mavenHome, progressInfoLabel);
             } catch (Throwable e1) {
-                e1.printStackTrace();
+                JOptionPane.showMessageDialog(com.lm.hbase.swing.SwingConstants.hbaseGui.parentJframe, e1, "异常",
+                                              JOptionPane.ERROR_MESSAGE);
             }
 
             // 加载适配程序
@@ -581,7 +584,8 @@ public class LoginGui extends JDialog {
                 loadHbaseAdapterJar(version);
                 progressInfoLabel.setText("download adapter jar success");
             } catch (Throwable e) {
-                e.printStackTrace();
+                JOptionPane.showMessageDialog(com.lm.hbase.swing.SwingConstants.hbaseGui.parentJframe, e, "异常",
+                                              JOptionPane.ERROR_MESSAGE);
             }
         } else {
             if (reload) {
@@ -802,7 +806,8 @@ public class LoginGui extends JDialog {
                         return;
 
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        JOptionPane.showMessageDialog(com.lm.hbase.swing.SwingConstants.hbaseGui.parentJframe, e1, "异常",
+                                                      JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 }
