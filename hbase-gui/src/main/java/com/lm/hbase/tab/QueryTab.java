@@ -13,8 +13,10 @@ import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -36,6 +38,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 
 import com.alibaba.fastjson.JSON;
 import com.lm.hbase.adapter.entity.HBasePageModel;
@@ -46,36 +49,47 @@ import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.util.Chooser;
 import com.lm.hbase.util.DateUtil;
 import com.lm.hbase.util.MyBytesUtil;
+import com.lm.hbase.util.StorageTableColumn;
 import com.lm.hbase.util.StringUtil;
 
 public class QueryTab extends TabAbstract {
 
-    private final static byte[]       COMBOBOX_DEFAULT_VALUE = "--".getBytes();
+    private final static byte[]              COMBOBOX_DEFAULT_VALUE = "--".getBytes();
 
-    private JList<String>             list                   = null;
-    private JButton                   refreshTableButton;
-    private JButton                   searchButton           = new JButton("查询", ImageIconConstons.SEARCH_ICON);
-    private JButton                   deleteButton;
-    private DefaultValueTextField     textField_start_rowkey;
-    private DefaultValueTextField     textField_end_rowkey;
-    private JTextField                textField_version;
-    private JTextField                textField_pageSize;
-    private DefaultValueTextField     textField_rowKey_prefix;
-    private JButton                   nextpage_button;
-    private JTable                    contentTable;
-    private JScrollPane               tableScroll;
-    private JTextField                textField_min_stamp;
-    private JTextField                textField_max_stamp;
-    private JLabel                    bottom_message_label;
+    private JList<String>                    list                   = null;
+    private JButton                          refreshTableButton;
+    private JButton                          searchButton           = new JButton("查询", ImageIconConstons.SEARCH_ICON);
+    private JButton                          deleteButton;
+    private DefaultValueTextField            textField_start_rowkey;
+    private DefaultValueTextField            textField_end_rowkey;
+    private JTextField                       textField_version;
+    private JTextField                       textField_pageSize;
+    private DefaultValueTextField            textField_rowKey_prefix;
+    private JButton                          nextpage_button;
+    private JTable                           contentTable;
+    private JScrollPane                      tableScroll;
+    private JTextField                       textField_min_stamp;
+    private JTextField                       textField_max_stamp;
+    private JLabel                           bottom_message_label;
 
     // item filter
-    private JComboBox<HbaseQualifier> fieldsComboBox;
-    private JComboBox<String>         fieldTypeComboBox;
-    private JComboBox<String>         comparatorComboBox;
-    private JComboBox<String>         filterOperatorComboBox;
-    private JTextField                filterValueTextField;
+    private JComboBox<HbaseQualifier>        fieldsComboBox;
+    private JComboBox<String>                fieldTypeComboBox;
+    private JComboBox<String>                comparatorComboBox;
+    private JComboBox<String>                filterOperatorComboBox;
+    private JTextField                       filterValueTextField;
 
-    private static HBasePageModel     pageModel;
+    // field display filter
+    private JLabel                           fieldDisplayLabel;
+    private JComboBox<HbaseQualifier>        fieldDisplayComboBox;
+    private JButton                          fieldDisplayResetBut   = new JButton("重置",
+                                                                                  ImageIconConstons.RESET_CLICK_ICON);
+    // 当前选中的表需要展示的字段。为空代表展示全部
+    private Map<String, HbaseQualifier>      showFieldMap           = new HashMap<>();
+    // 当前选中的表部分被隐藏的列宽信息
+    private Map<Integer, StorageTableColumn> currentTableColumnsMap = new HashMap<>();
+
+    private static HBasePageModel            pageModel;
 
     public QueryTab(HbaseGui window){
         super(window);
@@ -253,6 +267,25 @@ public class QueryTab extends TabAbstract {
 
         filterValueTextField = new JTextField();
         filterSouthPanel.add(filterValueTextField, BorderLayout.CENTER);
+
+        fieldDisplayLabel = new JLabel(ImageIconConstons.DISPLAY_ICON);
+        fieldDisplayComboBox = new JComboBox<>();
+        fieldDisplayComboBox.addItem(new HbaseQualifier(COMBOBOX_DEFAULT_VALUE, COMBOBOX_DEFAULT_VALUE, "--"));
+        fieldDisplayComboBox.setEditable(true);
+
+        JPanel fieldDisplayPanel = new JPanel();
+
+        JSeparator js4 = new JSeparator(JSeparator.VERTICAL);
+        js4.setPreferredSize(new Dimension(js4.getPreferredSize().width, 20));
+        fieldDisplayPanel.add(js4);
+
+        fieldDisplayResetBut.addMouseListener(new FieldDisplayResetButEvent());
+
+        fieldDisplayPanel.add(fieldDisplayLabel);
+        fieldDisplayPanel.add(fieldDisplayComboBox);
+        fieldDisplayPanel.add(fieldDisplayResetBut);
+        filterSouthPanel.add(fieldDisplayPanel, BorderLayout.EAST);
+
         // filterSouthPanel 位于filtersPanel的最下面 包含了条件查询filter end
         // 渲染字段过滤条件查询filter end
 
@@ -468,6 +501,9 @@ public class QueryTab extends TabAbstract {
                                     textField_pageSize.setText("10");
                                     // 运行初次查询
                                     query();
+                                    // 清空desplayField信息
+                                    showFieldMap = new HashMap<>();
+                                    currentTableColumnsMap = new HashMap<>();
                                 } catch (Exception e) {
                                     exceptionAlert(e);
                                     return;
@@ -483,6 +519,8 @@ public class QueryTab extends TabAbstract {
 
             // 监听筛选条件选择事件，用于动态调整类型下拉框
             fieldsComboBox.addItemListener(new AutoAdapterFieldTypeItemListener());
+            // 监听可视列筛选事件。动态调整需要展示的列
+            fieldDisplayComboBox.addItemListener(new AutoAdapterDisplayFieldTypeItemListener());
 
         }
         // end
@@ -557,9 +595,11 @@ public class QueryTab extends TabAbstract {
         }
         // 清空fieldsComboBox
         fieldsComboBox.removeAllItems();
+        fieldDisplayComboBox.removeAllItems();
         // 渲染条件
         for (HbaseQualifier hbaseQualifier : qualifierList) {
             fieldsComboBox.addItem(hbaseQualifier);
+            fieldDisplayComboBox.addItem(hbaseQualifier);
         }
 
     }
@@ -602,6 +642,101 @@ public class QueryTab extends TabAbstract {
             return fs;
         } else {
             return null;
+        }
+    }
+
+    /**
+     * 隐藏表格中的某一列
+     * 
+     * @param table 表格
+     * @param index 要隐藏的列 的索引
+     */
+    public void hideColumn(JTable table, int index) {
+
+        TableColumn tc = table.getColumnModel().getColumn(index);
+        if (currentTableColumnsMap.get(index) == null) {
+            currentTableColumnsMap.put(index, new StorageTableColumn(tc.getMaxWidth(), tc.getPreferredWidth(),
+                                                                     tc.getMinWidth(), tc.getWidth()));
+        }
+
+        tc.setMaxWidth(0);
+        tc.setPreferredWidth(0);
+        tc.setMinWidth(0);
+        tc.setWidth(0);
+
+        table.getTableHeader().getColumnModel().getColumn(index).setMaxWidth(0);
+        table.getTableHeader().getColumnModel().getColumn(index).setMinWidth(0);
+    }
+
+    /**
+     * 恢复列宽
+     * 
+     * @param table
+     * @param index
+     */
+    public void recoverColumn(JTable table, int index) {
+
+        StorageTableColumn storageTableColumn = currentTableColumnsMap.get(index);
+        if (storageTableColumn == null) {
+            return;
+        }
+
+        TableColumn tc = table.getColumnModel().getColumn(index);
+
+        tc.setMaxWidth(storageTableColumn.getMaxWidth());
+        tc.setPreferredWidth(storageTableColumn.getPreferredWidth());
+        tc.setMinWidth(storageTableColumn.getMinWidth());
+        tc.setWidth(storageTableColumn.getWidth());
+
+        table.getTableHeader().getColumnModel().getColumn(index).setMaxWidth(storageTableColumn.getMaxWidth());
+        table.getTableHeader().getColumnModel().getColumn(index).setMinWidth(storageTableColumn.getMinWidth());
+        table.updateUI();
+    }
+
+    /**
+     * 恢复表的所有列
+     * 
+     * @param table
+     */
+    public void recoverAllColumn(JTable table) {
+
+        for (Entry<Integer, StorageTableColumn> entry : currentTableColumnsMap.entrySet()) {
+            TableColumn tc = table.getColumnModel().getColumn(entry.getKey());
+
+            tc.setMaxWidth(entry.getValue().getMaxWidth());
+            tc.setPreferredWidth(entry.getValue().getPreferredWidth());
+            tc.setMinWidth(entry.getValue().getMinWidth());
+            tc.setWidth(entry.getValue().getWidth());
+
+            table.getTableHeader().getColumnModel().getColumn(entry.getKey()).setMaxWidth(entry.getValue().getMaxWidth());
+            table.getTableHeader().getColumnModel().getColumn(entry.getKey()).setMinWidth(entry.getValue().getMinWidth());
+        }
+
+        table.updateUI();
+    }
+
+    public void displayColumn(JTable table, Map<String, HbaseQualifier> showFieldMap) {
+        for (Entry<String, HbaseQualifier> b : showFieldMap.entrySet()) {
+            System.out.println(b.getKey());
+        }
+
+        for (int index = 0; index < table.getColumnModel().getColumnCount(); index++) {
+            TableColumn tc = table.getColumnModel().getColumn(index);
+            if (tc != null) {
+                String headValue = tc.getHeaderValue().toString();
+                if (headValue.equalsIgnoreCase("rowkey") || headValue.equalsIgnoreCase("number")) {
+                    continue;
+                }
+
+                if (showFieldMap.get(tc.getHeaderValue().toString()) == null) {
+                    hideColumn(table, index);
+                } else {
+                    recoverColumn(table, index);
+                }
+            } else {
+                break;
+            }
+
         }
     }
 
@@ -787,6 +922,29 @@ public class QueryTab extends TabAbstract {
         }
     }
 
+    class FieldDisplayResetButEvent extends MouseAdapter {
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            fieldDisplayResetBut.setEnabled(false);
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            startTask();
+            getSingleThreadPool().execute(new Runnable() {
+
+                @Override
+                public void run() {
+                    recoverAllColumn(contentTable);
+                    stopTask();
+                    fieldDisplayResetBut.setEnabled(true);
+                }
+
+            });
+        }
+    }
+
     class DeleteEvent extends MouseAdapter {
 
         @Override
@@ -883,6 +1041,22 @@ public class QueryTab extends TabAbstract {
         }
     }
 
+    class AutoAdapterDisplayFieldTypeItemListener implements ItemListener {
+
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            if (e.getStateChange() == 2 || fieldDisplayComboBox.getSelectedIndex() == -1) {
+                return;
+            }
+
+            HbaseQualifier item = (HbaseQualifier) fieldDisplayComboBox.getSelectedItem();
+
+            showFieldMap.put(item.getDisplayName(), item);
+
+            displayColumn(contentTable, showFieldMap);
+        }
+
+    }
 }
 
 class DefaultValueTextField extends JTextField {
