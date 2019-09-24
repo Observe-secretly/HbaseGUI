@@ -271,7 +271,6 @@ public class QueryTab extends TabAbstract {
         fieldDisplayLabel = new JLabel(ImageIconConstons.DISPLAY_ICON);
         fieldDisplayComboBox = new JComboBox<>();
         fieldDisplayComboBox.addItem(new HbaseQualifier(COMBOBOX_DEFAULT_VALUE, COMBOBOX_DEFAULT_VALUE, "--"));
-        fieldDisplayComboBox.setEditable(true);
 
         JPanel fieldDisplayPanel = new JPanel();
 
@@ -939,6 +938,7 @@ public class QueryTab extends TabAbstract {
                     recoverAllColumn(contentTable);
                     stopTask();
                     fieldDisplayResetBut.setEnabled(true);
+                    showFieldMap.clear();
                 }
 
             });
