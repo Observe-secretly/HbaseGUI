@@ -715,10 +715,6 @@ public class QueryTab extends TabAbstract {
     }
 
     public void displayColumn(JTable table, Map<String, HbaseQualifier> showFieldMap) {
-        for (Entry<String, HbaseQualifier> b : showFieldMap.entrySet()) {
-            System.out.println(b.getKey());
-        }
-
         for (int index = 0; index < table.getColumnModel().getColumnCount(); index++) {
             TableColumn tc = table.getColumnModel().getColumn(index);
             if (tc != null) {

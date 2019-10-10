@@ -26,6 +26,7 @@ import com.lm.hbase.tab.CreateTab;
 import com.lm.hbase.tab.MetaDataTab;
 import com.lm.hbase.tab.QueryTab;
 import com.lm.hbase.tab.TabInterface;
+import com.lm.hbase.tab.TableInfoTab;
 
 public class HbaseGui {
 
@@ -131,6 +132,9 @@ public class HbaseGui {
         JTabbedPane tabbedPanel = new JTabbedPane(JTabbedPane.TOP);
         tabbedPanel.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
         parentJframe.getContentPane().add(tabbedPanel, BorderLayout.CENTER);
+
+        TabInterface tableInfoTab = new TableInfoTab(this);
+        registerTab(tableInfoTab, tabbedPanel);
 
         TabInterface queryTab = new QueryTab(this);
         registerTab(queryTab, tabbedPanel);
