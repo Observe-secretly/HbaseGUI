@@ -50,6 +50,8 @@ Hbase-GUI
 
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/cluster.png)
 
+![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/desc.png)
+
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/queryTab.png)
 
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/metaTab.png)
