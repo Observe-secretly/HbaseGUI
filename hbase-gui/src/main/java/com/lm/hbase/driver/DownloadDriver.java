@@ -40,14 +40,14 @@ public class DownloadDriver {
     private static String getPomUrl(String version) {
         if (isAliyun(version)) {
             String aliyunVersion = version.replace(ALIYUN_TAG, "");
-            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/com/aliyun/hbase/alihbase-client");
+            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/com/aliyun/hbase/alihbase-client");
             url.append("/" + aliyunVersion + "/");
             url.append("alihbase-client-");
             url.append(aliyunVersion);
             url.append(".pom");
             return url.toString();
         } else {
-            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
+            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/org/apache/hbase/hbase-client");
             url.append("/" + version + "/");
             url.append("hbase-client-");
             url.append(version);
@@ -59,14 +59,14 @@ public class DownloadDriver {
     private static String getJarUrl(String version) {
         if (isAliyun(version)) {
             String aliyunVersion = version.replace(ALIYUN_TAG, "");
-            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/com/aliyun/hbase/alihbase-client");
+            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/com/aliyun/hbase/alihbase-client");
             url.append("/" + aliyunVersion + "/");
             url.append("alihbase-client-");
             url.append(aliyunVersion);
             url.append(".jar");
             return url.toString();
         } else {
-            StringBuilder url = new StringBuilder("http://central.maven.org/maven2/org/apache/hbase/hbase-client");
+            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/org/apache/hbase/hbase-client");
             url.append("/" + version + "/");
             url.append("hbase-client-");
             url.append(version);
@@ -90,10 +90,13 @@ public class DownloadDriver {
 
         // 下载pom已经client jar
         progressInfoLabel.setText("download pom file ...");
-        System.out.println("download pom file to " + outputDir);
+        System.out.println("download file:" + getPomUrl(version));
         HttpURLConnection con = HttpURLConnectionFactory.getConn(getPomUrl(version));
+
         HttpURLConnectionFactory.downloadFile(con, outputDir, "pom.xml");
         progressInfoLabel.setText("download hbase-client-" + version + ".jar ...");
+
+        System.out.println("download file:" + getJarUrl(version));
         con = HttpURLConnectionFactory.getConn(getJarUrl(version));
         HttpURLConnectionFactory.downloadFile(con, outputDir, "hbase-client-" + version + ".jar");
 
