@@ -40,14 +40,14 @@ public class DownloadDriver {
     private static String getPomUrl(String version) {
         if (isAliyun(version)) {
             String aliyunVersion = version.replace(ALIYUN_TAG, "");
-            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/com/aliyun/hbase/alihbase-client");
+            StringBuilder url = new StringBuilder("https://maven.aliyun.com/repository/central/com/aliyun/hbase/alihbase-client");
             url.append("/" + aliyunVersion + "/");
             url.append("alihbase-client-");
             url.append(aliyunVersion);
             url.append(".pom");
             return url.toString();
         } else {
-            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/org/apache/hbase/hbase-client");
+            StringBuilder url = new StringBuilder("https://maven.aliyun.com/repository/central/org/apache/hbase/hbase-client");
             url.append("/" + version + "/");
             url.append("hbase-client-");
             url.append(version);
@@ -59,14 +59,14 @@ public class DownloadDriver {
     private static String getJarUrl(String version) {
         if (isAliyun(version)) {
             String aliyunVersion = version.replace(ALIYUN_TAG, "");
-            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/com/aliyun/hbase/alihbase-client");
+            StringBuilder url = new StringBuilder("https://maven.aliyun.com/repository/central/com/aliyun/hbase/alihbase-client");
             url.append("/" + aliyunVersion + "/");
             url.append("alihbase-client-");
             url.append(aliyunVersion);
             url.append(".jar");
             return url.toString();
         } else {
-            StringBuilder url = new StringBuilder("https://repo1.maven.org/maven2/org/apache/hbase/hbase-client");
+            StringBuilder url = new StringBuilder("https://maven.aliyun.com/repository/central/org/apache/hbase/hbase-client");
             url.append("/" + version + "/");
             url.append("hbase-client-");
             url.append(version);

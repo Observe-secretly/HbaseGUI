@@ -54,7 +54,7 @@ public class HbaseGui {
      * @wbp.parser.entryPoint
      */
     public static void main(String[] args) throws Throwable {
-        FrameDock.setDockIconImage();
+        // FrameDock.setDockIconImage();
 
         EventQueue.invokeLater(new Runnable() {
 
