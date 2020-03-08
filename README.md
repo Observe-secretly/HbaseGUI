@@ -48,6 +48,8 @@ Hbase-GUI
 
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/login.png)
 
+`ZNODE.PARENT参数请登录Hbase Masteer UI首页查看Zookeeper Base Path配置.默认Ambari Hbase是:/hbase-unsecure,阿里云是:/hbase`
+
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/cluster.png)
 
 ![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/desc.png)
