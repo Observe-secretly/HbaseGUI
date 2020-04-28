@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -58,6 +59,8 @@ public class RemoteDriverProp {
         for (Object item : loadProperties().keySet()) {
             keyList.add(item.toString());
         }
+
+        Collections.sort(keyList);
 
         return keyList;
     }
