@@ -48,7 +48,7 @@ public class HttpURLConnectionFactory {
         return conn;
     }
 
-    public static void downloadFile(HttpURLConnection con, String descDir, String fileName) {
+    public static void downloadFile(HttpURLConnection con, String descDir, String fileName) throws Throwable {
 
         InputStream is = null;
         OutputStream os = null;
@@ -62,11 +62,7 @@ public class HttpURLConnectionFactory {
             while ((size = is.read(buf)) != -1) {
                 os.write(buf, 0, size);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        } finally {
+        }  finally {
             if (is != null) {
                 try {
                     is.close();
