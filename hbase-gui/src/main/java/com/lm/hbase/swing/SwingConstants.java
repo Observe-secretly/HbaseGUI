@@ -43,4 +43,6 @@ public class SwingConstants {
 
     public static final String                TIME_TO_LIVE_DES  = "timeToLive==>";
 
+    public static final String                COMPRESSION       = "Compression==>";
+
 }

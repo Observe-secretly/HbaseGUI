@@ -46,10 +46,10 @@
 	                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>  
 	                        <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>  
 	                    </manifest>  
-	                    <manifestEntries>  
-	                        <Permissions>${Permissions}</Permissions>  
-	                        <Caller-Allowable-Codebase>${Caller-Allowable-Codebase}</Caller-Allowable-Codebase>  
-	                    </manifestEntries>  
+	                    <manifestEntries>
+	                        <Permissions>${Permissions}</Permissions>
+	                        <Caller-Allowable-Codebase>${Caller-Allowable-Codebase}</Caller-Allowable-Codebase>
+	                    </manifestEntries>
 	                </archive>  
 	            </configuration>  
 	        </plugin> 
@@ -215,7 +215,7 @@
 	<dependency>
 	    <groupId>com.lm</groupId>
 	    <artifactId>hbase-core-adapter-entity</artifactId>
-	    <version>1.0.0</version>
+	    <version>1.1.0</version>
 	</dependency>	
 	
 	<dependency>

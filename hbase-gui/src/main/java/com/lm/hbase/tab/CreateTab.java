@@ -4,25 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneLayout;
+import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -30,11 +14,13 @@ import javax.swing.event.ListSelectionListener;
 
 import com.lm.hbase.adapter.ColumnFamilyParam;
 import com.lm.hbase.adapter.ColumnFamilyParam.ColumnFamilyFieldEnum;
+import com.lm.hbase.adapter.entity.CompressionEnum;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.swing.SwingConstants;
 import com.lm.hbase.util.MyBytesUtil;
 import com.lm.hbase.util.StringUtil;
+import javafx.scene.control.ComboBox;
 
 public class CreateTab extends TabAbstract {
 
@@ -59,6 +45,9 @@ public class CreateTab extends TabAbstract {
     private DefaultValueTextField endRowkeyText;
     private DefaultValueTextField numRegionsText;
 
+    private JComboBox<CompressionEnum> compressionComboBox;
+
+
     private JTextArea             showTextArea;
 
     public CreateTab(HbaseGui window){
@@ -74,6 +63,7 @@ public class CreateTab extends TabAbstract {
         String startRowkey = startRowkeyText.getText();
         String endRowkey = endRowkeyText.getText();
         String numRegions = numRegionsText.getText();
+        CompressionEnum compression = compressionComboBox.getItemAt(compressionComboBox.getSelectedIndex());
 
         StringBuilder text = new StringBuilder("------------------配置信息----------------------\n");
 
@@ -104,6 +94,7 @@ public class CreateTab extends TabAbstract {
         if (!StringUtil.isEmpty(numRegions)) {
             text.append(com.lm.hbase.swing.SwingConstants.NUM_REGIONS_DES + numRegions + "\n");
         }
+        text.append(com.lm.hbase.swing.SwingConstants.COMPRESSION + compression.name() + "\n");
         showTextArea.setText(text.toString());
     }
 
@@ -256,6 +247,31 @@ public class CreateTab extends TabAbstract {
             tableNorthPanel.add(endRowkeyText);
             tableNorthPanel.add(numRegionsText);
 
+            JSeparator js3 = new JSeparator(JSeparator.VERTICAL);
+            js3.setPreferredSize(new Dimension(js2.getPreferredSize().width, 20));
+
+            compressionComboBox = new JComboBox<>();
+            compressionComboBox.addItem(CompressionEnum.GZ);
+            compressionComboBox.addItem(CompressionEnum.BZIP2);
+            compressionComboBox.addItem(CompressionEnum.LZ4);
+            compressionComboBox.addItem(CompressionEnum.LZO);
+            compressionComboBox.addItem(CompressionEnum.NONE);
+            compressionComboBox.addItem(CompressionEnum.SNAPPY);
+            compressionComboBox.addItem(CompressionEnum.ZSTD);
+
+            compressionComboBox.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if(e.getStateChange()==2){
+                        refreshCreateTableText();
+                    }
+                }
+            });
+
+            tableNorthPanel.add(js3);
+            tableNorthPanel.add(compressionComboBox);
+
+
             JPanel tableCenterPanel = new JPanel();
             tableCenterPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
             tableContentPanel.add(tableCenterPanel, BorderLayout.CENTER);
@@ -295,6 +311,7 @@ public class CreateTab extends TabAbstract {
             String numRegions = numRegionsText.getText();
             String maxVersion = maxVersionText.getText();
             String timeLive = timeLiveText.getText();
+            CompressionEnum compression = compressionComboBox.getItemAt(compressionComboBox.getSelectedIndex());
 
             if (StringUtil.isEmpty(namespace)) {
                 JOptionPane.showMessageDialog(getFrame(), "请选择命名空间", "警告", JOptionPane.WARNING_MESSAGE);
@@ -345,9 +362,9 @@ public class CreateTab extends TabAbstract {
                             SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null,
                                                                     MyBytesUtil.toBytes(startRowkey),
                                                                     MyBytesUtil.toBytes(endRowkey),
-                                                                    Integer.parseInt(numRegions), columnFamilyParam);
+                                                                    Integer.parseInt(numRegions),compression, columnFamilyParam);
                         } else {
-                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null, null, null, 0,
+                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null, null, null, 0,compression,
                                                                     columnFamilyParam);
                         }
                         JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
