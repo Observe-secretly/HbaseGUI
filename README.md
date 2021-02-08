@@ -16,7 +16,7 @@ HbaseGUI可视化工具，通过Hbase-client直接操作Hbase。提供可视化�
 * 原生支持黑暗主题（致谢Jmeter）
 
 # 架构图
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/invok-flow.png)
+![](./README_IMAGE/invok-flow.png)
 * 工程分为三部分组成：`HBaseGUI`Swing主程序，`Hbase-adapter-interface`适配器接口层和`Hbase-adapter`适配器
 * `HBaseGUI`Swing主程序完成GUI层全部功能实现
 * `Hbase-adapter-interface`适配器接口层被上下层依赖，`HBaseGUI`通过依赖它获取访问Hbase标准接口
@@ -73,19 +73,19 @@ Hbase-GUI
 
 # 软件图文介绍(各版本可能存在差异)
 
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/login.png)
+![](./README_IMAGE/login.png)
 
 `ZNODE.PARENT参数请登录Hbase Masteer UI首页查看Zookeeper Base Path配置.默认Ambari Hbase是:/hbase-unsecure,阿里云是:/hbase；ZK.QUORUM对应Zookeeper Quorum配置；HBASE.MASTER可以不填写`
 
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/cluster.png)
+![](./README_IMAGE/cluster.png)
 
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/desc.png)
+![](./README_IMAGE/desc.png)
 
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/queryTab.png)
+![](./README_IMAGE/queryTab.png)
 
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/metaTab.png)
+![](./README_IMAGE/metaTab.png)
 
-![](https://github.com/914245697/HbaseGUI/blob/master/README_IMAGE/createTab.png)
+![](./README_IMAGE/createTab.png)
 
 
 # 问题交流反馈
