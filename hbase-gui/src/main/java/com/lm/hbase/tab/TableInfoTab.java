@@ -12,10 +12,12 @@ import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -81,11 +83,10 @@ public class TableInfoTab extends TabAbstract {
     }
 
     @Override
-    public JPanel initializePanel() {
+    public JComponent initializePanel() {
 
         // 底层panel
-        JPanel parentPanel = new JPanel();
-        parentPanel.setLayout(new BorderLayout(0, 0));
+        JSplitPane parentPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
         // 展示数据库列表的panel
         JPanel tableListPanel = new JPanel();
@@ -97,6 +98,7 @@ public class TableInfoTab extends TabAbstract {
 
         list = new JList<>();
         list.setFixedCellHeight(20);
+        list.setFixedCellWidth(250);
         // 设置为单选模式
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -106,18 +108,20 @@ public class TableInfoTab extends TabAbstract {
         tableListPanel.add(jlistScroll);
 
         // 添加HbaseTableList Jlist所在的Panel到主容器中
-        parentPanel.add(tableListPanel, BorderLayout.WEST);
+        parentPanel.setLeftComponent(tableListPanel);
 
         // 展示表详情的父容器
-        JPanel contentPanel = new JPanel(new BorderLayout());
+        JSplitPane contentPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JPanel contentChildPanel = new JPanel(new BorderLayout(0, 0));
+        contentPanel.setTopComponent(contentChildPanel);
 
-        parentPanel.add(contentPanel, BorderLayout.CENTER);
+        parentPanel.setRightComponent(contentPanel);
 
         // 展示表详情容器
         descPanel = new JPanel();
         descPanel.setBorder(new TitledBorder("Descriptor"));
 
-        contentPanel.add(descPanel, BorderLayout.CENTER);
+        contentChildPanel.add(descPanel, BorderLayout.CENTER);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -133,7 +137,7 @@ public class TableInfoTab extends TabAbstract {
             headPanel.add(tableNameLabel);
             headPanel.add(cfComboBox);
 
-            contentPanel.add(headPanel, BorderLayout.NORTH);
+            contentChildPanel.add(headPanel, BorderLayout.SOUTH);
         }
 
         // 第一行
@@ -380,7 +384,7 @@ public class TableInfoTab extends TabAbstract {
             JPanel componentPanel = new JPanel(new GridLayout(1, 1));
             componentPanel.add(new JScrollPane(hDescTextArea));
 
-            contentPanel.add(componentPanel, BorderLayout.SOUTH);
+            contentPanel.setBottomComponent(componentPanel);
         }
 
         /**

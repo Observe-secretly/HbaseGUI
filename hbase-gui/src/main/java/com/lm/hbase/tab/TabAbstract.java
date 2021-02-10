@@ -5,9 +5,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import javax.swing.Icon;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
 import com.lm.hbase.swing.HbaseGui;
 
@@ -67,6 +67,6 @@ public abstract class TabAbstract extends TabCommonUtil implements TabInterface 
         return initializePanel();
     }
 
-    public abstract JPanel initializePanel();
+    public abstract JComponent initializePanel();
 
 }

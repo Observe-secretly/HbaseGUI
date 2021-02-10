@@ -20,6 +20,7 @@ import java.util.Map.Entry;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
@@ -28,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
@@ -101,20 +103,20 @@ public class QueryTab extends TabAbstract {
     }
 
     @Override
-    public JPanel initializePanel() {
+    public JComponent initializePanel() {
         // 底层panel
-        JPanel select = new JPanel();
-        select.setLayout(new BorderLayout(0, 0));
+        JSplitPane select = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 
         // 展示数据库列表的panel
         JPanel tableListPanel = new JPanel();
         tableListPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         tableListPanel.setLayout(new BorderLayout(1, 1));
 
-        select.add(tableListPanel, BorderLayout.WEST);
+        select.setLeftComponent(tableListPanel);
 
         list = new JList<>();
         list.setFixedCellHeight(20);
+        list.setFixedCellWidth(250);
         // 设置为单选模式
         list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
@@ -146,7 +148,7 @@ public class QueryTab extends TabAbstract {
 
         JPanel searchPanel = new JPanel();
         searchPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        select.add(searchPanel, BorderLayout.CENTER);
+        select.setRightComponent(searchPanel);
         searchPanel.setLayout(new BorderLayout(0, 0));
 
         // filtersPanel 位于table上侧 start

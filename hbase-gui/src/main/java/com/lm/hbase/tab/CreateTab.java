@@ -4,9 +4,30 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.event.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -20,35 +41,33 @@ import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.swing.SwingConstants;
 import com.lm.hbase.util.MyBytesUtil;
 import com.lm.hbase.util.StringUtil;
-import javafx.scene.control.ComboBox;
 
 public class CreateTab extends TabAbstract {
 
-    private JButton               refreshNameSpaceBut;
-    private JList<String>         nameSpaceList;
+    private JButton                    refreshNameSpaceBut;
+    private JList<String>              nameSpaceList;
 
-    private JLabel                addTableNameLabel;
-    private DefaultValueTextField addTableNameText;
+    private JLabel                     addTableNameLabel;
+    private DefaultValueTextField      addTableNameText;
 
-    private JButton               addNameSpaceBut;
-    private JTextField            addNameSpaceText;
+    private JButton                    addNameSpaceBut;
+    private JTextField                 addNameSpaceText;
 
-    private JButton               createTabBut;
+    private JButton                    createTabBut;
 
-    private JLabel                addColumnFamilyLabel;
-    private DefaultValueTextField columnFamilyText;
-    private DefaultValueTextField maxVersionText;
-    private DefaultValueTextField timeLiveText;
+    private JLabel                     addColumnFamilyLabel;
+    private DefaultValueTextField      columnFamilyText;
+    private DefaultValueTextField      maxVersionText;
+    private DefaultValueTextField      timeLiveText;
 
-    private JLabel                addRowkeyScopeLabel;
-    private DefaultValueTextField startRowkeyText;
-    private DefaultValueTextField endRowkeyText;
-    private DefaultValueTextField numRegionsText;
+    private JLabel                     addRowkeyScopeLabel;
+    private DefaultValueTextField      startRowkeyText;
+    private DefaultValueTextField      endRowkeyText;
+    private DefaultValueTextField      numRegionsText;
 
     private JComboBox<CompressionEnum> compressionComboBox;
 
-
-    private JTextArea             showTextArea;
+    private JTextArea                  showTextArea;
 
     public CreateTab(HbaseGui window){
         super(window);
@@ -104,9 +123,9 @@ public class CreateTab extends TabAbstract {
     }
 
     @Override
-    public JPanel initializePanel() {
+    public JComponent initializePanel() {
         // 底层面板
-        JPanel mainPanel = new JPanel();
+        JSplitPane mainPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         // 中央面板
         JPanel tableContentPanel = new JPanel();
         // 左侧面板
@@ -115,8 +134,6 @@ public class CreateTab extends TabAbstract {
 
         // 初始化所有panel
         {
-            mainPanel.setLayout(new BorderLayout());
-
             tableContentPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
             tableContentPanel.setLayout(new BorderLayout());
 
@@ -126,8 +143,8 @@ public class CreateTab extends TabAbstract {
 
         // panel布局
         {
-            mainPanel.add(tableContentPanel, BorderLayout.CENTER);
-            mainPanel.add(namespacePanel, BorderLayout.WEST);
+            mainPanel.setRightComponent(tableContentPanel);
+            mainPanel.setLeftComponent(namespacePanel);
         }
 
         // 左侧面板内部布局
@@ -137,7 +154,7 @@ public class CreateTab extends TabAbstract {
 
             nameSpaceList = new JList<>();
             nameSpaceList.setFixedCellHeight(20);
-            nameSpaceList.setFixedCellWidth(200);
+            nameSpaceList.setFixedCellWidth(250);
             nameSpaceList.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             try {
                 nameSpaceList.setListData(SwingConstants.hbaseAdapter.listNameSpace());
@@ -260,9 +277,10 @@ public class CreateTab extends TabAbstract {
             compressionComboBox.addItem(CompressionEnum.ZSTD);
 
             compressionComboBox.addItemListener(new ItemListener() {
+
                 @Override
                 public void itemStateChanged(ItemEvent e) {
-                    if(e.getStateChange()==2){
+                    if (e.getStateChange() == 2) {
                         refreshCreateTableText();
                     }
                 }
@@ -270,7 +288,6 @@ public class CreateTab extends TabAbstract {
 
             tableNorthPanel.add(js3);
             tableNorthPanel.add(compressionComboBox);
-
 
             JPanel tableCenterPanel = new JPanel();
             tableCenterPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -362,10 +379,11 @@ public class CreateTab extends TabAbstract {
                             SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null,
                                                                     MyBytesUtil.toBytes(startRowkey),
                                                                     MyBytesUtil.toBytes(endRowkey),
-                                                                    Integer.parseInt(numRegions),compression, columnFamilyParam);
-                        } else {
-                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null, null, null, 0,compression,
+                                                                    Integer.parseInt(numRegions), compression,
                                                                     columnFamilyParam);
+                        } else {
+                            SwingConstants.hbaseAdapter.createTable(namespace + ":" + table_name, null, null, null, 0,
+                                                                    compression, columnFamilyParam);
                         }
                         JOptionPane.showMessageDialog(getFrame(), "成功", "提示", JOptionPane.INFORMATION_MESSAGE);
                     } catch (Exception e2) {

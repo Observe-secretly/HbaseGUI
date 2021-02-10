@@ -9,10 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
@@ -50,58 +52,59 @@ public class MetaDataTab extends TabAbstract {
     }
 
     @Override
-    public JPanel initializePanel() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BorderLayout(0, 0));
+    public JComponent initializePanel() {
+        JSplitPane panel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        {
+            // 展示数据库列表的panel
+            JPanel tableListPanel = new JPanel();
+            tableListPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            tableListPanel.setLayout(new BorderLayout(1, 1));
 
-        // 展示数据库列表的panel
-        JPanel tableListPanel = new JPanel();
-        tableListPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        tableListPanel.setLayout(new BorderLayout(1, 1));
+            panel.setLeftComponent(tableListPanel);
 
-        panel.add(tableListPanel, BorderLayout.WEST);
+            list = new JList<>();
+            list.setFixedCellHeight(20);
+            list.setFixedCellWidth(250);
+            // 设置为单选模式
+            list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        list = new JList<>();
-        list.setFixedCellHeight(20);
-        // 设置为单选模式
-        list.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            JScrollPane jlistScroll = new JScrollPane(list);
+            jlistScroll.setBorder(new TitledBorder("TABLES"));
+            jlistScroll.setLayout(new ScrollPaneLayout());
+            tableListPanel.add(jlistScroll);
 
-        JScrollPane jlistScroll = new JScrollPane(list);
-        jlistScroll.setBorder(new TitledBorder("TABLES"));
-        jlistScroll.setLayout(new ScrollPaneLayout());
-        tableListPanel.add(jlistScroll);
+            refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
+            tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
 
-        refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
-        tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
+            JPanel southPanel = new JPanel();
+            southPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            southPanel.setLayout(new BorderLayout(0, 0));
+            panel.setRightComponent(southPanel);
 
-        JPanel southPanel = new JPanel();
-        southPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        southPanel.setLayout(new BorderLayout(0, 0));
-        panel.add(southPanel, BorderLayout.CENTER);
+            contentTable = new JTable();
+            tableScroll = new JScrollPane(contentTable);
+            tableScroll.setBorder(new TitledBorder("元数据信息"));
+            southPanel.add(tableScroll, BorderLayout.CENTER);
 
-        contentTable = new JTable();
-        tableScroll = new JScrollPane(contentTable);
-        tableScroll.setBorder(new TitledBorder("元数据信息"));
-        southPanel.add(tableScroll, BorderLayout.CENTER);
+            JPanel mataSouthPanel = new JPanel();
+            mataSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            southPanel.add(mataSouthPanel, BorderLayout.SOUTH);
 
-        JPanel mataSouthPanel = new JPanel();
-        mataSouthPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        southPanel.add(mataSouthPanel, BorderLayout.SOUTH);
+            addMataDataBut = new JButton(ImageIconConstons.ADD_ICON);
+            removeMataDataBut = new JButton(ImageIconConstons.GARBAGE_ICON);
+            refreshMataDataBut = new JButton(ImageIconConstons.UPDATE_ICON);
+            saveButton = new JButton("保存元数据", ImageIconConstons.SAVE_ICON);
 
-        addMataDataBut = new JButton(ImageIconConstons.ADD_ICON);
-        removeMataDataBut = new JButton(ImageIconConstons.GARBAGE_ICON);
-        refreshMataDataBut = new JButton(ImageIconConstons.UPDATE_ICON);
-        saveButton = new JButton("保存元数据", ImageIconConstons.SAVE_ICON);
+            addMataDataBut.setEnabled(false);
+            removeMataDataBut.setEnabled(false);
+            refreshMataDataBut.setEnabled(false);
+            saveButton.setEnabled(false);
 
-        addMataDataBut.setEnabled(false);
-        removeMataDataBut.setEnabled(false);
-        refreshMataDataBut.setEnabled(false);
-        saveButton.setEnabled(false);
-
-        mataSouthPanel.add(addMataDataBut);
-        mataSouthPanel.add(removeMataDataBut);
-        mataSouthPanel.add(refreshMataDataBut);
-        mataSouthPanel.add(saveButton);
+            mataSouthPanel.add(addMataDataBut);
+            mataSouthPanel.add(removeMataDataBut);
+            mataSouthPanel.add(refreshMataDataBut);
+            mataSouthPanel.add(saveButton);
+        }
 
         /*
          * 添加各种监听
