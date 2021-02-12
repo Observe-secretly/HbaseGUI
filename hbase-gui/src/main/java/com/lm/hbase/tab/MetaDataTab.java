@@ -15,7 +15,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EtchedBorder;
@@ -23,18 +22,21 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 
 import com.alibaba.fastjson.JSON;
+import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.swing.SwingConstants;
+import com.lm.hbase.swing.component.ComboBoxTable;
 import com.lm.hbase.util.StringUtil;
 
 public class MetaDataTab extends TabAbstract {
 
     private JList<String> list;
-    private JTable        contentTable;
+    private ComboBoxTable contentTable;
     private JScrollPane   tableScroll;
     private JButton       removeMataDataBut;
     private JButton       addMataDataBut;
@@ -81,7 +83,8 @@ public class MetaDataTab extends TabAbstract {
             southPanel.setLayout(new BorderLayout(0, 0));
             panel.setRightComponent(southPanel);
 
-            contentTable = new JTable();
+            contentTable = new ComboBoxTable();
+            contentTable.setRowHeight(CommonConstons.ROW_HEIGHT);
             tableScroll = new JScrollPane(contentTable);
             tableScroll.setBorder(new TitledBorder("元数据信息"));
             southPanel.add(tableScroll, BorderLayout.CENTER);
@@ -224,9 +227,23 @@ public class MetaDataTab extends TabAbstract {
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
+                    //使正在编辑的单元格生效。若不进行此操作会导致正在编辑的单元格内容或者下拉框内容丢失
+                    if(contentTable.isEditing()){
+                        TableCellEditor cellEditor  = contentTable.getCellEditor();
+                        if (cellEditor != null) {
+                            cellEditor.stopCellEditing();
+                        }
+                    }
+
                     Map<String, String> map = new HashMap<>();
                     for (int i = 0; i < contentTable.getRowCount(); i++) {
-                        map.put(contentTable.getValueAt(i, 0).toString(), contentTable.getValueAt(i, 1).toString());
+                        ComboBoxTable.JTabComboBoxOption [] JTabComboBoxOptions = (ComboBoxTable.JTabComboBoxOption [] )contentTable.getValueAt(i, 1);
+                        for (ComboBoxTable.JTabComboBoxOption option  : JTabComboBoxOptions){
+                            if(option.isSelected()){
+                                map.put(contentTable.getValueAt(i, 0).toString(), option.getValue());
+                            }
+                        }
+
                     }
 
                     String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;

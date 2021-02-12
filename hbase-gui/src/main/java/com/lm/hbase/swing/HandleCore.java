@@ -16,6 +16,12 @@ import com.lm.hbase.adapter.ColumnFamily;
 import com.lm.hbase.adapter.Row;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.QualifierValue;
+import com.lm.hbase.common.CommonConstons;
+import com.lm.hbase.swing.component.ComboBoxTable;
+import com.lm.hbase.swing.component.ComboBoxTable.ComboxRenderer;
+import com.lm.hbase.swing.component.ComboBoxTable.CustomComboBoxEditor;
+import com.lm.hbase.swing.component.ComboBoxTable.JTabComboBoxOption;
+import com.lm.hbase.swing.component.ComboBoxTableUtil;
 import com.lm.hbase.util.MyBytesUtil;
 
 public class HandleCore {
@@ -130,15 +136,15 @@ public class HandleCore {
 
     }
 
-    public static void reloadMetaTableFormat(JTable table, Map<String, String> metaMap) {
+    public static void reloadMetaTableFormat(ComboBoxTable table, Map<String, String> metaMap) {
 
         // 把datamap转化成二维数组
-        String[][] rowData = new String[metaMap.size()][2];
+        Object[][] rowData = new Object[metaMap.size()][2];
 
         int index = 0;
         for (Map.Entry<String, String> entry : metaMap.entrySet()) {
             rowData[index][0] = entry.getKey();
-            rowData[index][1] = entry.getValue();
+            rowData[index][1] = ComboBoxTableUtil.getJTabComboBoxOptions(entry.getValue());
             index++;
         }
 
@@ -146,6 +152,8 @@ public class HandleCore {
         tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
 
         table.setModel(tableModel);
+        table.getColumnModel().getColumn(1).setCellEditor(new CustomComboBoxEditor());
+        table.getColumnModel().getColumn(1).setCellRenderer(new ComboxRenderer());
 
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
@@ -154,7 +162,7 @@ public class HandleCore {
 
     }
 
-    public static void reloadMetaTableFormat(String tableName, JTable table) throws Exception {
+    public static void reloadMetaTableFormat(String tableName, ComboBoxTable table) throws Exception {
 
         HBasePageModel dataModel = new HBasePageModel(1, tableName);
         dataModel = SwingConstants.hbaseAdapter.scanResultByPageFilter(tableName, null, null, null, Integer.MAX_VALUE,
@@ -198,13 +206,13 @@ public class HandleCore {
         }
 
         // 把datamap转化成二维数组
-        String[][] rowData = new String[columnNameSet.size()][2];
+        Object[][] rowData = new Object[columnNameSet.size()][2];
 
         int index = 0;
         for (Iterator iterator = columnNameSet.iterator(); iterator.hasNext();) {
             String columnKey = (String) iterator.next();
             rowData[index][0] = columnKey;
-            rowData[index][1] = "String";
+            rowData[index][1] = ComboBoxTableUtil.JTAB_COMBOBOX_OPTIONS;
             index++;
         }
 
@@ -213,12 +221,16 @@ public class HandleCore {
 
         table.setModel(tableModel);
 
+        table.getColumnModel().getColumn(1).setCellEditor(new CustomComboBoxEditor());
+        table.getColumnModel().getColumn(1).setCellRenderer(new ComboxRenderer());
+
         int rowCount = table.getRowCount();
         table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
         Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
         table.scrollRectToVisible(rect);
 
     }
+
 
     public static void setPageInfomation(HBasePageModel dataModel, JLabel jlabel) {
         if (dataModel == null) {

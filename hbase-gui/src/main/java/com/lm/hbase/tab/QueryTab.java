@@ -45,6 +45,7 @@ import javax.swing.table.TableColumn;
 import com.alibaba.fastjson.JSON;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.HbaseQualifier;
+import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.common.ImageIconConstons;
 import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
@@ -306,6 +307,7 @@ public class QueryTab extends TabAbstract {
         // searchSouthPanel 位于整个searchPanel的最下侧 显示了下一页和查询页码等信息 end
 
         contentTable = new JTable();
+        contentTable.setRowHeight(CommonConstons.ROW_HEIGHT);
         tableScroll = new JScrollPane(contentTable);
         searchPanel.add(tableScroll, BorderLayout.CENTER);
 
