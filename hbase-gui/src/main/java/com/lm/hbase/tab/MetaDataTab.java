@@ -31,6 +31,7 @@ import com.lm.hbase.swing.HandleCore;
 import com.lm.hbase.swing.HbaseGui;
 import com.lm.hbase.swing.SwingConstants;
 import com.lm.hbase.swing.component.ComboBoxTable;
+import com.lm.hbase.swing.component.ComboBoxTableUtil;
 import com.lm.hbase.util.StringUtil;
 
 public class MetaDataTab extends TabAbstract {
@@ -169,7 +170,7 @@ public class MetaDataTab extends TabAbstract {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     DefaultTableModel tableModel = (DefaultTableModel) contentTable.getModel();
-                    tableModel.addRow(new String[] { "<CustomField>", "String" });
+                    tableModel.addRow(new Object[] { "<CustomField>", ComboBoxTableUtil.JTAB_COMBOBOX_OPTIONS });
                 }
             });
 
