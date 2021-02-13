@@ -89,12 +89,12 @@ public class DownloadDriver {
         }
 
         // 下载pom已经client jar
-        progressInfoLabel.setText("download pom file ...");
+        progressInfoLabel.setText("正在下载pom文件 ...");
         System.out.println("download file:" + getPomUrl(version));
         HttpURLConnection con = HttpURLConnectionFactory.getConn(getPomUrl(version));
 
         HttpURLConnectionFactory.downloadFile(con, outputDir, "pom.xml");
-        progressInfoLabel.setText("download hbase-client-" + version + ".jar ...");
+        progressInfoLabel.setText("正在下载hbase-client-" + version + ".jar ...");
 
         System.out.println("download file:" + getJarUrl(version));
         con = HttpURLConnectionFactory.getConn(getJarUrl(version));
@@ -104,13 +104,13 @@ public class DownloadDriver {
         StringBuilder cmd = new StringBuilder("dependency:copy-dependencies -DoutputDirectory=");
         cmd.append(outputDir);
 
-        progressInfoLabel.setText("download hbase-client dependencies jars  ...");
+        progressInfoLabel.setText("正在下载hbase-client依赖 ...");
         // 执行maven命令下载并拷贝依赖jar
         boolean result = executeMavenCmd(cmd.toString(), pomFile, mavenHome);
         if (result) {
-            progressInfoLabel.setText("download hbase-client dependencies jars  success");
+            progressInfoLabel.setText("hbase-client依赖下载成功");
         } else {
-            progressInfoLabel.setText("download hbase-client dependencies jars  error");
+            progressInfoLabel.setText("hbase-client依赖下载失败");
         }
 
         return result;

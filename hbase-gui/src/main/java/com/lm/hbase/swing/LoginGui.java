@@ -20,19 +20,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneLayout;
+import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -81,7 +69,7 @@ public class LoginGui extends JDialog {
 
     private JComboBox<String>       driverVersionComboBox;
 
-    public JLabel                   progressInfoLabel         = new JLabel("Please select configuration");
+    public JLabel                   progressInfoLabel         = new JLabel("请在左侧选择配置");
     public JProgressBar             processBar                = new JProgressBar();
     public JLabel                   stopLabel                 = new JLabel(ImageIconConstons.STOP_ICON);
 
@@ -105,13 +93,18 @@ public class LoginGui extends JDialog {
      */
     public LoginGui(){
         setTitle("配置Hbase");
-        int width = 730;
+        int width = 800;
         int height = 360;
         setBounds(100, 100, width, height);
         this.setMinimumSize(new Dimension(width, height));
         this.setLocationRelativeTo(null);
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(confsPanel, BorderLayout.WEST);
+
+
+
+        JSplitPane parentSplitPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        getContentPane().add(parentSplitPanel);
+
+        parentSplitPanel.setLeftComponent(confsPanel);
         {
 
             confsPanel.setLayout(new BorderLayout());
@@ -142,7 +135,7 @@ public class LoginGui extends JDialog {
 
         }
 
-        getContentPane().add(contentPanel, BorderLayout.EAST);
+        parentSplitPanel.setRightComponent(contentPanel);
         contentPanel.setLayout(new FlowLayout());
 
         JPanel formPanel = new JPanel();
@@ -580,9 +573,9 @@ public class LoginGui extends JDialog {
 
             // 加载适配程序
             try {
-                progressInfoLabel.setText("download adapter jar ....");
+                progressInfoLabel.setText("正在下载适配器Jar包 ....");
                 loadHbaseAdapterJar(version);
-                progressInfoLabel.setText("download adapter jar success");
+                progressInfoLabel.setText("适配器Jar包下载完成");
             } catch (Throwable e) {
                 JOptionPane.showMessageDialog(com.lm.hbase.swing.SwingConstants.hbaseGui.parentJframe, e, "异常",
                                               JOptionPane.ERROR_MESSAGE);
@@ -595,13 +588,13 @@ public class LoginGui extends JDialog {
             }
         }
 
-        progressInfoLabel.setText("Classloader load all jars  ....");
+        progressInfoLabel.setText("Jar包加载中 ....");
         // 从目录加载驱动以及适配器所有jar包
         jcl = new JarClassLoader();
         jcl.add(Env.DRIVER_DIR + version + "/");
         SwingConstants.driverMap.put(version, jcl);
         SwingConstants.version = version;
-        progressInfoLabel.setText("The jar necessary for the  " + version + " version is loaded");
+        progressInfoLabel.setText("已加载" + version + "版本所需的所有Jar包");
         loadCore(jcl);
     }
 

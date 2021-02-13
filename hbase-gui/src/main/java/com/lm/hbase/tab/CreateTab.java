@@ -130,7 +130,6 @@ public class CreateTab extends TabAbstract {
         JPanel tableContentPanel = new JPanel();
         // 左侧面板
         JPanel namespacePanel = new JPanel();
-        namespacePanel.setToolTipText("asdfads");
 
         // 初始化所有panel
         {
@@ -162,7 +161,7 @@ public class CreateTab extends TabAbstract {
                 e.printStackTrace();
             }
             JScrollPane nsListScroll = new JScrollPane(nameSpaceList);
-            nsListScroll.setBorder(new TitledBorder("NAMESPACE"));
+            nsListScroll.setBorder(new TitledBorder("命名空间列表"));
             nsListScroll.setLayout(new ScrollPaneLayout());
 
             JPopupMenu popupMenu = new JPopupMenu();

@@ -119,7 +119,7 @@ public class TableInfoTab extends TabAbstract {
 
         // 展示表详情容器
         descPanel = new JPanel();
-        descPanel.setBorder(new TitledBorder("Descriptor"));
+        descPanel.setBorder(new TitledBorder("描述信息"));
 
         contentChildPanel.add(descPanel, BorderLayout.CENTER);
 
@@ -132,7 +132,7 @@ public class TableInfoTab extends TabAbstract {
             cfComboBox = new JComboBox<>();
 
             JPanel headPanel = new JPanel();
-            headPanel.setBorder(new TitledBorder("Familys"));
+            headPanel.setBorder(new TitledBorder("列簇信息"));
 
             headPanel.add(tableNameLabel);
             headPanel.add(cfComboBox);
