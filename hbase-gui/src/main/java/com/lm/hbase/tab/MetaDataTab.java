@@ -170,7 +170,8 @@ public class MetaDataTab extends TabAbstract {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     DefaultTableModel tableModel = (DefaultTableModel) contentTable.getModel();
-                    tableModel.addRow(new Object[] { "<CustomField>", ComboBoxTableUtil.JTAB_COMBOBOX_OPTIONS });
+                    tableModel.addRow(new Object[] { "<CustomField>",
+                                                     ComboBoxTableUtil.getDefaultJTabComboBoxOptions() });
                 }
             });
 
@@ -228,9 +229,9 @@ public class MetaDataTab extends TabAbstract {
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    //使正在编辑的单元格生效。若不进行此操作会导致正在编辑的单元格内容或者下拉框内容丢失
-                    if(contentTable.isEditing()){
-                        TableCellEditor cellEditor  = contentTable.getCellEditor();
+                    // 使正在编辑的单元格生效。若不进行此操作会导致正在编辑的单元格内容或者下拉框内容丢失
+                    if (contentTable.isEditing()) {
+                        TableCellEditor cellEditor = contentTable.getCellEditor();
                         if (cellEditor != null) {
                             cellEditor.stopCellEditing();
                         }
@@ -238,9 +239,10 @@ public class MetaDataTab extends TabAbstract {
 
                     Map<String, String> map = new HashMap<>();
                     for (int i = 0; i < contentTable.getRowCount(); i++) {
-                        ComboBoxTable.JTabComboBoxOption [] JTabComboBoxOptions = (ComboBoxTable.JTabComboBoxOption [] )contentTable.getValueAt(i, 1);
-                        for (ComboBoxTable.JTabComboBoxOption option  : JTabComboBoxOptions){
-                            if(option.isSelected()){
+                        ComboBoxTable.JTabComboBoxOption[] JTabComboBoxOptions = (ComboBoxTable.JTabComboBoxOption[]) contentTable.getValueAt(i,
+                                                                                                                                              1);
+                        for (ComboBoxTable.JTabComboBoxOption option : JTabComboBoxOptions) {
+                            if (option.isSelected()) {
                                 map.put(contentTable.getValueAt(i, 0).toString(), option.getValue());
                             }
                         }

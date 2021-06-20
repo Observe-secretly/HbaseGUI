@@ -6,11 +6,11 @@ public class Env {
 
     public static String BASEDIR             = getBasedir();
 
-    public static String CONF_DIR            = getBasedir() + "conf" + System.getProperty("file.separator");
+    public static String CONF_DIR            = BASEDIR+ "conf" + System.getProperty("file.separator");
 
-    public static String IMG_DIR             = getBasedir() + "img" + System.getProperty("file.separator");
+    public static String IMG_DIR             = BASEDIR + "img" + System.getProperty("file.separator");
 
-    public static String MAVEN_DIR           = getBasedir() + "apache-maven" + System.getProperty("file.separator");
+    public static String MAVEN_DIR           = BASEDIR + "apache-maven" + System.getProperty("file.separator");
 
     public static String DRIVER_DIR          = getDriverDir();
 

@@ -1,12 +1,11 @@
 package com.lm.hbase.swing.component;
 
 import java.awt.Component;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.ArrayList;
 import java.util.Locale;
 
-import javax.swing.*;
+import javax.swing.AbstractCellEditor;
+import javax.swing.JComboBox;
+import javax.swing.JTable;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
@@ -88,7 +87,7 @@ public class ComboBoxTable extends JTable {
      * 
      * @author limin 2021年2月10日 下午3:02:15
      */
-    public static class JTabComboBoxOption implements Cloneable{
+    public static class JTabComboBoxOption implements Cloneable {
 
         private String  value;
 
@@ -125,7 +124,7 @@ public class ComboBoxTable extends JTable {
 
         @Override
         public JTabComboBoxOption clone() {
-            return  new JTabComboBoxOption(value,isSelected);
+            return new JTabComboBoxOption(value, isSelected);
         }
     }
 

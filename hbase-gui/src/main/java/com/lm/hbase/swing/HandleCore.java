@@ -16,11 +16,9 @@ import com.lm.hbase.adapter.ColumnFamily;
 import com.lm.hbase.adapter.Row;
 import com.lm.hbase.adapter.entity.HBasePageModel;
 import com.lm.hbase.adapter.entity.QualifierValue;
-import com.lm.hbase.common.CommonConstons;
 import com.lm.hbase.swing.component.ComboBoxTable;
 import com.lm.hbase.swing.component.ComboBoxTable.ComboxRenderer;
 import com.lm.hbase.swing.component.ComboBoxTable.CustomComboBoxEditor;
-import com.lm.hbase.swing.component.ComboBoxTable.JTabComboBoxOption;
 import com.lm.hbase.swing.component.ComboBoxTableUtil;
 import com.lm.hbase.util.MyBytesUtil;
 
@@ -136,6 +134,26 @@ public class HandleCore {
 
     }
 
+    /**
+     * 负责渲染元数据Table内容
+     * 
+     * @param table
+     * @param rowData
+     */
+    private static void metaTableModelApply(ComboBoxTable table, Object[][] rowData) {
+        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
+        tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
+
+        table.setModel(tableModel);
+        table.getColumnModel().getColumn(1).setCellEditor(new CustomComboBoxEditor());
+        table.getColumnModel().getColumn(1).setCellRenderer(new ComboxRenderer());
+
+        int rowCount = table.getRowCount();
+        table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
+        Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
+        table.scrollRectToVisible(rect);
+    }
+
     public static void reloadMetaTableFormat(ComboBoxTable table, Map<String, String> metaMap) {
 
         // 把datamap转化成二维数组
@@ -148,17 +166,7 @@ public class HandleCore {
             index++;
         }
 
-        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-        tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
-
-        table.setModel(tableModel);
-        table.getColumnModel().getColumn(1).setCellEditor(new CustomComboBoxEditor());
-        table.getColumnModel().getColumn(1).setCellRenderer(new ComboxRenderer());
-
-        int rowCount = table.getRowCount();
-        table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
-        Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
-        table.scrollRectToVisible(rect);
+        metaTableModelApply(table, rowData);
 
     }
 
@@ -212,25 +220,13 @@ public class HandleCore {
         for (Iterator iterator = columnNameSet.iterator(); iterator.hasNext();) {
             String columnKey = (String) iterator.next();
             rowData[index][0] = columnKey;
-            rowData[index][1] = ComboBoxTableUtil.JTAB_COMBOBOX_OPTIONS;
+            rowData[index][1] = ComboBoxTableUtil.getDefaultJTabComboBoxOptions();
             index++;
         }
 
-        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-        tableModel.setDataVector(rowData, new String[] { "Column", "Type" });
-
-        table.setModel(tableModel);
-
-        table.getColumnModel().getColumn(1).setCellEditor(new CustomComboBoxEditor());
-        table.getColumnModel().getColumn(1).setCellRenderer(new ComboxRenderer());
-
-        int rowCount = table.getRowCount();
-        table.getSelectionModel().setSelectionInterval(rowCount - 1, rowCount - 1);
-        Rectangle rect = table.getCellRect(rowCount - 1, 0, true);
-        table.scrollRectToVisible(rect);
+        metaTableModelApply(table, rowData);
 
     }
-
 
     public static void setPageInfomation(HBasePageModel dataModel, JLabel jlabel) {
         if (dataModel == null) {
