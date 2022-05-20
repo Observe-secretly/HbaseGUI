@@ -87,6 +87,10 @@ Hbase-GUI
 
 ![](./README_IMAGE/createTab.png)
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Observe-secretly/HbaseGUI&type=Date)](https://star-history.com/#Observe-secretly/HbaseGUI&Date)
+
 
 # 问题交流反馈
 QQ：914245697
