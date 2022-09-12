@@ -3,9 +3,13 @@ package com.lm.hbase.tab;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -36,14 +40,15 @@ import com.lm.hbase.util.StringUtil;
 
 public class MetaDataTab extends TabAbstract {
 
-    private JList<String> list;
-    private ComboBoxTable contentTable;
-    private JScrollPane   tableScroll;
-    private JButton       removeMataDataBut;
-    private JButton       addMataDataBut;
-    private JButton       refreshMataDataBut;
-    private JButton       saveButton;
-    private JButton       refreshTableButton;
+    private JList<String>         list;
+    private ComboBoxTable         contentTable;
+    private JScrollPane           tableScroll;
+    private JButton               removeMataDataBut;
+    private JButton               addMataDataBut;
+    private JButton               refreshMataDataBut;
+    private JButton               saveButton;
+    private JButton               refreshTableButton;
+    private DefaultValueTextField searchTableInput;
 
     public MetaDataTab(HbaseGui window){
         super(window);
@@ -76,8 +81,17 @@ public class MetaDataTab extends TabAbstract {
             jlistScroll.setLayout(new ScrollPaneLayout());
             tableListPanel.add(jlistScroll);
 
+            // 把查询按钮和模糊搜索框放一起
+            JPanel searchToolsPanel = new JPanel();
+            searchToolsPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+            searchToolsPanel.setLayout(new BorderLayout(1, 1));
+
+            searchTableInput = new DefaultValueTextField("模糊搜索");
             refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
-            tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
+            searchToolsPanel.add(searchTableInput, BorderLayout.NORTH);
+            searchToolsPanel.add(refreshTableButton, BorderLayout.SOUTH);
+
+            tableListPanel.add(searchToolsPanel, BorderLayout.NORTH);
 
             JPanel southPanel = new JPanel();
             southPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -132,6 +146,7 @@ public class MetaDataTab extends TabAbstract {
                             startTask();
                             try {
                                 initTableList(list);
+                                searchTableInput.setText("");
                             } catch (Exception e) {
                                 exceptionAlert(e);
                                 return;
@@ -159,7 +174,11 @@ public class MetaDataTab extends TabAbstract {
                 @Override
                 public void valueChanged(ListSelectionEvent e) {
                     if (!e.getValueIsAdjusting()) {
+                        if (list.getSelectedValue() == null) {
+                            return;
+                        }
                         loadMataData(list.getSelectedValue(), false);
+
                     }
                 }
             });
@@ -252,6 +271,31 @@ public class MetaDataTab extends TabAbstract {
                     String propertiesKey = list.getSelectedValue() + PROPERTIES_SUFFIX;
                     SwingConstants.selectedConf.setValue(propertiesKey, JSON.toJSONString(map));
                     JOptionPane.showMessageDialog(getFrame(), "保存成功", "提示", JOptionPane.INFORMATION_MESSAGE);
+
+                }
+            });
+
+            // 搜索表
+            searchTableInput.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+
+                    // 搜索输入
+                    String searchText = searchTableInput.getText().toLowerCase();
+
+                    // 清除选择
+                    list.clearSelection();
+
+                    List<String> likely = new ArrayList<>();// 匹配到的
+
+                    for (String item : getTableListCache()) {
+                        if (item.toLowerCase().indexOf(searchText) != -1) {
+                            likely.add(item);
+                        }
+                    }
+
+                    list.setListData(likely.toArray(new String[likely.size()]));
 
                 }
             });

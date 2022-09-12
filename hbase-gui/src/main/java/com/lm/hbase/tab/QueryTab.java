@@ -10,6 +10,8 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -61,6 +63,7 @@ public class QueryTab extends TabAbstract {
 
     private JList<String>                    list                   = null;
     private JButton                          refreshTableButton;
+    private DefaultValueTextField            searchTableInput;
     private JButton                          searchButton           = new JButton("查询", ImageIconConstons.SEARCH_ICON);
     private JButton                          deleteButton;
     private DefaultValueTextField            textField_start_rowkey;
@@ -144,8 +147,18 @@ public class QueryTab extends TabAbstract {
 
         popupMenu.add(countItem);
 
+        // 把查询按钮和模糊搜索框放一起
+        JPanel searchToolsPanel = new JPanel();
+        searchToolsPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        searchToolsPanel.setLayout(new BorderLayout(1, 1));
+
+        searchTableInput = new DefaultValueTextField("模糊搜索");
         refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
-        tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
+
+        searchToolsPanel.add(searchTableInput, BorderLayout.NORTH);
+        searchToolsPanel.add(refreshTableButton, BorderLayout.SOUTH);
+
+        tableListPanel.add(searchToolsPanel, BorderLayout.NORTH);
 
         JPanel searchPanel = new JPanel();
         searchPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
@@ -380,6 +393,7 @@ public class QueryTab extends TabAbstract {
                             startTask();
                             try {
                                 initTableList(list);
+                                searchTableInput.setText("");
                             } catch (Exception e) {
                                 exceptionAlert(e);
                                 return;
@@ -497,6 +511,10 @@ public class QueryTab extends TabAbstract {
                             public void run() {
                                 startTask();
                                 try {
+                                    if (list.getSelectedValue() == null) {
+                                        stopTask();
+                                        return;
+                                    }
                                     loadMataData(list.getSelectedValue());
                                     // 清空table
                                     cleanTable();
@@ -516,6 +534,31 @@ public class QueryTab extends TabAbstract {
                         });
 
                     }
+
+                }
+            });
+
+            // 搜索表
+            searchTableInput.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+
+                    // 搜索输入
+                    String searchText = searchTableInput.getText().toLowerCase();
+
+                    // 清除选择
+                    list.clearSelection();
+
+                    List<String> likely = new ArrayList<>();// 匹配到的
+
+                    for (String item : getTableListCache()) {
+                        if (item.toLowerCase().indexOf(searchText) != -1) {
+                            likely.add(item);
+                        }
+                    }
+
+                    list.setListData(likely.toArray(new String[likely.size()]));
 
                 }
             });
@@ -1082,7 +1125,10 @@ class DefaultValueTextField extends JTextField {
 
             @Override
             public void focusGained(FocusEvent e) {
-                setText(null);
+                if (getText() == null) {
+                    setText(null);
+                }
+
             }
         });
     }
@@ -1090,7 +1136,7 @@ class DefaultValueTextField extends JTextField {
     @Override
     public String getText() {
         String text = super.getText();
-        if (text.startsWith("* ")) {
+        if (super.getText().equalsIgnoreCase(defaultShowText)) {
             return null;
         }
         return text;

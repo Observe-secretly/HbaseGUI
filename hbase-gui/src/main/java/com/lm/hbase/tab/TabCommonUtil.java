@@ -14,6 +14,12 @@ import com.lm.hbase.swing.SwingConstants;
 
 public class TabCommonUtil {
 
+    String[] tableNamesCache = null;
+
+    public String[] getTableListCache() {
+        return tableNamesCache;
+    }
+
     /**
      * 初始化表
      * 
@@ -24,6 +30,7 @@ public class TabCommonUtil {
     public void initTableList(JList<String> list) throws Exception {
         String[] tableNames = SwingConstants.hbaseAdapter.getListTableNames();
         if (tableNames != null) {
+            tableNamesCache = tableNames;
             list.setListData(tableNames);
         }
     }

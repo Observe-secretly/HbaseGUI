@@ -38,6 +38,8 @@ public class HbaseGui {
 
     public JLabel                   stopLabel;
 
+    public JLabel                   versionLabel;
+
     public JButton                  switchBut;
 
     /**
@@ -122,11 +124,16 @@ public class HbaseGui {
         switchBut = new JButton(ImageIconConstons.SWITCH_ICON);
         switchBut.addMouseListener(new SwitchEvent());
 
+        //
+        versionLabel = new JLabel("Version 1.2.5");
+
         JPanel footerCenterPanel = new JPanel();
 
         footerCenterPanel.add(stopLabel);
         footerCenterPanel.add(processBar);
         footerPanel.add(footerCenterPanel, BorderLayout.CENTER);
+
+        footerPanel.add(versionLabel, BorderLayout.WEST);
         footerPanel.add(switchBut, BorderLayout.EAST);
 
         JTabbedPane tabbedPanel = new JTabbedPane(JTabbedPane.TOP);

@@ -6,8 +6,12 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JButton;
@@ -36,30 +40,31 @@ import com.lm.hbase.swing.SwingConstants;
 
 public class TableInfoTab extends TabAbstract {
 
-    private JList<String>     list = null;
-    private JButton           refreshTableButton;
+    private JList<String>         list = null;
+    private JButton               refreshTableButton;
+    private DefaultValueTextField searchTableInput;
 
-    private JPanel            descPanel;
+    private JPanel                descPanel;
 
     /*
      * 当前hbase表结构信息
      */
-    private TableDescriptor   tableDescriptor;
+    private TableDescriptor       tableDescriptor;
 
-    private JLabel            tableNameLabel;
-    private JComboBox<String> cfComboBox;
-    private JTextField        bloomfilterTextField;
-    private JTextField        inMemoryTextField;
-    private JTextField        versionsTextField;
-    private JTextField        minVersionsTextField;
-    private JTextField        keepDeletedCellsTextField;
-    private JTextField        dataBlockEncodingTextField;
-    private JTextField        ttlTextField;
-    private JTextField        compressionTextField;
-    private JTextField        blockcacheField;
-    private JTextField        replicationScopeTextField;
+    private JLabel                tableNameLabel;
+    private JComboBox<String>     cfComboBox;
+    private JTextField            bloomfilterTextField;
+    private JTextField            inMemoryTextField;
+    private JTextField            versionsTextField;
+    private JTextField            minVersionsTextField;
+    private JTextField            keepDeletedCellsTextField;
+    private JTextField            dataBlockEncodingTextField;
+    private JTextField            ttlTextField;
+    private JTextField            compressionTextField;
+    private JTextField            blockcacheField;
+    private JTextField            replicationScopeTextField;
 
-    private JTextArea         hDescTextArea;
+    private JTextArea             hDescTextArea;
 
     public TableInfoTab(HbaseGui window){
         super(window);
@@ -93,8 +98,17 @@ public class TableInfoTab extends TabAbstract {
         tableListPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
         tableListPanel.setLayout(new BorderLayout(1, 1));
 
+        // 把查询按钮和模糊搜索框放一起
+        JPanel searchToolsPanel = new JPanel();
+        searchToolsPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+        searchToolsPanel.setLayout(new BorderLayout(1, 1));
+
+        searchTableInput = new DefaultValueTextField("模糊搜索");
         refreshTableButton = new JButton("刷新", ImageIconConstons.UPDATE_ICON);
-        tableListPanel.add(refreshTableButton, BorderLayout.NORTH);
+        searchToolsPanel.add(searchTableInput, BorderLayout.NORTH);
+        searchToolsPanel.add(refreshTableButton, BorderLayout.SOUTH);
+
+        tableListPanel.add(searchToolsPanel, BorderLayout.NORTH);
 
         list = new JList<>();
         list.setFixedCellHeight(20);
@@ -153,6 +167,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             bloomfilterTextField = new JTextField(28);
+            bloomfilterTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(bloomfilterTextField);
 
@@ -176,6 +191,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             inMemoryTextField = new JTextField(28);
+            inMemoryTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(inMemoryTextField);
 
@@ -200,6 +216,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             versionsTextField = new JTextField(28);
+            versionsTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(versionsTextField);
 
@@ -223,6 +240,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             minVersionsTextField = new JTextField(28);
+            minVersionsTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(minVersionsTextField);
 
@@ -247,6 +265,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             keepDeletedCellsTextField = new JTextField(28);
+            keepDeletedCellsTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(keepDeletedCellsTextField);
 
@@ -270,6 +289,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             dataBlockEncodingTextField = new JTextField(28);
+            dataBlockEncodingTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(dataBlockEncodingTextField);
 
@@ -294,6 +314,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             ttlTextField = new JTextField(28);
+            ttlTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(ttlTextField);
 
@@ -317,6 +338,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             compressionTextField = new JTextField(28);
+            compressionTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(compressionTextField);
 
@@ -341,6 +363,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             blockcacheField = new JTextField(28);
+            blockcacheField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(blockcacheField);
 
@@ -364,6 +387,7 @@ public class TableInfoTab extends TabAbstract {
         }
         {
             replicationScopeTextField = new JTextField(28);
+            replicationScopeTextField.setEditable(false);
             JPanel componentPanel = new JPanel();
             componentPanel.add(replicationScopeTextField);
 
@@ -378,6 +402,7 @@ public class TableInfoTab extends TabAbstract {
         // 底部Text内容
         {
             hDescTextArea = new JTextArea();
+            hDescTextArea.setEditable(false);
             hDescTextArea.setRows(10);
             hDescTextArea.setLineWrap(true);
             hDescTextArea.setWrapStyleWord(true);
@@ -408,6 +433,7 @@ public class TableInfoTab extends TabAbstract {
                             startTask();
                             try {
                                 initTableList(list);
+                                searchTableInput.setText("");
                             } catch (Exception e) {
                                 exceptionAlert(e);
                                 return;
@@ -432,6 +458,10 @@ public class TableInfoTab extends TabAbstract {
                             public void run() {
                                 startTask();
                                 try {
+                                    if (list.getSelectedValue() == null) {
+                                        stopTask();
+                                        return;
+                                    }
                                     TableDescriptor tableDescriptor = SwingConstants.hbaseAdapter.getTableDescriptor(list.getSelectedValue());
 
                                     cleanAll();
@@ -447,6 +477,31 @@ public class TableInfoTab extends TabAbstract {
                         });
 
                     }
+
+                }
+            });
+
+            // 搜索表
+            searchTableInput.addKeyListener(new KeyAdapter() {
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+
+                    // 搜索输入
+                    String searchText = searchTableInput.getText().toLowerCase();
+
+                    // 清除选择
+                    list.clearSelection();
+
+                    List<String> likely = new ArrayList<>();// 匹配到的
+
+                    for (String item : getTableListCache()) {
+                        if (item.toLowerCase().indexOf(searchText) != -1) {
+                            likely.add(item);
+                        }
+                    }
+
+                    list.setListData(likely.toArray(new String[likely.size()]));
 
                 }
             });

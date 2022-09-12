@@ -11,7 +11,9 @@ public class ComboBoxTableUtil {
                                                                                                                        new ComboBoxTable.JTabComboBoxOption("int"),
                                                                                                                        new ComboBoxTable.JTabComboBoxOption("float"),
                                                                                                                        new ComboBoxTable.JTabComboBoxOption("double"),
-                                                                                                                       new ComboBoxTable.JTabComboBoxOption("boolean") };
+                                                                                                                       new ComboBoxTable.JTabComboBoxOption("boolean"),
+                                                                                                                       new ComboBoxTable.JTabComboBoxOption("short"),
+                                                                                                                       new ComboBoxTable.JTabComboBoxOption("bigdecimal") };
 
     public static ComboBoxTable.JTabComboBoxOption[] getDefaultJTabComboBoxOptions() {
         ComboBoxTable.JTabComboBoxOption[] defaultComboboxOptions = new ComboBoxTable.JTabComboBoxOption[] { new ComboBoxTable.JTabComboBoxOption("String",
@@ -20,7 +22,9 @@ public class ComboBoxTableUtil {
                                                                                                              new ComboBoxTable.JTabComboBoxOption("int"),
                                                                                                              new ComboBoxTable.JTabComboBoxOption("float"),
                                                                                                              new ComboBoxTable.JTabComboBoxOption("double"),
-                                                                                                             new ComboBoxTable.JTabComboBoxOption("boolean") };
+                                                                                                             new ComboBoxTable.JTabComboBoxOption("boolean"),
+                                                                                                             new ComboBoxTable.JTabComboBoxOption("short"),
+                                                                                                             new ComboBoxTable.JTabComboBoxOption("bigdecimal") };
         return defaultComboboxOptions;
     }
 
