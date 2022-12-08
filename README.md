@@ -27,7 +27,7 @@ HbaseGUI可视化工具，通过Hbase-client直接操作Hbase。提供可视化�
 * [Hbase-adapter-interface](https://github.com/914245697/HbaseGui-driver-adapter-entity)
 * [Hbase-adapter](https://github.com/914245697/HbaseGui-driver-adapter)
 
-关于二次开发部分，请[戳我](https://github.com/Observe-secretly/HbaseGUI/wiki/Continued-development)
+关于二次开发部分，请[戳我](https://github.com/Observe-secretly/HbaseGUI/wiki/%E4%BA%8C%E6%AC%A1%E5%BC%80%E5%8F%91)
 
 # 目录结构
 ```
