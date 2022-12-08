@@ -42,34 +42,8 @@ Hbase-GUI
 * 首次运行软件，选择相应的hbase版本时。软件会去mvnrepository.com下载Hbase-client以及依赖。根据请保证网络畅通
 * 内网环境可以选择在外网下提前下载，并拷贝到内网运行
 
-# GitHub Host映射
-如果新萌未使用代理，在下载软件后尝试使用网络加载Hbase驱动时，它极有可能会失败。当出现此问题时，可以先配置下方的Host映射，再尝试重新下载。也可以选择下载离线包（除非更新，否则此操作只需要一次）。Host映射如下：
-```
-# GitHub Start 
-192.30.253.112    github.com 
-192.30.253.119    gist.github.com
-151.101.184.133    assets-cdn.github.com
-151.101.184.133    raw.githubusercontent.com
-151.101.184.133    gist.githubusercontent.com
-151.101.184.133    cloud.githubusercontent.com
-151.101.184.133    camo.githubusercontent.com
-151.101.184.133    avatars0.githubusercontent.com
-151.101.184.133    avatars1.githubusercontent.com
-151.101.184.133    avatars2.githubusercontent.com
-151.101.184.133    avatars3.githubusercontent.com
-151.101.184.133    avatars4.githubusercontent.com
-151.101.184.133    avatars5.githubusercontent.com
-151.101.184.133    avatars6.githubusercontent.com
-151.101.184.133    avatars7.githubusercontent.com
-151.101.184.133    avatars8.githubusercontent.com
-
-151.101.185.194 	  github.global.ssl.fastly.net
- 
- # GitHub End
-```
-
 # 下载
-下载请转到[Release-history](https://github.com/914245697/HbaseGUI/wiki/Release-history)查看
+下载请转到[Release-history](https://github.com/Observe-secretly/HbaseGUI/wiki/%E5%8F%91%E5%B8%83%E5%8E%86%E5%8F%B2)查看
 
 # 软件图文介绍(各版本可能存在差异)
 
